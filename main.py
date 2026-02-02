@@ -31,6 +31,20 @@ def compute_kernel(coords, weights=None):
     K_mat = Q_mat @ coords @ coords.T @ Q_mat.T
     return K_mat
 
+def compute_gaussian_kernel(coords, param=1, weights=None):
+    n = coords.shape[0]
+    if weights is None:
+        weights = np.ones(n) / n
+    H_mat = np.eye(n) - np.outer(np.ones(n), weights)
+    Q_mat = np.diag(np.sqrt(weights)) @ H_mat
+    
+    pairwise_dists = np.sum(coords**2, axis=1).reshape(-1, 1) + \
+                     np.sum(coords**2, axis=1) - 2 * coords @ coords.T
+    K_gauss = np.exp(-pairwise_dists / (2 * param**2))
+    K_mat = Q_mat @ K_gauss @ Q_mat.T
+    return K_mat
+    
+
 # Make the algorithm of gradient descent
 def rv_descent(K_obj, weights, dim=2, lr=0.1, 
                conv_threshold = 1e-8, 
@@ -67,7 +81,7 @@ def rv_descent(K_obj, weights, dim=2, lr=0.1,
     return Y, RV
 
 
-K_obj = compute_kernel(my_grid)
+K_obj = compute_gaussian_kernel(my_grid)
 weights = np.ones(my_grid.shape[0]) / my_grid.shape[0]
 Y_opt, RV_final = rv_descent(K_obj, weights, dim=2, lr=0.01)
 

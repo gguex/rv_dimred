@@ -31,6 +31,7 @@ def compute_kernel(coords, weights=None):
     K_mat = Q_mat @ coords @ coords.T @ Q_mat.T
     return K_mat
 
+# Compute the Gaussian kernel from coordinates
 def compute_gaussian_kernel(coords, param=1, weights=None):
     n = coords.shape[0]
     if weights is None:

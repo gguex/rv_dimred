@@ -64,7 +64,7 @@ for i in range(4):
     for j in range(4):
         ax = axes[i, j]
         Y_opt = Y_opt_grid[i][j]
-        ax.scatter(Y_opt[:, 0], Y_opt[:, 1], c=c_color, cmap='rainbow', s=5)
+        ax.scatter(Y_opt[:, 0], Y_opt[:, 1], c=c_color, cmap='rainbow', s=10)
         ax.set_title(f"Input: {kernels_names[i]}, Output: {kernels_names[j]}\nRV: {RV_matrix_torch[i,j]:.6f}")
         ax.set_xticks([])
         ax.set_yticks([])

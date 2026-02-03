@@ -46,9 +46,6 @@ def compute_t_kernel(coords, df=3, weights=None):
     K_mat = Q_mat @ K_t @ Q_mat.T
     return K_mat
 
-def compute_sigmoid_kernel(coords, weights=None):
-    return None
-
 # Make the algorithm of gradient descent
 def rv_descent(K_obj, weights, dim=2, lr=0.1, 
                conv_threshold = 1e-8, 
@@ -86,7 +83,7 @@ def rv_descent(K_obj, weights, dim=2, lr=0.1,
 
 #-------------- TORCH VERSION
 
-def compute_linear_kernel_torch(coords, weights=None, device='cpu'):
+def compute_linear_kernel_torch(coords, param=None, weights=None, device='cpu'):
     n = coords.shape[0]
     if weights is None:
         weights = torch.ones(n, device=device) / n
@@ -95,7 +92,19 @@ def compute_linear_kernel_torch(coords, weights=None, device='cpu'):
     K_mat = Q_mat @ coords @ coords.T @ Q_mat.T
     return K_mat
 
-def compute_rbf_kernel_torch(coords, gamma=1, weights=None, device='cpu'):
+def compute_polynomial_kernel_torch(coords, param=2, weights=None, device='cpu'):
+    n = coords.shape[0]
+    if weights is None:
+        weights = torch.ones(n, device=device) / n
+    H_mat = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
+    Q_mat = torch.diag(torch.sqrt(weights)) @ H_mat
+    
+    G = (param * coords @ coords.T)**3
+    K_mat = Q_mat @ G @ Q_mat.T
+    return K_mat
+    
+
+def compute_t_kernel_torch(coords, param=3, weights=None, device='cpu'):
     n = coords.shape[0]
     if weights is None:
         weights = torch.ones(n, device=device) / n
@@ -104,7 +113,20 @@ def compute_rbf_kernel_torch(coords, gamma=1, weights=None, device='cpu'):
     
     pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
                      torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
-    K_gauss = torch.exp(-gamma * pairwise_dists)
+    K_t = (1 + pairwise_dists / param) ** (-(param + 1) / 2)
+    K_mat = Q_mat @ K_t @ Q_mat.T
+    return K_mat
+
+def compute_rbf_kernel_torch(coords, param=1, weights=None, device='cpu'):
+    n = coords.shape[0]
+    if weights is None:
+        weights = torch.ones(n, device=device) / n
+    H_mat = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
+    Q_mat = torch.diag(torch.sqrt(weights)) @ H_mat
+    
+    pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
+                     torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
+    K_gauss = torch.exp(-param * pairwise_dists)
     K_mat = Q_mat @ K_gauss @ Q_mat.T
     return K_mat    
 
@@ -116,21 +138,26 @@ def compute_rv(K_in, K_out):
     RV = Scal_Obj_Y / (Norm_in * Norm_out)
     return RV
 
-def rv_descent_torch(K_in, output_kernel_function, weights=None, dim=2, lr=0.1, 
+def rv_descent_torch(K_in, output_kernel_function, param, Y_0=None, weights=None, dim=2, lr=0.1, 
                      conv_threshold = 1e-8, 
                      n_iter_max=50000, device='cpu'):
     
     n = K_in.shape[0]
     if weights is None:
         weights = torch.ones(n, device=device) / n
+        
+    if Y_0 is not None:
+        Y = Y_0.to(device)
+        Y.requires_grad = True
+    else:
+        Y = torch.normal(0, 1, size=(n, dim), device=device, requires_grad=True)
     
-    Y = torch.normal(0, 1, size=(n, dim), device=device, requires_grad=True)
     optimizer = torch.optim.Adam([Y], lr=lr, maximize=True)
     
     RV_old = 1000
     for i in range(n_iter_max):
         optimizer.zero_grad()
-        K_out = output_kernel_function(Y, weights=weights, device=device)
+        K_out = output_kernel_function(Y, param=param, weights=weights, device=device)
         RV = compute_rv(K_in, K_out)
         RV.backward()
         optimizer.step()

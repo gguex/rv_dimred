@@ -11,8 +11,15 @@ print(device)
 
 # Load the data
 mnist_data = pd.read_csv("data/mnist_test.csv").to_numpy()
+
 # Subset data
-mnist_data = mnist_data[:2000, :]
+mnist_data_list = []
+for i in range(10):
+    mnist_data_i = mnist_data[mnist_data[:,0] == i][:200, :]
+    mnist_data_list.append(mnist_data_i)
+mnist_data = np.vstack(mnist_data_list)
+
+# Format data
 mnist_images = mnist_data[:, 1:] / 255.0  # Normalize
 mnist_labels = mnist_data[:, 0]
 mnist_images_tensor = torch.tensor(mnist_images).to(device).to(torch.float32)

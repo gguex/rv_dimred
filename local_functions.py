@@ -18,6 +18,18 @@ def compute_linear_kernel(coords, weights=None):
     K_mat = Q_mat @ coords @ coords.T @ Q_mat.T
     return K_mat
 
+# Compute the polynomial kernel from coordinates
+def compute_polynomial_kernel(coords, gamma=2, weights=None):
+    n = coords.shape[0]
+    if weights is None:
+        weights = np.ones(n) / n
+    H_mat = np.eye(n) - np.outer(np.ones(n), weights)
+    Q_mat = np.diag(np.sqrt(weights)) @ H_mat
+    
+    G = (gamma * coords @ coords.T)**3
+    K_mat = Q_mat @ G @ Q_mat.T
+    return K_mat
+
 # Compute the Gaussian kernel from coordinates
 def compute_rbf_kernel(coords, gamma=1, weights=None):
     n = coords.shape[0]

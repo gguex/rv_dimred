@@ -25,17 +25,17 @@ mnist_labels = mnist_data[:, 0]
 mnist_images_tensor = torch.tensor(mnist_images).to(device).to(torch.float32)
 weights = torch.ones(mnist_images_tensor.shape[0], device=device) / mnist_images_tensor.shape[0]
 
-# Define the input and output kernels parameters to test
-kernels_params = [None, 1, 0.5, 2]
+# Define the input kernels parameters to test
+kernels_in_params = [None, 3, 0.5, 3]
 
 # Make all the input kernels
-K_lin_in = compute_linear_kernel_torch(mnist_images_tensor, param=kernels_params[0], 
+K_lin_in = compute_linear_kernel_torch(mnist_images_tensor, param=kernels_in_params[0], 
                                        weights=weights, device=device)
-K_poly_in = compute_polynomial_kernel_torch(mnist_images_tensor, param=kernels_params[1], 
+K_poly_in = compute_polynomial_kernel_torch(mnist_images_tensor, param=kernels_in_params[1], 
                                             weights=weights, device=device)
-K_rbf_in = compute_rbf_kernel_torch(mnist_images_tensor, param=kernels_params[2], 
+K_rbf_in = compute_rbf_kernel_torch(mnist_images_tensor, param=kernels_in_params[2], 
                                     weights=weights, device=device)
-K_t_in = compute_t_kernel_torch(mnist_images_tensor, param=kernels_params[3], 
+K_t_in = compute_t_kernel_torch(mnist_images_tensor, param=kernels_in_params[3], 
                                 weights=weights, device=device)
 
 # The normalization factors
@@ -51,6 +51,8 @@ kernels_out_functions = [compute_linear_kernel_torch,
                          compute_polynomial_kernel_torch, 
                          compute_rbf_kernel_torch, 
                          compute_t_kernel_torch]
+# Define the output kernels parameters to test
+kernels_out_params = [None, 1, 1, 1]
 
 # Compute the MDS solution for reference
 Y_pca = torch.tensor(PCA(n_components=2).fit_transform(mnist_images_tensor.cpu().numpy()))
@@ -63,7 +65,7 @@ for i in range(4):
     for j in range(4):
         K_in = kernels_in[i]
         output_kernel_function = kernels_out_functions[j]
-        param = kernels_params[j]
+        param = kernels_out_params[j]
         
         Y_opt_torch, RV_final_torch = rv_descent_torch(K_in, output_kernel_function, 
                                                        param=param, Y_0=Y_pca,

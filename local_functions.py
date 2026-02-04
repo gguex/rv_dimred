@@ -60,7 +60,7 @@ def compute_t_kernel(coords, df=3, weights=None):
 
 # Make the algorithm of gradient descent
 def rv_descent(K_obj, weights, dim=2, lr=0.1, 
-               conv_threshold = 1e-8, 
+               conv_threshold = 1e-5, 
                n_iter_max=50000):
     
     n = K_obj.shape[0]
@@ -151,7 +151,7 @@ def compute_rv(K_in, K_out):
     return RV
 
 def rv_descent_torch(K_in, output_kernel_function, param, Y_0=None, weights=None, dim=2, lr=0.1, 
-                     conv_threshold = 1e-8, 
+                     conv_threshold = 1e-5, 
                      n_iter_max=50000, device='cpu'):
     
     n = K_in.shape[0]

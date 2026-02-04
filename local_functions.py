@@ -114,9 +114,72 @@ def compute_polynomial_kernel_torch(coords, param=2, weights=None, device='cpu')
     G = (param * coords @ coords.T)**3
     K_mat = Q_mat @ G @ Q_mat.T
     return K_mat
-    
 
-def compute_t_kernel_torch(coords, param=3, weights=None, device='cpu'):
+def compute_rbf_kernel_torch(coords, param=1, weights=None, device='cpu'):
+    n = coords.shape[0]
+    param = torch.tensor(param, device=device, dtype=torch.float32)
+    if weights is None:
+        weights = torch.ones(n, device=device) / n
+    H_mat = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
+    Q_mat = torch.diag(torch.sqrt(weights)) @ H_mat
+    
+    pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
+                     torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
+    if param.ndim == 0:
+        K_gauss = torch.exp(-param * pairwise_dists)
+    else:
+        K_gauss = torch.exp(-param[:, None] * pairwise_dists)
+        # Symmetrize the kernel
+        K_gauss = (K_gauss + K_gauss.T) / 2
+    K_mat = Q_mat @ K_gauss @ Q_mat.T
+    return K_mat    
+
+def compute_gaussP_kernel_torch(coords, param=1, power=0.5, weights=None, 
+                                device='cpu'):
+    
+    n = coords.shape[0]
+    param = torch.tensor(param, device=device, dtype=torch.float32)
+    
+    if weights is None:
+        weights = torch.ones(n, device=device) / n
+        
+    H_mat = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
+    Q_mat = torch.diag(torch.sqrt(weights)) @ H_mat
+    
+    pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
+                     torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
+                     
+    if param.ndim == 0:
+        K_gauss = torch.exp(-param * pairwise_dists)
+    else:
+        K_gauss = torch.exp(-param[:, None] * pairwise_dists)
+    
+    K_gauss.fill_diagonal_(0)
+    sums_gauss = torch.sum(K_gauss, axis=1)
+    K_P = K_gauss / (sums_gauss[:, np.newaxis] + 1e-15)
+    K_P = (K_P + K_P.T) / 2
+    K_P = K_P**power
+    
+    K_mat = Q_mat @ K_P @ Q_mat.T
+    
+    return K_mat    
+
+def compute_t_kernel_torch(coords, param=1, weights=None, device='cpu'):
+    n = coords.shape[0]
+    if weights is None:
+        weights = torch.ones(n, device=device) / n
+    H_mat = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
+    Q_mat = torch.diag(torch.sqrt(weights)) @ H_mat
+    
+    pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
+                     torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
+    K_t = (1 + pairwise_dists / param) ** (-1)
+    K_t.fill_diagonal_(0)
+
+    K_mat = Q_mat @ K_t @ Q_mat.T
+    return K_mat
+
+def compute_tP_kernel_torch(coords, param=1, weights=None, device='cpu'):
     n = coords.shape[0]
     if weights is None:
         weights = torch.ones(n, device=device) / n
@@ -126,21 +189,14 @@ def compute_t_kernel_torch(coords, param=3, weights=None, device='cpu'):
     pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
                      torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
     K_t = (1 + pairwise_dists / param) ** (-(param + 1) / 2)
-    K_mat = Q_mat @ K_t @ Q_mat.T
-    return K_mat
-
-def compute_rbf_kernel_torch(coords, param=1, weights=None, device='cpu'):
-    n = coords.shape[0]
-    if weights is None:
-        weights = torch.ones(n, device=device) / n
-    H_mat = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
-    Q_mat = torch.diag(torch.sqrt(weights)) @ H_mat
     
-    pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
-                     torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
-    K_gauss = torch.exp(-param * pairwise_dists)
-    K_mat = Q_mat @ K_gauss @ Q_mat.T
-    return K_mat    
+    K_t[np.arange(K_t.shape[0]), np.arange(K_t.shape[0])] = 0
+    sums_t = torch.sum(K_t, axis=1)  - torch.diag(K_t)
+    K_P = K_t / (sums_t[:, np.newaxis] + 1e-15)
+    K_P = (K_P + K_P.T) / 2
+    
+    K_mat = Q_mat @ K_P @ Q_mat.T
+    return K_mat
 
 def compute_rv(K_in, K_out):
     Norm_in = torch.sqrt(torch.trace(K_in @ K_in))
@@ -183,3 +239,57 @@ def rv_descent_torch(K_in, output_kernel_function, param, Y_0=None, weights=None
         
         RV_old = RV.clone().detach()
     return Y.detach(), RV.detach()
+
+
+#-------------- Binary search for optimal parameter with RBF
+
+def binary_search_rbf_params(coord, target_perplexity, tolerance=1e-5, 
+                             max_iter=1000):
+    
+    # Get the number of points
+    n = coord.shape[0]
+    
+    # Compute the squared distances matrix
+    sq_dist = np.sum(coord**2, axis=1).reshape(-1, 1) + \
+               np.sum(coord**2, axis=1) - 2 * coord @ coord.T
+    
+    # Target entropy
+    target_entropy = np.log2(target_perplexity)
+    
+    # Initialize bounds
+    betas_min = np.zeros(n)
+    betas_max = np.ones(n) * np.inf
+    betas = np.ones(n)
+    
+    for i in range(max_iter):
+        
+        # Compute the Gaussian kernel and entropy on every row 
+        probs = np.exp(-betas[:, np.newaxis] * sq_dist)
+        np.fill_diagonal(probs, 0)
+        sum_probs = np.sum(probs, axis=1) - np.diag(probs)
+        P = probs / (sum_probs[:, np.newaxis] + 1e-15)
+        entropies = -np.sum(P * np.log2(P + 1e-10), axis=1)
+        
+        # Check the difference between computed and target entropy
+        entropies_diff = entropies - target_entropy
+        
+        # Check convergence
+        if np.all(np.abs(entropies_diff) < tolerance):
+            break
+        
+        # Update beta for each point
+        for j in range(n):
+            if entropies_diff[j] > 0:
+                betas_min[j] = betas[j]
+                if betas_max[j] == np.inf:
+                    betas[j] *= 2
+                else:
+                    betas[j] = (betas[j] + betas_max[j]) / 2
+            else:
+                betas_max[j] = betas[j]
+                if betas_min[j] == 0:
+                    betas[j] /= 2
+                else:
+                    betas[j] = (betas[j] + betas_min[j]) / 2
+                
+    return betas, 2**(entropies)

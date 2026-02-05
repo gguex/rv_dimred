@@ -6,9 +6,6 @@ from local_functions import *
 from sklearn.decomposition import PCA
 from sklearn.manifold import Isomap
 
-import scipy.sparse.csgraph as csgraph
-from sklearn.neighbors import kneighbors_graph
-
 # Is cuda available?
 if torch.cuda.is_available():
     device = "cuda"
@@ -39,24 +36,6 @@ mnist_images_tensor = torch.tensor(mnist_images,
 weights = np.ones(mnist_images.shape[0])
 weights = weights / np.sum(weights)  # Normalize to sum to 1
 weights = torch.tensor(weights, device=device, dtype=torch.float32)
-
-# Create the isomap kernel (CPU only, i.e. input only)
-def compute_geodesic_kernel(coords, param=10, weights=None):
-    n = coords.shape[0]
-    if weights is None:
-        weights = np.ones(n) / n
-    H_mat = np.eye(n) - np.outer(np.ones(n), weights)
-    Q_mat = np.diag(np.sqrt(weights)) @ H_mat
-    
-    adjacency = kneighbors_graph(coords,
-                                 n_neighbors=param,
-                                 mode='distance', include_self=False)
-    sp_dists = csgraph.shortest_path(adjacency, method='auto', 
-                                     directed=False)
-    pairwise_dists = ((sp_dists + sp_dists.T) / 2)**2
-    
-    K_mat = -0.5 * Q_mat @ pairwise_dists @ Q_mat.T
-    return K_mat 
 
 # Make all the input kernels
 n_neighbors = 10
@@ -90,10 +69,10 @@ plt.savefig("results/mnist/mnist_isomap_rv.png", dpi=300)
 plt.show()  
 
 # Plot the TSNE with same perplexity for comparison
-tsne = Isomap(n_components=2, n_neighbors=n_neighbors)
-Y_tsne = tsne.fit_transform(mnist_images)
+iso = Isomap(n_components=2, n_neighbors=n_neighbors)
+Y_iso = iso.fit_transform(mnist_images)
 plt.figure(figsize=(8,6))
-scatter = plt.scatter(Y_tsne[:,0], Y_tsne[:,1], c=mnist_labels, cmap='tab10', 
+scatter = plt.scatter(Y_iso[:,0], Y_iso[:,1], c=mnist_labels, cmap='tab10', 
                       s=10)
 plt.title(f"MNIST ISOMAP with n_neighbors={n_neighbors}")
 plt.xlabel("Dimension 1")

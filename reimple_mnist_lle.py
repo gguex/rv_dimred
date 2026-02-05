@@ -3,7 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import torch
 from local_functions import *
-from sklearn.decomposition import PCA, KernelPCA
+from sklearn.decomposition import PCA
+from sklearn.manifold import LocallyLinearEmbedding
 
 # Is cuda available?
 if torch.cuda.is_available():
@@ -35,10 +36,12 @@ mnist_images_tensor = torch.tensor(mnist_images,
 weights = np.ones(mnist_images.shape[0])
 weights = weights / np.sum(weights)  # Normalize to sum to 1
 weights = torch.tensor(weights, device=device, dtype=torch.float32)
-        
+       
 # Make the input kernels
-K_in = compute_polynomial_kernel_torch(mnist_images_tensor, 
-                                       weights=weights, device=device)
+n_neighbors = 10
+K_in = compute_lle_kernel_torch(mnist_images_tensor,
+                                param=n_neighbors, 
+                                weights=weights, device=device)
 
 # PCA solution for reference
 Y_pca = torch.tensor(PCA(n_components=2).fit_transform(mnist_images), 
@@ -57,24 +60,24 @@ Y_opt = Y_opt_torch.cpu().numpy()
 plt.figure(figsize=(8,6))
 scatter = plt.scatter(Y_opt[:,0], Y_opt[:,1], c=mnist_labels, cmap='tab10', 
                       s=10)
-plt.title(f"MNIST kPCA-RV with Polynomial Kernel")
+plt.title(f"MNIST LLE-RV with n_neighbour={n_neighbors}")
 plt.xlabel("Dimension 1")
 plt.ylabel("Dimension 2")
 plt.colorbar(scatter, ticks=range(10), label='Digit Label')
 plt.grid(True)
-plt.savefig("results/mnist/mnist_kpca_rv.png", dpi=300)
+plt.savefig("results/mnist/mnist_lle_rv.png", dpi=300)
 plt.show()  
 
 # Plot the TSNE with same perplexity for comparison
-pca = KernelPCA(n_components=2, kernel='poly', random_state=42)
-Y_pca = pca.fit_transform(mnist_images)
+lle = LocallyLinearEmbedding(n_components=2, n_neighbors=n_neighbors)
+Y_lle = lle.fit_transform(mnist_images)
 plt.figure(figsize=(8,6))
-scatter = plt.scatter(Y_pca[:,0], Y_pca[:,1], c=mnist_labels, cmap='tab10', 
+scatter = plt.scatter(Y_lle[:,0], Y_lle[:,1], c=mnist_labels, cmap='tab10', 
                       s=10)
-plt.title(f"MNIST kPCA with Polynomial Kernel")
+plt.title(f"MNIST LLE with n_neighbour={n_neighbors}")
 plt.xlabel("Dimension 1")
 plt.ylabel("Dimension 2")
 plt.colorbar(scatter, ticks=range(10), label='Digit Label')
 plt.grid(True)
-plt.savefig("results/mnist/mnist_kpca.png", dpi=300)
+plt.savefig("results/mnist/mnist_lle.png", dpi=300)
 plt.show() 

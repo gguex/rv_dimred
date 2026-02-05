@@ -129,12 +129,13 @@ def compute_rbf_kernel_torch(coords, param=1, weights=None, device='cpu'):
     
     pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
                      torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
+                     
     if param.ndim == 0:
         G_gauss = torch.exp(-param * pairwise_dists)
     else:
         G_gauss = torch.exp(-param[:, None] * pairwise_dists)
-        # Symmetrize the kernel
         G_gauss = (G_gauss + G_gauss.T) / 2
+        
     K_mat = Q_mat @ G_gauss @ Q_mat.T
     return K_mat    
 
@@ -218,6 +219,56 @@ def compute_tP_kernel_torch(coords, param=1, weights=None, device='cpu'):
     G_P = (G_P + G_P.T) / 2
     
     K_mat = Q_mat @ G_P @ Q_mat.T
+    return K_mat
+
+def compute_lle_kernel_torch(coords, param=5, reg=0.001, weights=None, device='cpu'):
+    n = coords.shape[0]
+    if weights is None:
+        weights = torch.ones(n, device=device) / n
+    H_mat = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
+    Q_mat = torch.diag(torch.sqrt(weights)) @ H_mat
+    
+    pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
+        torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
+    
+    # Indices of the k nearest neighbors for each point
+    _, indices = torch.topk(pairwise_dists, k=param+1, largest=False)
+    neighbor_indices = indices[:, 1:] # (n, k)
+    
+    W = torch.zeros((n, n), device=device)
+    for i in range(n):
+        
+        coord_neighbors = coords[neighbor_indices[i]] 
+        coord_i = coords[i].unsqueeze(0)              
+        Z = coord_i - coord_neighbors                   
+        
+        # Local covariance
+        C = Z @ Z.T                            
+        
+        # Regularization for numerical stability
+        trace = torch.trace(C)
+        if trace > 0:
+            R = reg * trace
+        else:
+            R = reg
+        C.view(-1)[::param+1] += R
+        
+        ones = torch.ones(param, device=device)
+        try:
+            w = torch.linalg.solve(C, ones)
+        except:
+            w = torch.linalg.pinv(C) @ ones
+            
+        w = w / torch.sum(w)
+        W[i, neighbor_indices[i]] = w
+        
+    I = torch.eye(n, device=device)
+    M = (I - W).T @ (I - W)
+    
+    G_lle = torch.linalg.pinv(M)
+    G_lle = (G_lle + G_lle.T) / 2  
+    K_mat = Q_mat @ G_lle @ Q_mat.T
+    
     return K_mat
 
 def compute_rv(K_in, K_out):

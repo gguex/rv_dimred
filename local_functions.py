@@ -25,8 +25,8 @@ def compute_polynomial_kernel(coords, gamma=2, weights=None):
     H_mat = np.eye(n) - np.outer(np.ones(n), weights)
     Q_mat = np.diag(np.sqrt(weights)) @ H_mat
     
-    G = (gamma * coords @ coords.T)**3
-    K_mat = Q_mat @ G @ Q_mat.T
+    G_mat = (gamma * coords @ coords.T)**3
+    K_mat = Q_mat @ G_mat @ Q_mat.T
     return K_mat
 
 # Compute the Gaussian kernel from coordinates
@@ -39,8 +39,8 @@ def compute_rbf_kernel(coords, gamma=1, weights=None):
     
     pairwise_dists = np.sum(coords**2, axis=1).reshape(-1, 1) + \
                      np.sum(coords**2, axis=1) - 2 * coords @ coords.T
-    K_gauss = np.exp(-gamma * pairwise_dists)
-    K_mat = Q_mat @ K_gauss @ Q_mat.T
+    G_gauss = np.exp(-gamma * pairwise_dists)
+    K_mat = Q_mat @ G_gauss @ Q_mat.T
     return K_mat
 
 # Compute t-kernel from coordinates
@@ -53,8 +53,8 @@ def compute_t_kernel(coords, df=3, weights=None):
     
     pairwise_dists = np.sum(coords**2, axis=1).reshape(-1, 1) + \
                      np.sum(coords**2, axis=1) - 2 * coords @ coords.T
-    K_t = (1 + pairwise_dists / df) ** (-(df + 1) / 2)
-    K_mat = Q_mat @ K_t @ Q_mat.T
+    G_t = (1 + pairwise_dists / df) ** (-(df + 1) / 2)
+    K_mat = Q_mat @ G_t @ Q_mat.T
     return K_mat
 
 # Make the algorithm of gradient descent
@@ -105,15 +105,18 @@ def compute_linear_kernel_torch(coords, param=None, weights=None, device='cpu'):
     K_mat = Q_mat @ coords @ coords.T @ Q_mat.T
     return K_mat
 
-def compute_polynomial_kernel_torch(coords, param=2, weights=None, device='cpu'):
+def compute_polynomial_kernel_torch(coords, param=None, degree=3, coef0=1, weights=None, device='cpu'):
     n = coords.shape[0]
+    p = coords.shape[1]
     if weights is None:
         weights = torch.ones(n, device=device) / n
+    if param is None:
+        param = 1 / p
     H_mat = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
     Q_mat = torch.diag(torch.sqrt(weights)) @ H_mat
     
-    G = (param * coords @ coords.T)**3
-    K_mat = Q_mat @ G @ Q_mat.T
+    G_mat = (param * coords @ coords.T + coef0)**degree
+    K_mat = Q_mat @ G_mat @ Q_mat.T
     return K_mat
 
 def compute_rbf_kernel_torch(coords, param=1, weights=None, device='cpu'):
@@ -127,12 +130,12 @@ def compute_rbf_kernel_torch(coords, param=1, weights=None, device='cpu'):
     pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
                      torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
     if param.ndim == 0:
-        K_gauss = torch.exp(-param * pairwise_dists)
+        G_gauss = torch.exp(-param * pairwise_dists)
     else:
-        K_gauss = torch.exp(-param[:, None] * pairwise_dists)
+        G_gauss = torch.exp(-param[:, None] * pairwise_dists)
         # Symmetrize the kernel
-        K_gauss = (K_gauss + K_gauss.T) / 2
-    K_mat = Q_mat @ K_gauss @ Q_mat.T
+        G_gauss = (G_gauss + G_gauss.T) / 2
+    K_mat = Q_mat @ G_gauss @ Q_mat.T
     return K_mat    
 
 # Create the isomap kernel (CPU only, i.e. input only)
@@ -169,17 +172,17 @@ def compute_gaussP_kernel_torch(coords, param=1, power=0.5, weights=None,
                      torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
                      
     if param.ndim == 0:
-        K_gauss = torch.exp(-param * pairwise_dists)
+        G_gauss = torch.exp(-param * pairwise_dists)
     else:
-        K_gauss = torch.exp(-param[:, None] * pairwise_dists)
+        G_gauss = torch.exp(-param[:, None] * pairwise_dists)
     
-    K_gauss.fill_diagonal_(0)
-    sums_gauss = torch.sum(K_gauss, axis=1)
-    K_P = K_gauss / (sums_gauss[:, np.newaxis] + 1e-15)
-    K_P = (K_P + K_P.T) / 2
-    K_P = K_P**power
+    G_gauss.fill_diagonal_(0)
+    sums_gauss = torch.sum(G_gauss, axis=1)
+    G_P = G_gauss / (sums_gauss[:, np.newaxis] + 1e-15)
+    G_P = (G_P + G_P.T) / 2
+    G_P = G_P**power
     
-    K_mat = Q_mat @ K_P @ Q_mat.T
+    K_mat = Q_mat @ G_P @ Q_mat.T
     
     return K_mat    
 
@@ -192,10 +195,10 @@ def compute_t_kernel_torch(coords, param=1, weights=None, device='cpu'):
     
     pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
                      torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
-    K_t = (1 + pairwise_dists / param) ** (-1)
-    K_t.fill_diagonal_(0)
+    G_t = (1 + pairwise_dists / param) ** (-1)
+    G_t.fill_diagonal_(0)
 
-    K_mat = Q_mat @ K_t @ Q_mat.T
+    K_mat = Q_mat @ G_t @ Q_mat.T
     return K_mat
 
 def compute_tP_kernel_torch(coords, param=1, weights=None, device='cpu'):
@@ -207,14 +210,14 @@ def compute_tP_kernel_torch(coords, param=1, weights=None, device='cpu'):
     
     pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
                      torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
-    K_t = (1 + pairwise_dists / param) ** (-(param + 1) / 2)
+    G_t = (1 + pairwise_dists / param) ** (-(param + 1) / 2)
     
-    K_t[np.arange(K_t.shape[0]), np.arange(K_t.shape[0])] = 0
-    sums_t = torch.sum(K_t, axis=1)  - torch.diag(K_t)
-    K_P = K_t / (sums_t[:, np.newaxis] + 1e-15)
-    K_P = (K_P + K_P.T) / 2
+    G_t[np.arange(G_t.shape[0]), np.arange(G_t.shape[0])] = 0
+    sums_t = torch.sum(G_t, axis=1)
+    G_P = G_t / (sums_t[:, np.newaxis] + 1e-15)
+    G_P = (G_P + G_P.T) / 2
     
-    K_mat = Q_mat @ K_P @ Q_mat.T
+    K_mat = Q_mat @ G_P @ Q_mat.T
     return K_mat
 
 def compute_rv(K_in, K_out):

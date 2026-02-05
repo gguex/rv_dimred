@@ -266,6 +266,19 @@ def compute_cosine_kernel_torch(coords, param=None, weights=None, device='cpu'):
     K_mat = Q_mat @ coords_normalized @ coords_normalized.T @ Q_mat.T
     return K_mat
 
+def compute_class_kernel_torch(coords, Z, weights=None, device='cpu'):
+    n = coords.shape[0]
+    if weights is None:
+        weights = torch.ones(n, device=device) / n
+    H_mat = torch.eye(n, device=device) \
+        - torch.outer(torch.ones(n, device=device), weights)
+    Pi_mat = torch.diag(torch.sqrt(weights))
+    
+    P_Z = Z @ torch.linalg.pinv(Z.T @ Pi_mat @ Z) @ Z.T @ Pi_mat
+    
+    K_mat = P_Z @ H_mat @ coords @ coords.T @ H_mat.T @ P_Z.T
+    return K_mat
+
 def compute_rv(K_in, K_out):
     Norm_in = torch.sqrt(torch.trace(K_in @ K_in))
     Norm_out = torch.sqrt(torch.trace(K_out @ K_out))

@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import torch
 from local_functions import *
 from sklearn.decomposition import PCA
+from sklearn.manifold import Isomap
 
 # Check GPU availability
 if torch.cuda.is_available():
@@ -45,8 +46,10 @@ weights = torch.tensor(weights, device=device, dtype=torch.float32)
 # --------------------------------------------------------------
   
 # Make the input kernels
-K_geom = compute_linear_kernel_torch(mnist_images_tensor, 
-                                   weights=weights, device=device)
+n_neighbors = 10
+K_geom = compute_geodesic_kernel(mnist_images, param=n_neighbors, 
+                                 weights=weights.to('cpu').numpy())
+K_geom = torch.tensor(K_geom, dtype=torch.float32).to(device)
 norm_geom = torch.sqrt(torch.trace(K_geom @ K_geom))
  
 # Make the class labels kernel
@@ -97,40 +100,40 @@ Y_mix_c = Y_mix.cpu().numpy()
 RV_mix_c = RV_final_mix.cpu().numpy().item()
 
 # Baseline PCA plot
-pca = PCA(n_components=2, random_state=42)
-Y_pca = pca.fit_transform(mnist_images)
+iso = Isomap(n_components=2, n_neighbors=n_neighbors)
+Y_iso = iso.fit_transform(mnist_images)
 plt.figure(figsize=(8,6))
-scatter = plt.scatter(Y_pca[:,0], Y_pca[:,1], c=mnist_labels, cmap='tab10', 
+scatter = plt.scatter(Y_iso[:,0], Y_iso[:,1], c=mnist_labels, cmap='tab10', 
                       s=10)
-plt.title(f"MNIST PCA")
+plt.title(f"MNIST Isomap")
 plt.xlabel("Dimension 1")
 plt.ylabel("Dimension 2")
 plt.grid(True)
-plt.savefig("results/mnist/comp_pca.png", dpi=300)
+plt.savefig("results/mnist/comp_isomap.png", dpi=300)
 plt.show() 
 
 # Plot RV
 plt.figure(figsize=(8,6))
 scatter = plt.scatter(Y_geom_c[:,0], Y_geom_c[:,1], c=mnist_labels, cmap='tab10', 
                       s=10)
-plt.title(f"MNIST RV with Input: Linear,  Output: Linear\n"
+plt.title(f"MNIST RV with Input: Geodesic,  Output: Linear\n"
           f"RV: {RV_geom_c:.6f}")
 plt.xlabel("Dimension 1")
 plt.ylabel("Dimension 2")
 plt.grid(True)
-plt.savefig("results/mnist/comp_pca_rv.png", dpi=300)
+plt.savefig("results/mnist/comp_isomap_rv.png", dpi=300)
 plt.show()  
 
 # Plot RV with class kernel
 plt.figure(figsize=(8,6))
 scatter = plt.scatter(Y_mix_c[:,0], Y_mix_c[:,1], c=mnist_labels, cmap='tab10', 
                       s=10)
-plt.title(f"MNIST RV with Input: Linear + Class,  Output: Linear\n"
+plt.title(f"MNIST RV with Input: Geodesic + Class,  Output: Linear\n"
           f"RV: {RV_mix_c:.6f}")
 plt.xlabel("Dimension 1")
 plt.ylabel("Dimension 2")
 handles, labels = scatter.legend_elements(prop="colors", alpha=0.6)
 plt.legend(handles, labels, title="Digit Label", loc="best")
 plt.grid(True)
-plt.savefig("results/mnist/comp_pca_rv_class.png", dpi=300)
+plt.savefig("results/mnist/comp_isomap_rv_class.png", dpi=300)
 plt.show()  

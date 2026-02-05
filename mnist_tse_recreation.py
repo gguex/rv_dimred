@@ -7,7 +7,12 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
 # Is cuda available?
-device = "cuda" if torch.cuda.is_available() else "cpu"
+if torch.cuda.is_available():
+    device = "cuda"
+elif torch.mps.is_available():
+    device = "mps"
+else:
+    device = "cpu"
 print(device)
 
 # Load the data
@@ -24,7 +29,8 @@ mnist_data = np.vstack(mnist_data_list)
 # Format data
 mnist_images = mnist_data[:, 1:] / 255.0  # Normalize
 mnist_labels = mnist_data[:, 0]
-mnist_images_tensor = torch.tensor(mnist_images).to(device).to(torch.float32)
+mnist_images_tensor = torch.tensor(mnist_images, 
+                                   dtype=torch.float32).to(device)
 
 # weights
 weights = np.ones(mnist_images.shape[0])
@@ -55,7 +61,8 @@ Y_opt_torch, RV_final_torch = rv_descent_torch(K_in, compute_t_kernel_torch,
 # Plot the results
 Y_opt = Y_opt_torch.cpu().numpy()
 plt.figure(figsize=(8,6))
-scatter = plt.scatter(Y_opt[:,0], Y_opt[:,1], c=mnist_labels, cmap='tab10', s=10)
+scatter = plt.scatter(Y_opt[:,0], Y_opt[:,1], c=mnist_labels, cmap='tab10', 
+                      s=10)
 plt.title(f"MNIST RV with Perplexity={perplexity}")
 plt.xlabel("Dimension 1")
 plt.ylabel("Dimension 2")
@@ -68,7 +75,8 @@ plt.show()
 tsne = TSNE(n_components=2, perplexity=perplexity, init='pca', random_state=42)
 Y_tsne = tsne.fit_transform(mnist_images)
 plt.figure(figsize=(8,6))
-scatter = plt.scatter(Y_tsne[:,0], Y_tsne[:,1], c=mnist_labels, cmap='tab10', s=10)
+scatter = plt.scatter(Y_tsne[:,0], Y_tsne[:,1], c=mnist_labels, cmap='tab10', 
+                      s=10)
 plt.title(f"MNIST t-SNE with Perplexity={perplexity}")
 plt.xlabel("Dimension 1")
 plt.ylabel("Dimension 2")

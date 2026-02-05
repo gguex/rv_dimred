@@ -1,12 +1,9 @@
 import numpy as np
 import torch
 
-# Define a lattice of points in 2D
-def create_lattice(n_side, mesh_size=1):
-    x = np.tile(np.linspace(1, mesh_size*n_side, n_side), n_side)
-    y = np.repeat(np.linspace(1, mesh_size*n_side, n_side), n_side)
-    
-    return np.concatenate([x.reshape(-1, 1), y.reshape(-1, 1)], axis=1)
+#------------------------------------
+#-------------- CPU VERSIONS
+#------------------------------------
 
 # Compute the kernel from coordinates
 def compute_linear_kernel(coords, weights=None):
@@ -93,7 +90,9 @@ def rv_descent(K_obj, weights, dim=2, lr=0.1,
     
     return Y, RV
 
-#-------------- TORCH VERSION
+#------------------------------------
+#-------------- TORCH VERSIONS
+#------------------------------------
 
 def compute_linear_kernel_torch(coords, param=None, weights=None, device='cpu'):
     n = coords.shape[0]
@@ -241,8 +240,19 @@ def rv_descent_torch(K_in, output_kernel_function, param, Y_0=None, weights=None
     return Y.detach(), RV.detach()
 
 
-#-------------- Binary search for optimal parameter with RBF
+#------------------------------------
+#-------------- UTILITY FUNCTIONS
+#------------------------------------
 
+# Define a lattice of points in 2D
+def create_lattice(n_side, mesh_size=1):
+    x = np.tile(np.linspace(1, mesh_size*n_side, n_side), n_side)
+    y = np.repeat(np.linspace(1, mesh_size*n_side, n_side), n_side)
+    
+    return np.concatenate([x.reshape(-1, 1), y.reshape(-1, 1)], axis=1)
+
+# Binary search for optimal parameter with gaussian kernel given 
+# a target perplexity
 def binary_search_rbf_params(coord, target_perplexity, tolerance=1e-5, 
                              max_iter=1000):
     

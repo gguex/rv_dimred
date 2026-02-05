@@ -42,7 +42,7 @@ perplexity = 20
 params, perp = binary_search_rbf_params(mnist_images, 
                                         target_perplexity=perplexity)
         
-# Make all the input kernels
+# Make the input kernels
 K_in = compute_gaussP_kernel_torch(mnist_images_tensor, param=params, 
                                    weights=weights, device=device)
 
@@ -63,12 +63,12 @@ Y_opt = Y_opt_torch.cpu().numpy()
 plt.figure(figsize=(8,6))
 scatter = plt.scatter(Y_opt[:,0], Y_opt[:,1], c=mnist_labels, cmap='tab10', 
                       s=10)
-plt.title(f"MNIST RV with Perplexity={perplexity}")
+plt.title(f"MNIST tSNE-RV with Perplexity={perplexity}")
 plt.xlabel("Dimension 1")
 plt.ylabel("Dimension 2")
 plt.colorbar(scatter, ticks=range(10), label='Digit Label')
 plt.grid(True)
-plt.savefig("results/mnist/mnist_rv_solution.png", dpi=300)
+plt.savefig("results/mnist/mnist_tsne_rv.png", dpi=300)
 plt.show()  
 
 # Plot the TSNE with same perplexity for comparison
@@ -77,10 +77,10 @@ Y_tsne = tsne.fit_transform(mnist_images)
 plt.figure(figsize=(8,6))
 scatter = plt.scatter(Y_tsne[:,0], Y_tsne[:,1], c=mnist_labels, cmap='tab10', 
                       s=10)
-plt.title(f"MNIST t-SNE with Perplexity={perplexity}")
+plt.title(f"MNIST tSNE with Perplexity={perplexity}")
 plt.xlabel("Dimension 1")
 plt.ylabel("Dimension 2")
 plt.colorbar(scatter, ticks=range(10), label='Digit Label')
 plt.grid(True)
-plt.savefig("results/mnist/mnist_tsne_solution.png", dpi=300)
+plt.savefig("results/mnist/mnist_tsne.png", dpi=300)
 plt.show() 

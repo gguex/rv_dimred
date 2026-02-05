@@ -6,7 +6,7 @@ from local_functions import *
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
-# Is cuda available?
+# Check GPU availability
 if torch.cuda.is_available():
     device = "cuda"
 elif torch.mps.is_available():
@@ -14,6 +14,10 @@ elif torch.mps.is_available():
 else:
     device = "cpu"
 print(device)
+
+# --------------------------------------------------------------
+# Data Loading and Preprocessing
+# --------------------------------------------------------------
 
 # Load the data
 mnist_data = pd.read_csv("data/mnist_test.csv").to_numpy()
@@ -37,6 +41,10 @@ weights = np.ones(mnist_images.shape[0])
 weights = weights / np.sum(weights)  # Normalize to sum to 1
 weights = torch.tensor(weights, device=device, dtype=torch.float32)
 
+# --------------------------------------------------------------
+# Construct the input kernel
+# --------------------------------------------------------------
+
 # Parameters for t-SNE
 perplexity = 20
 params, perp = binary_search_rbf_params(mnist_images, 
@@ -45,6 +53,10 @@ params, perp = binary_search_rbf_params(mnist_images,
 # Make the input kernels
 K_in = compute_gaussP_kernel_torch(mnist_images_tensor, param=params, 
                                    weights=weights, device=device)
+
+# --------------------------------------------------------------
+# Compute the solution via RV descent
+# --------------------------------------------------------------
 
 # PCA solution for reference
 Y_pca = torch.tensor(PCA(n_components=2).fit_transform(mnist_images), 
@@ -58,8 +70,12 @@ Y_opt_torch, RV_final_torch = rv_descent_torch(K_in, compute_t_kernel_torch,
                                                device=device,
                                                conv_threshold=1e-8)
 
+# --------------------------------------------------------------
 # Plot the results
+# --------------------------------------------------------------
+
 Y_opt = Y_opt_torch.cpu().numpy()
+
 plt.figure(figsize=(8,6))
 scatter = plt.scatter(Y_opt[:,0], Y_opt[:,1], c=mnist_labels, cmap='tab10', 
                       s=10)

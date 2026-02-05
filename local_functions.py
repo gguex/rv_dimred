@@ -1,5 +1,7 @@
 import numpy as np
 import torch
+import scipy.sparse.csgraph as csgraph
+from sklearn.neighbors import kneighbors_graph
 
 #------------------------------------
 #-------------- CPU VERSIONS
@@ -132,6 +134,24 @@ def compute_rbf_kernel_torch(coords, param=1, weights=None, device='cpu'):
         K_gauss = (K_gauss + K_gauss.T) / 2
     K_mat = Q_mat @ K_gauss @ Q_mat.T
     return K_mat    
+
+# Create the isomap kernel (CPU only, i.e. input only)
+def compute_geodesic_kernel(coords, param=10, weights=None):
+    n = coords.shape[0]
+    if weights is None:
+        weights = np.ones(n) / n
+    H_mat = np.eye(n) - np.outer(np.ones(n), weights)
+    Q_mat = np.diag(np.sqrt(weights)) @ H_mat
+    
+    adjacency = kneighbors_graph(coords,
+                                 n_neighbors=param,
+                                 mode='distance', include_self=False)
+    sp_dists = csgraph.shortest_path(adjacency, method='auto', 
+                                     directed=False)
+    pairwise_dists = ((sp_dists + sp_dists.T) / 2)**2
+    
+    K_mat = -0.5 * Q_mat @ pairwise_dists @ Q_mat.T
+    return K_mat 
 
 def compute_gaussP_kernel_torch(coords, param=1, power=0.5, weights=None, 
                                 device='cpu'):

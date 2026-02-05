@@ -23,7 +23,7 @@ print(device)
 mnist_data = pd.read_csv("data/mnist_test.csv").to_numpy()
 
 # Subset data
-n_per_digit = 100
+n_per_digit = 200
 mnist_data_list = []
 for i in range(10):
     mnist_data_i = mnist_data[mnist_data[:,0] == i][:n_per_digit, :]
@@ -46,7 +46,7 @@ weights = torch.tensor(weights, device=device, dtype=torch.float32)
 # --------------------------------------------------------------
 
 # Parameters for t-SNE
-perplexity = 20
+perplexity = 40
 params, perp = binary_search_rbf_params(mnist_images, 
                                         target_perplexity=perplexity)
         

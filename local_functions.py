@@ -121,7 +121,7 @@ def compute_polynomial_kernel_torch(coords, param=None, degree=3, coef0=1, weigh
 
 def compute_rbf_kernel_torch(coords, param=1, weights=None, device='cpu'):
     n = coords.shape[0]
-    param = torch.tensor(param, device=device, dtype=torch.float32)
+
     if weights is None:
         weights = torch.ones(n, device=device) / n
     H_mat = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
@@ -129,10 +129,11 @@ def compute_rbf_kernel_torch(coords, param=1, weights=None, device='cpu'):
     
     pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
                      torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
-                     
-    if param.ndim == 0:
+    
+    if np.array(param).ndim == 0:
         G_gauss = torch.exp(-param * pairwise_dists)
     else:
+        param = torch.tensor(param, device=device, dtype=torch.float32)
         G_gauss = torch.exp(-param[:, None] * pairwise_dists)
         G_gauss = (G_gauss + G_gauss.T) / 2
         
@@ -200,25 +201,6 @@ def compute_t_kernel_torch(coords, param=1, weights=None, device='cpu'):
     G_t.fill_diagonal_(0)
 
     K_mat = Q_mat @ G_t @ Q_mat.T
-    return K_mat
-
-def compute_tP_kernel_torch(coords, param=1, weights=None, device='cpu'):
-    n = coords.shape[0]
-    if weights is None:
-        weights = torch.ones(n, device=device) / n
-    H_mat = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
-    Q_mat = torch.diag(torch.sqrt(weights)) @ H_mat
-    
-    pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
-                     torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
-    G_t = (1 + pairwise_dists / param) ** (-(param + 1) / 2)
-    
-    G_t[np.arange(G_t.shape[0]), np.arange(G_t.shape[0])] = 0
-    sums_t = torch.sum(G_t, axis=1)
-    G_P = G_t / (sums_t[:, np.newaxis] + 1e-15)
-    G_P = (G_P + G_P.T) / 2
-    
-    K_mat = Q_mat @ G_P @ Q_mat.T
     return K_mat
 
 def compute_lle_kernel_torch(coords, param=5, reg=0.001, weights=None, device='cpu'):

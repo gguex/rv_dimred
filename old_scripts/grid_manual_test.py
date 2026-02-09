@@ -15,7 +15,7 @@ plt.show()
 
 weights = np.ones(my_grid.shape[0]) / my_grid.shape[0]
 K_obj = compute_rbf_kernel(my_grid, weights=weights)
-Y_opt, RV_final = rv_descent(K_obj, weights, dim=2, lr=0.01)
+Y_opt, RV_final = rv_ascent(K_obj, weights, dim=2, lr=0.01)
 
 # Plot the optimized points
 plt.scatter(Y_opt[:, 0], Y_opt[:, 1], c=np.linalg.norm(Y_opt, axis=1), 

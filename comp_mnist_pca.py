@@ -70,22 +70,22 @@ Y_pca = torch.tensor(PCA(n_components=2).fit_transform(mnist_images),
                      dtype=torch.float32)
 
 # The coordinates of geometry kernel
-Y_geom, RV_final_geom = rv_descent_torch(K_geom, 
-                                         compute_linear_kernel_torch, 
-                                         param=None,
-                                         weights=weights, 
-                                         Y_0=Y_pca.to(device),
-                                         device=device,
-                                         conv_threshold=1e-8)
+Y_geom, RV_final_geom = rv_ascent_torch(K_geom, 
+                                        compute_linear_kernel_torch, 
+                                        param=None,
+                                        weights=weights, 
+                                        Y_0=Y_pca.to(device),
+                                        device=device,
+                                        conv_threshold=1e-8)
 
 # The coordinates of mix kernel
-Y_mix, RV_final_mix = rv_descent_torch(K_mix,
-                                       compute_linear_kernel_torch,
-                                       param=None,
-                                       weights=weights,
-                                       Y_0=Y_pca.to(device),
-                                       device=device,
-                                       conv_threshold=1e-8)
+Y_mix, RV_final_mix = rv_ascent_torch(K_mix,
+                                      compute_linear_kernel_torch,
+                                      param=None,
+                                      weights=weights,
+                                      Y_0=Y_pca.to(device),
+                                      device=device,
+                                      conv_threshold=1e-8)
 
 # --------------------------------------------------------------
 # Plot the results

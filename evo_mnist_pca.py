@@ -62,7 +62,7 @@ norm_class = torch.sqrt(torch.trace(K_class @ K_class))
 # --------------------------------------------------------------
 
 # Mix the kernels 
-alpha_vec = [0, 0.33, 0.66, 1]
+alpha_vec = [0, 0.25, 0.5, 0.75]
 
 # PCA solution for reference
 Y_pca = torch.tensor(PCA(n_components=2).fit_transform(mnist_images), 
@@ -75,13 +75,13 @@ for alpha in alpha_vec:
     K_mix = (1 - alpha) * K_geom / norm_geom + alpha * K_class / norm_class
 
     # The coordinates of mix kernel
-    Y_mix, RV_mix = rv_descent_torch(K_mix,
-                                     compute_linear_kernel_torch,
-                                     param=None,
-                                     weights=weights,
-                                     Y_0=Y_pca.to(device),
-                                     device=device,
-                                     conv_threshold=1e-6)
+    Y_mix, RV_mix = rv_ascent_torch(K_mix,
+                                    compute_linear_kernel_torch,
+                                    param=None,
+                                    weights=weights,
+                                    Y_0=Y_pca.to(device),
+                                    device=device,
+                                    conv_threshold=1e-6)
     Y_mix_list.append(Y_mix)
     RV_mix_list.append(RV_mix)
 
@@ -102,7 +102,7 @@ for i, alpha in enumerate(alpha_vec):
     ax.set_ylabel("Dimension 2")
     if i == 0:
         ax.legend(*scatter.legend_elements(), title="Digits")
-plt.suptitle("MNIST RV with Input: Linear + Class (varying alpha),  Output: Linear")
+plt.suptitle("MNIST RV with Input: Linear + Class,  Output: Linear")
 plt.tight_layout()
 plt.savefig("results/mnist/evo_pca.png", dpi=300)
 plt.show()

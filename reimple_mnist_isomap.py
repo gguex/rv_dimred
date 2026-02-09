@@ -60,12 +60,12 @@ Y_pca = torch.tensor(PCA(n_components=2).fit_transform(mnist_images),
                      dtype=torch.float32)
 
 # The coordinates of outputs
-Y_opt_torch, RV_final_torch = rv_descent_torch(K_in, compute_linear_kernel_torch, 
-                                               param=None,
-                                               weights=weights, dim=2, lr=0.1, 
-                                               Y_0=Y_pca.to(device),
-                                               device=device,
-                                               conv_threshold=1e-8)
+Y_opt_torch, RV_final_torch = rv_ascent_torch(K_in, compute_linear_kernel_torch, 
+                                              param=None,
+                                              weights=weights, dim=2, lr=0.1, 
+                                              Y_0=Y_pca.to(device),
+                                              device=device,
+                                              conv_threshold=1e-8)
 
 # --------------------------------------------------------------
 # Plot the results

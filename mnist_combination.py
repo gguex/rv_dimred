@@ -97,13 +97,13 @@ for i in range(4):
         print(f"Input: {kernel_in_names[i]}, "
               f"Output: {kernel_out_names[j]}\n")
               
-        Y_opt_torch, RV_final_torch = rv_descent_torch(K_in,
-                                                       output_kernel_function, 
-                                                       param=out_param, 
-                                                       Y_0=Y_pca,
-                                                       weights=weights, 
-                                                       conv_threshold=1e-6,
-                                                       device=device)
+        Y_opt_torch, RV_final_torch = rv_ascent_torch(K_in,
+                                                      output_kernel_function, 
+                                                      param=out_param, 
+                                                      Y_0=Y_pca,
+                                                      weights=weights, 
+                                                      conv_threshold=1e-6,
+                                                      device=device)
         print(f"Final RV: {RV_final_torch.item()}\n")
         RV_matrix_torch[i,j] = RV_final_torch.item()
         Y_opt_list.append(Y_opt_torch.detach().cpu().numpy())

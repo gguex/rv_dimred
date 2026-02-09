@@ -58,9 +58,9 @@ def compute_t_kernel(coords, df=3, weights=None):
     return K_mat
 
 # Make the algorithm of gradient descent
-def rv_descent(K_obj, weights, dim=2, lr=0.1, 
-               conv_threshold = 1e-5, 
-               n_iter_max=50000):
+def rv_ascent(K_obj, weights, dim=2, lr=0.1, 
+              conv_threshold = 1e-5, 
+              n_iter_max=50000):
     
     n = K_obj.shape[0]
     H_mat = np.eye(n) - np.outer(np.ones(n), weights)
@@ -287,9 +287,9 @@ def compute_rv(K_in, K_out):
     RV = Scal_Obj_Y / (Norm_in * Norm_out)
     return RV
 
-def rv_descent_torch(K_in, output_kernel_function, param, Y_0=None, weights=None, dim=2, lr=0.1, 
-                     conv_threshold = 1e-5, 
-                     n_iter_max=50000, device='cpu'):
+def rv_ascent_torch(K_in, output_kernel_function, param, Y_0=None, weights=None, 
+                    dim=2, lr=0.1, conv_threshold = 1e-5, n_iter_max=50000, 
+                    device='cpu'):
     
     n = K_in.shape[0]
     if weights is None:

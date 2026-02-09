@@ -81,13 +81,13 @@ for alpha in alpha_vec:
     K_mix = (1 - alpha) * K_geom / norm_geom + alpha * K_class / norm_class
     
     # The coordinates of mix kernel
-    Y_mix, RV_mix = rv_descent_torch(K_mix,
-                                     compute_t_kernel_torch,
-                                     param=1,
-                                     weights=weights,
-                                     Y_0=Y_pca.to(device),
-                                     device=device,
-                                     conv_threshold=1e-6)
+    Y_mix, RV_mix = rv_ascent_torch(K_mix,
+                                    compute_t_kernel_torch,
+                                    param=1,
+                                    weights=weights,
+                                    Y_0=Y_pca.to(device),
+                                    device=device,
+                                    conv_threshold=1e-6)
     
     Y_mix_list.append(Y_mix)
     RV_mix_list.append(RV_mix)

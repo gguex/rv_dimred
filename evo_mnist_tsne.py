@@ -109,7 +109,7 @@ for i, alpha in enumerate(alpha_vec):
     ax.set_ylabel("Dimension 2")
     if i == 0:
         ax.legend(*scatter.legend_elements(), title="Digits")
-plt.suptitle("MNIST RV with Input: Gaussian + Class,  Output: t")
+plt.suptitle("MNIST RV with Input: Adapt. Gaussian + Class,  Output: t")
 plt.tight_layout()
 plt.savefig("results/mnist/evo_tsne.png", dpi=300)
 plt.show()

@@ -54,7 +54,7 @@ K_lin_in = compute_linear_kernel_torch(mnist_images_tensor,
                                        param=None, 
                                        weights=weights, device=device)
 K_geo_in_cpu = compute_geodesic_kernel(mnist_images, 
-                                       param=10,
+                                       param=15,
                                        weights=weights.to('cpu').numpy())
 K_geo_in = torch.tensor(K_geo_in_cpu, dtype=torch.float32).to(device)
 K_lle_in = compute_lle_kernel_torch(mnist_images_tensor, 
@@ -66,7 +66,7 @@ K_gauss_in = compute_gaussP_kernel_torch(mnist_images_tensor,
 
 kernels_in = [K_lin_in, K_geo_in, K_lle_in, K_gauss_in]
 
-kernel_in_names = ['Linear', 'Geodesic', 'LLE', 'Gaussian']
+kernel_in_names = ['Linear', 'Geodesic', 'LLE', 'Adapt. Gaussian']
 
 # All output kernel functions to test
 kernel_out_functions = [compute_linear_kernel_torch,
@@ -74,7 +74,7 @@ kernel_out_functions = [compute_linear_kernel_torch,
                         compute_t_kernel_torch,
                         compute_cosine_kernel_torch]
 kernel_out_params = [None, 1, 1, None]
-kernel_out_names = ['Linear', 'RBF', 't', 'Cosine']
+kernel_out_names = ['Linear', 'RBF', 'Student', 'Cosine']
 
 # --------------------------------------------------------------
 # Computations of the combinations
@@ -127,5 +127,5 @@ for i in range(4):
         ax.set_xticks([])
         ax.set_yticks([])
 plt.tight_layout()
-plt.savefig("results/mnist/mnist_combinations2.png", dpi=300)
+plt.savefig("results/mnist/mnist_combinations.png", dpi=300)
                                                     

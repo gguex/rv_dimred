@@ -77,7 +77,8 @@ def rv_ascent(K_obj, weights, dim=2, lr=0.1,
         Scal_Obj_Y = np.trace(K_obj @ K_Y)
         
         RV = Scal_Obj_Y / (Norm_obj * Norm_Y)
-        M = 1/(Norm_obj * Norm_Y) * (K_obj - Scal_Obj_Y / Norm_Y**2 * K_Y)
+        M = 1/(Norm_obj * Norm_Y) \
+            * Q_mat @ (K_obj - Scal_Obj_Y / Norm_Y**2 * K_Y) @ Q_mat.T
         grad = 2 * M @ Y
         
         Y += lr * grad

@@ -63,24 +63,18 @@ K_lle_in = compute_lle_kernel_torch(mnist_images_tensor,
 K_gauss_in = compute_gaussP_kernel_torch(mnist_images_tensor, 
                                          param=gauss_params, 
                                          weights=weights, device=device)
-K_topo_in = compute_fuzzy_topo_kernel_torch(mnist_images_tensor, 
-                                            param=15,
-                                            weights=weights, device=device)
 
-kernels_in = [K_lin_in, K_geo_in, K_lle_in, K_gauss_in, K_topo_in]
+kernels_in = [K_lin_in, K_geo_in, K_lle_in, K_gauss_in]
 
-kernel_in_names = ['Linear', 'Geodesic', 'LLE', 
-                   'Adapt. Gaussian', 'Fuzzy Topo.']
+kernel_in_names = ['Linear', 'Geodesic', 'LLE', 'Adapt. Gaussian']
 
 # All output kernel functions to test
 kernel_out_functions = [compute_linear_kernel_torch,
-                        compute_polynomial_kernel_torch,
-                        compute_t_kernel_torch]
-kernel_out_params = [None, None, 1]
-kernel_out_names = ['Linear', 'Polynomial', 'Student']
-
-n_in = len(kernels_in)
-n_out = len(kernel_out_functions)
+                        compute_rbf_kernel_torch,
+                        compute_t_kernel_torch,
+                        compute_cosine_kernel_torch]
+kernel_out_params = [None, 1, 1, None]
+kernel_out_names = ['Linear', 'RBF', 'Student', 'Cosine']
 
 # --------------------------------------------------------------
 # Computations of the combinations
@@ -91,11 +85,11 @@ Y_pca = torch.tensor(PCA(n_components=2).fit_transform(
     mnist_images_tensor.cpu().numpy()))
 
 # Compute the 16 possibles input-output combinations
-RV_matrix_torch = np.zeros((n_in, n_out))
+RV_matrix_torch = np.zeros((4,4))
 Y_opt_grid = []
-for i in range(n_in):
+for i in range(4):
     Y_opt_list = []
-    for j in range(n_out):
+    for j in range(4):
         K_in = kernels_in[i]
         output_kernel_function = kernel_out_functions[j]
         out_param = kernel_out_params[j]
@@ -121,9 +115,9 @@ for i in range(n_in):
 
 # Plot the results in a grid with the label colors
 c_color = mnist_labels
-fig, axes = plt.subplots(n_in, n_out, figsize=(100/n_in, 100/n_out))
-for i in range(n_in):
-    for j in range(n_out):
+fig, axes = plt.subplots(4, 4, figsize=(16, 16))
+for i in range(4):
+    for j in range(4):
         ax = axes[i, j]
         Y_opt = Y_opt_grid[i][j]
         ax.scatter(Y_opt[:, 0], Y_opt[:, 1], c=c_color, cmap='tab10', s=5)

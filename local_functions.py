@@ -106,7 +106,7 @@ def compute_linear_kernel_torch(coords, param=None, weights=None, device='cpu'):
     K_mat = Q_mat @ coords @ coords.T @ Q_mat.T
     return K_mat
 
-def compute_polynomial_kernel_torch(coords, param=None, degree=3, coef0=1, weights=None, device='cpu'):
+def compute_polynomial_kernel_torch(coords, param=None, degree=2, coef0=1, weights=None, device='cpu'):
     n = coords.shape[0]
     p = coords.shape[1]
     if weights is None:
@@ -189,7 +189,44 @@ def compute_gaussP_kernel_torch(coords, param=1, power=0.5, weights=None,
     
     return K_mat    
 
+def compute_fuzzy_topo_kernel_torch(coords, param=15, power=1, 
+                                    weights=None, device='cpu'):
+    
+    n = coords.shape[0]
+    
+    if weights is None:
+        weights = torch.ones(n, device=device) / n
+        
+    H_mat = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
+    Q_mat = torch.diag(torch.sqrt(weights)) @ H_mat
+    
+    # Euclidean distances (not squared)
+    pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
+               torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
+    pairwise__sqrt_dists = torch.sqrt(torch.clamp(pairwise_dists, min=0.0))
+    
+    k = int(param)
+    knn_dists, _ = torch.topk(pairwise__sqrt_dists, k=k+1, largest=False)
+    
+    # rho_i : distance to the nearest neighbor (k=1) for each point
+    rho = knn_dists[:, 1] 
+    
+    # sigma_i : approximation for the dist to the k-th nn minus rho_i
+    sigma = knn_dists[:, k] - rho
+    sigma = torch.clamp(sigma, min=1e-5) # Éviter la division par 0
+    
+    # Compute : exp(- max(0, d - rho) / sigma)
+    d_minus_rho = pairwise__sqrt_dists - rho.unsqueeze(1)
+    P_local = torch.exp(-torch.clamp(d_minus_rho, min=0.0) / sigma.unsqueeze(1))
+    P_local.fill_diagonal_(0)
+    
+    P_sym = (P_local + P_local.T - (P_local * P_local.T))**power
+    K_mat = Q_mat @ P_sym @ Q_mat.T
+    
+    return K_mat
+
 def compute_t_kernel_torch(coords, param=1, weights=None, device='cpu'):
+    
     n = coords.shape[0]
     if weights is None:
         weights = torch.ones(n, device=device) / n
@@ -202,6 +239,39 @@ def compute_t_kernel_torch(coords, param=1, weights=None, device='cpu'):
     G_t.fill_diagonal_(0)
 
     K_mat = Q_mat @ G_t @ Q_mat.T
+    
+    return K_mat
+
+def compute_gen_t_kernel_torch(coords, param=None, weights=None, device='cpu'):
+
+    n = coords.shape[0]
+    
+    if param is None:
+        a, b = 1.0, 1.0
+    elif isinstance(param, (list, tuple)) and len(param) >= 2:
+        a, b = param[0], param[1]
+    else:
+        # Si un seul scalaire est passé, on suppose que c'est 'a' et b=1
+        a, b = float(param), 1.0
+        
+    if weights is None:
+        weights = torch.ones(n, device=device) / n
+        
+    H_mat = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
+    Q_mat = torch.diag(torch.sqrt(weights)) @ H_mat
+    
+    pairwise_dists = torch.sum(coords**2, axis=1).reshape(-1, 1) + \
+        torch.sum(coords**2, axis=1) - 2 * coords @ coords.T
+    
+    # Formule Generalized t-distribution : (1 + a * (d^2)^b)^-1
+    if b == 1.0:
+        G_t = (1 + a * pairwise_dists) ** (-1)
+    else:
+        G_t = (1 + a * (torch.clamp(pairwise_dists, min=1e-10) ** b)) ** (-1)
+        
+    G_t.fill_diagonal_(0)
+    K_mat = Q_mat @ G_t @ Q_mat.T
+    
     return K_mat
 
 def compute_lle_kernel_torch(coords, param=5, reg=0.001, weights=None, device='cpu'):

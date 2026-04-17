@@ -141,7 +141,7 @@ def compute_rbf_kernel_torch(coords, param=1, weights=None, device='cpu'):
     K_mat = Q_mat @ G_gauss @ Q_mat.T
     return K_mat    
 
-# Create the isomap kernel (CPU only, i.e. input only)
+# (CPU only, i.e. input only)
 def compute_geodesic_kernel(coords, param=10, weights=None):
     n = coords.shape[0]
     if weights is None:

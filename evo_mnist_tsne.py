@@ -68,7 +68,7 @@ norm_class = torch.sqrt(torch.trace(K_class @ K_class))
 # --------------------------------------------------------------
 
 # Mix the kernels 
-alpha_vec = [0, 0.25, 0.5, 0.75]
+alpha_vec = [0, 0.33, 0.66, 1]
 
 # PCA solution for reference
 Y_pca = torch.tensor(PCA(n_components=2).fit_transform(mnist_images), 
@@ -109,7 +109,7 @@ for i, alpha in enumerate(alpha_vec):
     ax.set_ylabel("Dimension 2")
     if i == 0:
         ax.legend(*scatter.legend_elements(), title="Digits")
-plt.suptitle("MNIST RV with Input: Adapt. Gaussian + Class,  Output: t")
+plt.suptitle("MNIST RV with Input: Adapt. Gaussian + Class,  Output: Student")
 plt.tight_layout()
 plt.savefig("results/mnist/evo_tsne.png", dpi=300)
 plt.show()

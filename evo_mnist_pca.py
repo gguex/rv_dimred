@@ -62,7 +62,7 @@ norm_class = torch.sqrt(torch.trace(K_class @ K_class))
 # --------------------------------------------------------------
 
 # Mix the kernels 
-alpha_vec = [0, 0.25, 0.5, 0.75]
+alpha_vec = [0, 0.33, 0.66, 1]
 
 # PCA solution for reference
 Y_pca = torch.tensor(PCA(n_components=2).fit_transform(mnist_images), 

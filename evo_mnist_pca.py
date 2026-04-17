@@ -106,4 +106,3 @@ for i, alpha in enumerate(alpha_vec):
         plt.legend(*ax.legend_elements(), title="Digits")
     plt.savefig(f"results/mnist/evo_pca_{alpha}.png", dpi=300)
     plt.show()
-    

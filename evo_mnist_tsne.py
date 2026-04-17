@@ -96,20 +96,20 @@ for alpha in alpha_vec:
 # Plot the results in a row of subplots
 # --------------------------------------------------------------
 
-fig, axes = plt.subplots(1, len(alpha_vec), figsize=(20, 5))
+# Plot the results for each alpha
 for i, alpha in enumerate(alpha_vec):
-    ax = axes[i]
+    
     Y_mix = Y_mix_list[i]
     RV_mix = RV_mix_list[i]
     
-    scatter = ax.scatter(Y_mix[:, 0].cpu(), Y_mix[:, 1].cpu(), 
+    # Make the scatter plot and save it
+    plt.figure(figsize=(5, 5))
+    ax = plt.scatter(Y_mix[:, 0].cpu(), Y_mix[:, 1].cpu(), 
                          c=mnist_labels, cmap='tab10', s=15)
-    ax.set_title(f"alpha={alpha:.2f}, RV={RV_mix:.4f}")
-    ax.set_xlabel("Dimension 1")
-    ax.set_ylabel("Dimension 2")
+    plt.title(f"alpha={alpha:.2f}, RV={RV_mix:.4f}")
+    plt.xlabel("Dimension 1")
+    plt.ylabel("Dimension 2")
     if i == 0:
-        ax.legend(*scatter.legend_elements(), title="Digits")
-plt.suptitle("MNIST RV with Input: Adapt. Gaussian + Class,  Output: Student")
-plt.tight_layout()
-plt.savefig("results/mnist/evo_tsne.png", dpi=300)
-plt.show()
+        plt.legend(*ax.legend_elements(), title="Digits")
+    plt.savefig(f"results/mnist/evo_tsne_{alpha}.png", dpi=300)
+    plt.show()

@@ -54,17 +54,17 @@ K_lin_in = compute_linear_kernel_torch(mnist_images_tensor,
                                        param=None, 
                                        weights=weights, device=device)
 K_geo_in_cpu = compute_geodesic_kernel(mnist_images, 
-                                       param=15,
+                                       param=20,
                                        weights=weights.to('cpu').numpy())
 K_geo_in = torch.tensor(K_geo_in_cpu, dtype=torch.float32).to(device)
 K_lle_in = compute_lle_kernel_torch(mnist_images_tensor, 
-                                    param=15, 
+                                    param=20, 
                                     weights=weights, device=device)
 K_gauss_in = compute_gaussP_kernel_torch(mnist_images_tensor, 
                                          param=gauss_params, 
                                          weights=weights, device=device)
 K_topo_in = compute_fuzzy_topo_kernel_torch(mnist_images_tensor, 
-                                            param=15,
+                                            param=20,
                                             weights=weights, device=device)
 
 kernels_in = [K_lin_in, K_geo_in, K_lle_in, K_gauss_in, K_topo_in]

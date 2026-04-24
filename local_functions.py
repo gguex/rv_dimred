@@ -142,7 +142,7 @@ def compute_rbf_kernel_torch(coords, param=1, weights=None, device='cpu'):
     return K_mat    
 
 # (CPU only, i.e. input only)
-def compute_geodesic_kernel(coords, param=10, weights=None):
+def compute_geodesic_kernel(coords, param=15, weights=None):
     n = coords.shape[0]
     if weights is None:
         weights = np.ones(n) / n
@@ -213,11 +213,13 @@ def compute_fuzzy_topo_kernel_torch(coords, param=15, power=1,
     
     # sigma_i : approximation for the dist to the k-th nn minus rho_i
     sigma = knn_dists[:, k] - rho
-    sigma = torch.clamp(sigma, min=1e-5) # Éviter la division par 0
+    sigma = torch.clamp(sigma, min=1e-5)
     
     # Compute : exp(- max(0, d - rho) / sigma)
     d_minus_rho = pairwise__sqrt_dists - rho.unsqueeze(1)
     P_local = torch.exp(-torch.clamp(d_minus_rho, min=0.0) / sigma.unsqueeze(1))
+    
+    # No self-similarity
     P_local.fill_diagonal_(0)
     
     P_sym = (P_local + P_local.T - (P_local * P_local.T))**power
@@ -274,7 +276,7 @@ def compute_gen_t_kernel_torch(coords, param=None, weights=None, device='cpu'):
     
     return K_mat
 
-def compute_lle_kernel_torch(coords, param=5, reg=0.001, weights=None, device='cpu'):
+def compute_lle_kernel_torch(coords, param=20, reg=0.01, weights=None, device='cpu'):
     n = coords.shape[0]
     if weights is None:
         weights = torch.ones(n, device=device) / n
@@ -318,7 +320,13 @@ def compute_lle_kernel_torch(coords, param=5, reg=0.001, weights=None, device='c
     I = torch.eye(n, device=device)
     M = (I - W).T @ (I - W)
     
-    G_lle = torch.linalg.pinv(M)
+    # G_lle = torch.linalg.pinv(M)
+    
+    # Alternative : eigen-decomposition with exponential decay of eigenvalues
+    evals, evecs = torch.linalg.eigh(M)
+    new_evals = torch.exp(-evals / torch.median(evals)) 
+    G_lle = evecs @ torch.diag(new_evals) @ evecs.T
+
     G_lle = (G_lle + G_lle.T) / 2  
     K_mat = Q_mat @ G_lle @ Q_mat.T
     

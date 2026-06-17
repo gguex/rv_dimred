@@ -1,0 +1,654 @@
+"""
+rv_kernels.py
+=============
+
+Kernel "lego pieces" for RV-coefficient dimensionality reduction.
+
+Every kernel maps a coordinate / similarity input to a *centered* kernel matrix
+
+        K = Q G Q^T ,     Q = diag(sqrt(f)) (I - 1 f^T)
+
+so that K lies in the weighted kernel space K_n (i.e. K sqrt(f) = 0).
+All kernels share the same signature
+
+        compute_*_kernel_torch(coords, param=None, weights=None, device='cpu') -> (n,n) torch.Tensor
+
+so that an INPUT kernel and an OUTPUT kernel can be plugged into the optimiser
+like two interchangeable bricks (see `rv_dimred` and the __main__ demo).
+
+----------------------------------------------------------------------------
+INPUT vs OUTPUT kernels
+----------------------------------------------------------------------------
+* OUTPUT kernels (linear, polynomial, gaussian, student_t, umap) are written in
+  pure differentiable PyTorch: K_Y is a function of the embedding Y = `coords`,
+  and autograd back-propagates through them during gradient ascent on RV.
+
+* INPUT kernels (linear, geodesic, lle, laplacian, diffusion, gaussian_affinity,
+  fuzzy_topological, rbf, class) are computed ONCE from the fixed data X.
+  Graph-based ones rely on numpy/scipy/sklearn internally and return a constant
+  tensor; they need not be differentiable.
+
+`param` is kernel-specific and documented in each docstring (None = sensible
+defaults). It can be a scalar, a tuple, or a dict.
+----------------------------------------------------------------------------
+"""
+
+from __future__ import annotations
+
+from typing import Any, Callable
+
+import numpy as np
+import torch
+
+# scipy / sklearn are only needed for the graph-based INPUT kernels.
+# Declared as Any so type checkers accept usages even when the import is absent.
+expm: Any = None
+pinvh: Any = None
+shortest_path: Any = None
+NearestNeighbors: Any = None
+
+try:
+    from scipy.linalg import expm, pinvh
+    from scipy.sparse.csgraph import shortest_path
+    from sklearn.neighbors import NearestNeighbors
+
+    _HAS_SCIPY = True
+except Exception:  # pragma: no cover
+    _HAS_SCIPY = False
+
+
+# ===========================================================================
+# Core helpers
+# ===========================================================================
+def default_weights(n: int, device: str | torch.device = "cpu") -> torch.Tensor:
+    """Uniform relative weights f_i = 1/n."""
+    return torch.ones(n, device=device) / n
+
+
+def centering_operator(
+    weights: torch.Tensor, device: str | torch.device = "cpu"
+) -> torch.Tensor:
+    """Q = diag(sqrt(f)) (I - 1 f^T). Note: Q is NOT symmetric when f is non-uniform."""
+    n = weights.shape[0]
+    H = torch.eye(n, device=device) - torch.outer(torch.ones(n, device=device), weights)
+    Q = torch.diag(torch.sqrt(weights)) @ H
+    return Q
+
+
+def double_center(
+    G: torch.Tensor, weights: torch.Tensor, device: str | torch.device = "cpu"
+) -> torch.Tensor:
+    """Map a raw Gram/affinity matrix G to the centered kernel K = Q G Q^T in K_n.
+
+    Differentiable in G (Q depends only on the fixed weights), so OUTPUT kernels
+    that build G from the embedding remain autograd-friendly.
+    """
+    Q = centering_operator(weights, device=device)
+    return Q @ G @ Q.T
+
+
+def _as_tensor(coords: Any, device: str | torch.device = "cpu") -> torch.Tensor:
+    if isinstance(coords, torch.Tensor):
+        return coords.to(device)
+    return torch.as_tensor(np.asarray(coords), dtype=torch.float32, device=device)
+
+
+def _np(coords: np.ndarray | torch.Tensor) -> np.ndarray:
+    """Detach to a numpy array (for graph-based input kernels)."""
+    if isinstance(coords, torch.Tensor):
+        return coords.detach().cpu().numpy()
+    return np.asarray(coords, dtype=np.float64)
+
+
+def pairwise_sq_dists(Y: torch.Tensor) -> torch.Tensor:
+    """(n,n) matrix of squared Euclidean distances, differentiable, clamped >= 0."""
+    sq = (Y * Y).sum(dim=1)
+    d2 = sq.unsqueeze(1) + sq.unsqueeze(0) - 2.0 * (Y @ Y.T)
+    return d2.clamp_min(0.0)
+
+
+# ===========================================================================
+# OUTPUT kernels  (differentiable in the embedding Y = coords)
+# ===========================================================================
+def compute_linear_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: Any = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """Linear / dot-product kernel: G = Y Y^T.  Recovers PCA / cMDS (spectral readout)."""
+    coords = _as_tensor(coords, device)
+    n = coords.shape[0]
+    weights = default_weights(n, device) if weights is None else weights.to(device)
+    G = coords @ coords.T
+    return double_center(G, weights, device)
+
+
+def compute_polynomial_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: dict[str, Any] | None = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """Polynomial dot-product kernel: G = (Y Y^T / q + c)^d.  -> 'curved' embeddings.
+
+    param: dict {'c': float (default 1.0), 'd': int (default 2)}.
+    The 1/q normalisation (q = output dim) keeps the kernel well-scaled.
+    """
+    coords = _as_tensor(coords, device)
+    n, q = coords.shape[0], coords.shape[1]
+    weights = default_weights(n, device) if weights is None else weights.to(device)
+    param = param or {}
+    c = float(param.get("c", 1.0))
+    d = int(param.get("d", 2))
+    G = (coords @ coords.T / q + c) ** d
+    return double_center(G, weights, device)
+
+
+def compute_gaussian_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: float | None = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """Gaussian / RBF output kernel: G_ij = exp(-||y_i - y_j||^2 / (2 sigma^2)).
+
+    Light-tailed neighbour readout -> SNE-like behaviour.
+    param: sigma (float, default 1.0).
+    """
+    coords = _as_tensor(coords, device)
+    n = coords.shape[0]
+    weights = default_weights(n, device) if weights is None else weights.to(device)
+    sigma = 1.0 if param is None else float(param)
+    d2 = pairwise_sq_dists(coords)
+    G = torch.exp(-d2 / (2.0 * sigma**2))
+    return double_center(G, weights, device)
+
+
+def compute_student_t_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: float | None = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """Student-t output kernel with nu degrees of freedom:
+
+        G_ij = (1 + ||y_i - y_j||^2 / nu)^{-(nu+1)/2}
+
+    nu = 1   -> the classic t-SNE kernel (1 + ||.||^2)^{-1}
+    nu -> inf -> recovers the Gaussian (SNE) kernel
+    nu < 1   -> heavier tails (Kobak et al. 2020)
+    param: nu (float, default 1.0).
+    """
+    coords = _as_tensor(coords, device)
+    n = coords.shape[0]
+    weights = default_weights(n, device) if weights is None else weights.to(device)
+    nu = 1.0 if param is None else float(param)
+    d2 = pairwise_sq_dists(coords)
+    G = (1.0 + d2 / nu) ** (-(nu + 1.0) / 2.0)
+    return double_center(G, weights, device)
+
+
+def compute_umap_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: dict[str, Any] | None = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """UMAP rational output kernel: G_ij = (1 + a ||y_i - y_j||^{2b})^{-1}.
+
+    Generalises Student-t (a = b = 1). Defaults a=1.929, b=0.7915 match UMAP's
+    min_dist=0.1. A tiny eps stabilises the b<1 power at zero distance.
+    param: dict {'a': float, 'b': float}.
+    """
+    coords = _as_tensor(coords, device)
+    n = coords.shape[0]
+    weights = default_weights(n, device) if weights is None else weights.to(device)
+    param = param or {}
+    a = float(param.get("a", 1.929))
+    b = float(param.get("b", 0.7915))
+    d2 = pairwise_sq_dists(coords)
+    G = 1.0 / (1.0 + a * (d2 + 1e-12) ** b)
+    return double_center(G, weights, device)
+
+
+# ===========================================================================
+# INPUT kernels  (computed once from the fixed data X)
+# ===========================================================================
+def compute_geodesic_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: dict[str, Any] | None = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """Isomap input kernel: G = -1/2 D_geo^2, D_geo = symmetrised shortest paths
+    on a kNN graph.  Recovers Isomap with a linear output.
+
+    param: dict {'k': int (default 10)}.
+    """
+    if not _HAS_SCIPY:
+        raise ImportError("geodesic kernel requires scipy + sklearn")
+    X = _np(coords)
+    n = X.shape[0]
+    k = int((param or {}).get("k", 10))
+    nbrs = NearestNeighbors(n_neighbors=k + 1).fit(X)
+    graph = nbrs.kneighbors_graph(mode="distance")  # sparse kNN distances
+    Dgeo = shortest_path(graph, method="D", directed=False)  # all-pairs geodesics
+    # patch disconnected pairs (inf) with the largest finite geodesic
+    finite = np.isfinite(Dgeo)
+    Dgeo[~finite] = Dgeo[finite].max() if finite.any() else 0.0
+    Dgeo = 0.5 * (Dgeo + Dgeo.T)
+    G = -0.5 * (Dgeo**2)
+    weights = default_weights(n, device) if weights is None else weights
+    return double_center(_as_tensor(G, device), weights.to(device), device)
+
+
+def compute_lle_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: dict[str, Any] | None = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """LLE input kernel: G = pinv(Phi), Phi = (I - W)^T (I - W), W = local
+    reconstruction weights.  The top eigenvectors of pinv(Phi) = the bottom
+    eigenvectors of Phi = the standard LLE embedding.
+
+    param: dict {'k': int (default 10), 'reg': float (default 1e-3)}.
+    """
+    if not _HAS_SCIPY:
+        raise ImportError("LLE kernel requires sklearn")
+    X = _np(coords)
+    n = X.shape[0]
+    p = param or {}
+    k = int(p.get("k", 10))
+    reg = float(p.get("reg", 1e-3))
+    nbrs = NearestNeighbors(n_neighbors=k + 1).fit(X)
+    _, idx = nbrs.kneighbors(X)
+    idx = idx[:, 1:]  # drop self
+    W = np.zeros((n, n))
+    ones = np.ones(k)
+    for i in range(n):
+        Z = X[idx[i]] - X[i]  # (k, p): neighbours centred on x_i
+        C = Z @ Z.T  # (k, k) local Gram
+        C += np.eye(k) * reg * np.trace(C) / k  # Tikhonov regularisation
+        w = np.linalg.solve(C, ones)
+        w /= w.sum()
+        W[i, idx[i]] = w
+    I = np.eye(n)
+    Phi = (I - W).T @ (I - W)
+    G = pinvh(
+        Phi
+    )  # symmetric pseudo-inverse: top eigvecs <-> bottom nonzero eigvecs of Phi
+    weights = default_weights(n, device) if weights is None else weights
+    return double_center(_as_tensor(G, device), weights.to(device), device)
+
+
+def _knn_affinity(
+    X: np.ndarray,
+    k: int,
+    sigma: float | None = None,
+    binary: bool = False,
+) -> np.ndarray:
+    """Symmetric kNN affinity W (numpy). Heat weights exp(-d^2/sigma^2) by default."""
+    n = X.shape[0]
+    nbrs = NearestNeighbors(n_neighbors=k + 1).fit(X)
+    dist, idx = nbrs.kneighbors(X)
+    dist, idx = dist[:, 1:], idx[:, 1:]
+    if sigma is None:
+        sigma = float(np.median(dist[:, -1])) + 1e-12  # local-scale heuristic
+    W = np.zeros((n, n))
+    for i in range(n):
+        if binary:
+            W[i, idx[i]] = 1.0
+        else:
+            W[i, idx[i]] = np.exp(-(dist[i] ** 2) / (sigma**2))
+    return np.maximum(W, W.T)  # symmetrise
+
+
+def compute_laplacian_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: dict[str, Any] | None = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """Laplacian / commute-time input kernel: G = pinv(L), L = D - W.
+    Top eigenvectors of pinv(L) = bottom eigenvectors of L = Laplacian Eigenmaps.
+    (For the normalised variant Lv = lambda Dv, pass weights f_i proportional to
+    the node degree d_i.)
+
+    param: dict {'k': int (default 10), 'sigma': float or None, 'binary': bool}.
+    """
+    if not _HAS_SCIPY:
+        raise ImportError("laplacian kernel requires sklearn")
+    X = _np(coords)
+    n = X.shape[0]
+    p = param or {}
+    W = _knn_affinity(
+        X, int(p.get("k", 10)), p.get("sigma", None), bool(p.get("binary", False))
+    )
+    L = np.diag(W.sum(1)) - W
+    G = pinvh(L)  # symmetric pseudo-inverse
+    weights = default_weights(n, device) if weights is None else weights
+    return double_center(_as_tensor(G, device), weights.to(device), device)
+
+
+def compute_diffusion_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: dict[str, Any] | None = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """Diffusion-map input kernel: heat kernel G = exp(-t L_sym),
+    L_sym = I - D^{-1/2} W D^{-1/2}.  Top eigenvectors = diffusion coordinates;
+    t (diffusion time) sets the analysis scale.
+
+    param: dict {'k': int (default 10), 't': float (default 1.0), 'sigma': float}.
+    """
+    if not _HAS_SCIPY:
+        raise ImportError("diffusion kernel requires scipy + sklearn")
+    X = _np(coords)
+    n = X.shape[0]
+    p = param or {}
+    t = float(p.get("t", 1.0))
+    W = _knn_affinity(X, int(p.get("k", 10)), p.get("sigma", None))
+    d = W.sum(1)
+    d_inv_sqrt = 1.0 / np.sqrt(d + 1e-12)
+    L_sym = np.eye(n) - (d_inv_sqrt[:, None] * W * d_inv_sqrt[None, :])
+    G = expm(-t * L_sym)
+    weights = default_weights(n, device) if weights is None else weights
+    return double_center(_as_tensor(G, device), weights.to(device), device)
+
+
+def _perplexity_probabilities(
+    D2: np.ndarray,
+    perplexity: float,
+    tol: float = 1e-5,
+    max_iter: int = 60,
+) -> np.ndarray:
+    """Conditional probabilities p_{j|i} with per-point bandwidths matching
+    `perplexity` (classic t-SNE Hbeta binary search).  D2: (n,n) sq distances."""
+    n = D2.shape[0]
+    P = np.zeros((n, n))
+    target = np.log(perplexity)
+    for i in range(n):
+        mask = np.arange(n) != i
+        Di = D2[i, mask]
+        beta, lo, hi = 1.0, -np.inf, np.inf
+        Pi: np.ndarray = np.exp(-Di * beta)
+        sumP: float = float(Pi.sum()) + 1e-12
+        for _ in range(max_iter):
+            Pi = np.exp(-Di * beta)
+            sumP = float(Pi.sum()) + 1e-12
+            H = np.log(sumP) + beta * (Di * Pi).sum() / sumP
+            diff = H - target
+            if abs(diff) < tol:
+                break
+            if diff > 0:  # entropy too high -> increase beta
+                lo = beta
+                beta = beta * 2 if hi == np.inf else (beta + hi) / 2
+            else:
+                hi = beta
+                beta = beta / 2 if lo == -np.inf else (beta + lo) / 2
+        P[i, mask] = Pi / sumP
+    return P
+
+
+def compute_gaussian_affinity_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: dict[str, Any] | None = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """Adaptive-Gaussian (perplexity) input kernel = the symmetrised t-SNE P matrix.
+    With a Student-t output this gives t-SNE-like embeddings.
+
+    param: dict {'perplexity': float (default 30), 'hellinger': bool}.
+           hellinger=True applies G = sqrt(P) (Bhattacharyya/Hellinger variant).
+    """
+    if not _HAS_SCIPY:
+        raise ImportError("gaussian-affinity kernel requires sklearn for distances")
+    X = _np(coords)
+    n = X.shape[0]
+    p = param or {}
+    perp = float(p.get("perplexity", 30.0))
+    sq = (X**2).sum(1)
+    D2 = np.maximum(sq[:, None] + sq[None, :] - 2 * X @ X.T, 0.0)
+    Pcond = _perplexity_probabilities(D2, perp)
+    P = (Pcond + Pcond.T) / (2.0 * n)
+    G = np.sqrt(P) if bool(p.get("hellinger", False)) else P
+    weights = default_weights(n, device) if weights is None else weights
+    return double_center(_as_tensor(G, device), weights.to(device), device)
+
+
+def compute_fuzzy_topological_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: dict[str, Any] | None = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """UMAP fuzzy-topological input kernel.
+
+    Local distances are offset by rho_i (distance to nearest neighbour) and scaled
+    by sigma_i (binary-searched so sum_j w_ij = log2(k)). The fuzzy set union gives
+        G = W + W^T - W o W^T.
+
+    param: dict {'k': int (default 15)}.
+    """
+    if not _HAS_SCIPY:
+        raise ImportError("fuzzy-topological kernel requires sklearn")
+    X = _np(coords)
+    n = X.shape[0]
+    k = int((param or {}).get("k", 15))
+    nbrs = NearestNeighbors(n_neighbors=k + 1).fit(X)
+    dist, idx = nbrs.kneighbors(X)
+    dist, idx = dist[:, 1:], idx[:, 1:]
+    rho = dist[:, 0]  # nearest-neighbour distance
+    target = np.log2(k)
+    W = np.zeros((n, n))
+    for i in range(n):
+        d = np.maximum(dist[i] - rho[i], 0.0)
+        sigma, lo, hi = 1.0, 0.0, np.inf
+        for _ in range(64):  # binary search on sigma_i
+            psum = np.exp(-d / sigma).sum()
+            if abs(psum - target) < 1e-5:
+                break
+            if psum > target:
+                hi = sigma
+                sigma = (lo + hi) / 2
+            else:
+                lo = sigma
+                sigma = sigma * 2 if hi == np.inf else (lo + hi) / 2
+        W[i, idx[i]] = np.exp(-d / sigma)
+    G = W + W.T - W * W.T  # probabilistic (fuzzy) union
+    weights = default_weights(n, device) if weights is None else weights
+    return double_center(_as_tensor(G, device), weights.to(device), device)
+
+
+def compute_rbf_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: float | None = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """Mercer RBF input kernel: G_ij = exp(-gamma ||x_i - x_j||^2).  Recovers
+    Kernel PCA (Gaussian kernel) with a linear output. Pure torch (also usable
+    as a differentiable output kernel if desired).
+
+    param: gamma (float). Default uses the median-distance heuristic.
+    """
+    coords = _as_tensor(coords, device)
+    n = coords.shape[0]
+    weights = default_weights(n, device) if weights is None else weights.to(device)
+    d2 = pairwise_sq_dists(coords)
+    gamma: float
+    if param is None:
+        med = (
+            torch.median(d2[d2 > 0])
+            if (d2 > 0).any()
+            else torch.tensor(1.0, device=device)
+        )
+        gamma = float(1.0 / (med + 1e-12))
+    else:
+        gamma = float(param)
+    G = torch.exp(-gamma * d2)
+    return double_center(G, weights, device)
+
+
+def compute_class_kernel_torch(
+    coords: np.ndarray | torch.Tensor,
+    param: dict[str, Any] | None = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """Inter-class (label) kernel K_Z = P_Z K_X P_Z^T, where
+        P_Z = Z (Z^T Pi Z)^{-1} Z^T Pi
+    relocates every point to its (weighted) class centroid. Recovers LDA with a
+    linear output and a projection constraint; the alpha=1 limit of supervision.
+
+    param: dict {'labels': array-like (n,), 'base_kernel': (n,n) tensor or None}.
+           If base_kernel is None, the linear kernel of `coords` is used as K_X.
+    """
+    coords = _as_tensor(coords, device)
+    n = coords.shape[0]
+    weights = default_weights(n, device) if weights is None else weights.to(device)
+    p = param or {}
+    labels = np.asarray(p["labels"])
+    classes = np.unique(labels)
+    Z = torch.zeros((n, len(classes)), device=device)
+    for c_idx, c in enumerate(classes):
+        Z[torch.as_tensor(labels == c, device=device), c_idx] = 1.0
+    Pi = torch.diag(weights)
+    ZtPiZ = Z.T @ Pi @ Z
+    P_Z = Z @ torch.linalg.inv(ZtPiZ) @ Z.T @ Pi
+    K_X = p.get("base_kernel", None)
+    if K_X is None:
+        K_X = compute_linear_kernel_torch(coords, weights=weights, device=device)
+    return P_Z @ K_X @ P_Z.T
+
+
+# ===========================================================================
+# Registry  (pick bricks by name)
+# ===========================================================================
+INPUT_KERNELS: dict[str, Callable[..., torch.Tensor]] = {
+    "linear": compute_linear_kernel_torch,
+    "geodesic": compute_geodesic_kernel_torch,
+    "lle": compute_lle_kernel_torch,
+    "laplacian": compute_laplacian_kernel_torch,
+    "diffusion": compute_diffusion_kernel_torch,
+    "gaussian_affinity": compute_gaussian_affinity_kernel_torch,
+    "fuzzy_topological": compute_fuzzy_topological_kernel_torch,
+    "rbf": compute_rbf_kernel_torch,
+    "class": compute_class_kernel_torch,
+}
+
+OUTPUT_KERNELS: dict[str, Callable[..., torch.Tensor]] = {
+    "linear": compute_linear_kernel_torch,
+    "polynomial": compute_polynomial_kernel_torch,
+    "gaussian": compute_gaussian_kernel_torch,
+    "student_t": compute_student_t_kernel_torch,
+    "umap": compute_umap_kernel_torch,
+}
+
+
+# ===========================================================================
+# RV coefficient and gradient-ascent driver
+# ===========================================================================
+def rv_coefficient(
+    K1: torch.Tensor, K2: torch.Tensor, eps: float = 1e-12
+) -> torch.Tensor:
+    """RV(K1, K2) = <K1,K2> / (||K1|| ||K2||), using <A,B> = sum(A*B) for symmetric A,B."""
+    num = (K1 * K2).sum()
+    den = torch.sqrt((K1 * K1).sum() * (K2 * K2).sum()) + eps
+    return num / den
+
+
+def rv_dimred(
+    K_X: torch.Tensor,
+    output_kernel: str | Callable[..., torch.Tensor] = "student_t",
+    q: int = 2,
+    weights: torch.Tensor | None = None,
+    output_param: Any = None,
+    n_iter: int = 500,
+    lr: float = 1e-1,
+    device: str | torch.device = "cpu",
+    init: np.ndarray | torch.Tensor | None = None,
+    verbose: bool = False,
+) -> tuple[torch.Tensor, float]:
+    """Maximise RV(K_X, K_Y(Y)) over the embedding Y by autograd gradient ascent.
+
+    K_X            : (n,n) fixed input kernel (any INPUT_KERNELS output).
+    output_kernel  : name in OUTPUT_KERNELS, or a callable with the kernel signature.
+    Returns (Y, final_rv).
+    """
+    n = K_X.shape[0]
+    weights = default_weights(n, device) if weights is None else weights.to(device)
+    out_fn: Callable[..., torch.Tensor] = (
+        OUTPUT_KERNELS[output_kernel]
+        if isinstance(output_kernel, str)
+        else output_kernel
+    )
+    Y = (
+        (torch.randn(n, q, device=device) * 1e-2)
+        if init is None
+        else _as_tensor(init, device).clone()
+    )
+    Y.requires_grad_(True)
+    opt = torch.optim.Adam([Y], lr=lr)
+    rv: torch.Tensor = torch.tensor(0.0)
+    for it in range(n_iter):
+        opt.zero_grad()
+        K_Y = out_fn(Y, param=output_param, weights=weights, device=device)
+        rv = rv_coefficient(K_X, K_Y)
+        (-rv).backward()  # maximise RV
+        opt.step()
+        if verbose and (it % max(1, n_iter // 10) == 0):
+            print(f"  iter {it:4d}  RV = {rv.item():.4f}")
+    return Y.detach(), rv.item()
+
+
+# ===========================================================================
+# Demo
+# ===========================================================================
+if __name__ == "__main__":
+    torch.manual_seed(0)
+    np.random.seed(0)
+
+    # toy data: 3 Gaussian blobs in 10-D
+    n_per, dim = 60, 10
+    centers = np.random.randn(3, dim) * 6
+    X = np.vstack([c + np.random.randn(n_per, dim) for c in centers]).astype(np.float32)
+    labels = np.repeat(np.arange(3), n_per)
+    Xt = torch.as_tensor(X)
+    n = X.shape[0]
+    w = default_weights(n)
+
+    # --- Brick 1: choose an INPUT kernel (target geometry) ---
+    K_X = compute_geodesic_kernel_torch(Xt, param={"k": 10}, weights=w)
+
+    # --- Brick 2: choose an OUTPUT kernel (model geometry) ---  here: Student-t (t-SNE-like)
+    Y, rv = rv_dimred(
+        K_X,
+        output_kernel="student_t",
+        q=2,
+        weights=w,
+        output_param=1.0,
+        n_iter=300,
+        lr=0.5,
+        verbose=True,
+    )
+    print(f"Geodesic + Student-t  ->  RV = {rv:.4f}")
+
+    # --- Supervised mix: K(alpha) = (1-alpha) K_X + alpha K_Z  (a pure lego op) ---
+    K_Z = compute_class_kernel_torch(Xt, param={"labels": labels}, weights=w)
+    alpha = 0.5
+    K_mix = (1 - alpha) * K_X + alpha * K_Z
+    Y2, rv2 = rv_dimred(
+        K_mix,
+        output_kernel="student_t",
+        q=2,
+        weights=w,
+        output_param=1.0,
+        n_iter=300,
+        lr=0.5,
+    )
+    print(f"Soft-supervised (alpha={alpha})  ->  RV = {rv2:.4f}")

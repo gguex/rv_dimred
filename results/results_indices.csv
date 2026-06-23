@@ -1,0 +1,525 @@
+section,dataset,method,variant,init,index_name,k,value,run_id
+5.3.1,singlecell,PCA,overlay,pca,procrustes,15,1.9818671711654957e-07,
+5.3.1,singlecell,PCA,overlay,pca,knn_overlap,15,0.9985342431134697,
+5.3.1,singlecell,PCA,framework,pca,rv_final,,0.8102056384086609,
+5.3.1,singlecell,PCA,framework,pca,trustworthiness,15,0.8252095301740363,
+5.3.1,singlecell,PCA,framework,pca,q_local,,0.37051564737595827,
+5.3.1,singlecell,PCA,framework,pca,ari,,0.5496320177536987,
+5.3.1,singlecell,PCA,reference,pca,trustworthiness,15,0.8251779188416974,
+5.3.1,singlecell,PCA,reference,pca,q_local,,0.3704299869429702,
+5.3.1,singlecell,PCA,reference,pca,ari,,0.548970163632591,
+5.3.1,singlecell,Kernel PCA (RBF),overlay,pca,procrustes,15,3.0937887576425697e-13,
+5.3.1,singlecell,Kernel PCA (RBF),overlay,pca,knn_overlap,15,0.9999747283295426,
+5.3.1,singlecell,Kernel PCA (RBF),framework,pca,rv_final,,0.8564151525497437,
+5.3.1,singlecell,Kernel PCA (RBF),framework,pca,trustworthiness,15,0.7738978048437529,
+5.3.1,singlecell,Kernel PCA (RBF),framework,pca,q_local,,0.3230128569623452,
+5.3.1,singlecell,Kernel PCA (RBF),framework,pca,ari,,0.42863074173317606,
+5.3.1,singlecell,Kernel PCA (RBF),reference,pca,trustworthiness,15,0.7738994574080544,
+5.3.1,singlecell,Kernel PCA (RBF),reference,pca,q_local,,0.3230128569623452,
+5.3.1,singlecell,Kernel PCA (RBF),reference,pca,ari,,0.42863074173317606,
+5.3.1,singlecell,Isomap,overlay,pca,procrustes,15,0.006269900694041512,
+5.3.1,singlecell,Isomap,overlay,pca,knn_overlap,15,0.4844831943391458,
+5.3.1,singlecell,Isomap,framework,pca,rv_final,,0.9484736323356628,
+5.3.1,singlecell,Isomap,framework,pca,trustworthiness,15,0.8281998887659935,
+5.3.1,singlecell,Isomap,framework,pca,q_local,,0.36738417151040353,
+5.3.1,singlecell,Isomap,framework,pca,ari,,0.569557956873539,
+5.3.1,singlecell,Isomap,reference,pca,trustworthiness,15,0.8272336605120727,
+5.3.1,singlecell,Isomap,reference,pca,q_local,,0.3631005707185578,
+5.3.1,singlecell,Isomap,reference,pca,ari,,0.5623971084246042,
+5.3.1,singlecell,LLE,overlay,pca,procrustes,15,0.058310306634373685,
+5.3.1,singlecell,LLE,overlay,pca,knn_overlap,15,0.37369219105382867,
+5.3.1,singlecell,LLE,framework,pca,rv_final,,0.9960334897041321,
+5.3.1,singlecell,LLE,framework,pca,trustworthiness,15,0.7948790414740488,
+5.3.1,singlecell,LLE,framework,pca,q_local,,0.32096206090472584,
+5.3.1,singlecell,LLE,framework,pca,ari,,0.556112772214292,
+5.3.1,singlecell,LLE,reference,pca,trustworthiness,15,0.7855713644430979,
+5.3.1,singlecell,LLE,reference,pca,q_local,,0.29422963524555645,
+5.3.1,singlecell,LLE,reference,pca,ari,,0.37179573152329826,
+5.3.1,singlecell,Diffusion Maps,overlay,pca,procrustes,15,0.4390973624217029,
+5.3.1,singlecell,Diffusion Maps,overlay,pca,knn_overlap,15,0.46421531463229715,
+5.3.1,singlecell,Diffusion Maps,framework,pca,rv_final,,0.07170464843511581,
+5.3.1,singlecell,Diffusion Maps,framework,pca,trustworthiness,15,0.7970320524993586,
+5.3.1,singlecell,Diffusion Maps,framework,pca,q_local,,0.2984709586386994,
+5.3.1,singlecell,Diffusion Maps,framework,pca,ari,,0.4373723557910262,
+5.3.1,singlecell,Diffusion Maps,reference,pca,trustworthiness,15,0.6772120950311451,
+5.3.1,singlecell,Diffusion Maps,reference,pca,q_local,,0.19091973085670957,
+5.3.1,singlecell,Diffusion Maps,reference,pca,ari,,0.24233562281157953,
+5.3.1,singlecell,Laplacian Eigenmaps,overlay,pca,procrustes,15,0.99830053786068,
+5.3.1,singlecell,Laplacian Eigenmaps,overlay,pca,knn_overlap,15,0.0335860500379075,
+5.3.1,singlecell,Laplacian Eigenmaps,framework,pca,rv_final,,0.9856600165367126,
+5.3.1,singlecell,Laplacian Eigenmaps,framework,pca,trustworthiness,15,0.732776457820229,
+5.3.1,singlecell,Laplacian Eigenmaps,framework,pca,q_local,,0.23451583691348665,
+5.3.1,singlecell,Laplacian Eigenmaps,framework,pca,ari,,-0.017105983674404586,
+5.3.1,singlecell,Laplacian Eigenmaps,reference,pca,trustworthiness,15,0.82975163698091,
+5.3.1,singlecell,Laplacian Eigenmaps,reference,pca,q_local,,0.3813118629433072,
+5.3.1,singlecell,Laplacian Eigenmaps,reference,pca,ari,,0.7503038741287572,
+5.3.1,mnist,PCA,overlay,pca,procrustes,15,4.347594246735172e-08,
+5.3.1,mnist,PCA,overlay,pca,knn_overlap,15,0.9996333333333334,
+5.3.1,mnist,PCA,framework,pca,rv_final,,0.681700587272644,
+5.3.1,mnist,PCA,framework,pca,trustworthiness,15,0.7573897319170461,
+5.3.1,mnist,PCA,framework,pca,q_local,,0.42935638888888894,
+5.3.1,mnist,PCA,framework,pca,ari,,0.23114729017452554,
+5.3.1,mnist,PCA,reference,pca,trustworthiness,15,0.7574215309391334,
+5.3.1,mnist,PCA,reference,pca,q_local,,0.4293647222222223,
+5.3.1,mnist,PCA,reference,pca,ari,,0.23177710727315043,
+5.3.1,mnist,Kernel PCA (RBF),overlay,pca,procrustes,15,4.120750576282481e-09,
+5.3.1,mnist,Kernel PCA (RBF),overlay,pca,knn_overlap,15,1.0,
+5.3.1,mnist,Kernel PCA (RBF),framework,pca,rv_final,,0.6894757747650146,
+5.3.1,mnist,Kernel PCA (RBF),framework,pca,trustworthiness,15,0.7466573427752488,
+5.3.1,mnist,Kernel PCA (RBF),framework,pca,q_local,,0.4242654166666667,
+5.3.1,mnist,Kernel PCA (RBF),framework,pca,ari,,0.2102358937164512,
+5.3.1,mnist,Kernel PCA (RBF),reference,pca,trustworthiness,15,0.7466573427752488,
+5.3.1,mnist,Kernel PCA (RBF),reference,pca,q_local,,0.42424659722222224,
+5.3.1,mnist,Kernel PCA (RBF),reference,pca,ari,,0.2102358937164512,
+5.3.1,mnist,Isomap,overlay,pca,procrustes,15,0.004394760293283936,
+5.3.1,mnist,Isomap,overlay,pca,knn_overlap,15,0.6263333333333333,
+5.3.1,mnist,Isomap,framework,pca,rv_final,,0.7236031293869019,
+5.3.1,mnist,Isomap,framework,pca,trustworthiness,15,0.7815109256449165,
+5.3.1,mnist,Isomap,framework,pca,q_local,,0.4716245138888888,
+5.3.1,mnist,Isomap,framework,pca,ari,,0.24529259995723146,
+5.3.1,mnist,Isomap,reference,pca,trustworthiness,15,0.7836312932051931,
+5.3.1,mnist,Isomap,reference,pca,q_local,,0.47288222222222237,
+5.3.1,mnist,Isomap,reference,pca,ari,,0.24181909368795035,
+5.3.1,mnist,LLE,overlay,pca,procrustes,15,0.7923361206460096,
+5.3.1,mnist,LLE,overlay,pca,knn_overlap,15,0.0361,
+5.3.1,mnist,LLE,framework,pca,rv_final,,0.9917727708816528,
+5.3.1,mnist,LLE,framework,pca,trustworthiness,15,0.6573849435171135,
+5.3.1,mnist,LLE,framework,pca,q_local,,0.30104666666666663,
+5.3.1,mnist,LLE,framework,pca,ari,,0.10629523757775015,
+5.3.1,mnist,LLE,reference,pca,trustworthiness,15,0.6881801213960547,
+5.3.1,mnist,LLE,reference,pca,q_local,,0.3423346527777778,
+5.3.1,mnist,LLE,reference,pca,ari,,0.11615077679104042,
+5.3.1,mnist,Diffusion Maps,overlay,pca,procrustes,15,0.00041901007358934625,
+5.3.1,mnist,Diffusion Maps,overlay,pca,knn_overlap,15,0.8528000000000002,
+5.3.1,mnist,Diffusion Maps,framework,pca,rv_final,,0.07856520265340805,
+5.3.1,mnist,Diffusion Maps,framework,pca,trustworthiness,15,0.7967691114483224,
+5.3.1,mnist,Diffusion Maps,framework,pca,q_local,,0.5118908333333333,
+5.3.1,mnist,Diffusion Maps,framework,pca,ari,,0.28932917982355355,
+5.3.1,mnist,Diffusion Maps,reference,pca,trustworthiness,15,0.7947107064575957,
+5.3.1,mnist,Diffusion Maps,reference,pca,q_local,,0.5094424305555555,
+5.3.1,mnist,Diffusion Maps,reference,pca,ari,,0.28864956387747853,
+5.3.1,mnist,Laplacian Eigenmaps,overlay,pca,procrustes,15,0.14596036314510719,
+5.3.1,mnist,Laplacian Eigenmaps,overlay,pca,knn_overlap,15,0.4030666666666667,
+5.3.1,mnist,Laplacian Eigenmaps,framework,pca,rv_final,,0.4924936294555664,
+5.3.1,mnist,Laplacian Eigenmaps,framework,pca,trustworthiness,15,0.8371221716405328,
+5.3.1,mnist,Laplacian Eigenmaps,framework,pca,q_local,,0.5808245138888889,
+5.3.1,mnist,Laplacian Eigenmaps,framework,pca,ari,,0.3048091990919248,
+5.3.1,mnist,Laplacian Eigenmaps,reference,pca,trustworthiness,15,0.8264681841173496,
+5.3.1,mnist,Laplacian Eigenmaps,reference,pca,q_local,,0.5606788194444444,
+5.3.1,mnist,Laplacian Eigenmaps,reference,pca,ari,,0.3166791047041223,
+5.3.1,swissroll,PCA,overlay,pca,procrustes,15,1.236312305337204e-09,
+5.3.1,swissroll,PCA,overlay,pca,knn_overlap,15,0.9999,
+5.3.1,swissroll,PCA,framework,pca,rv_final,,0.8771896958351135,
+5.3.1,swissroll,PCA,framework,pca,trustworthiness,15,0.9586481537683359,
+5.3.1,swissroll,PCA,framework,pca,q_local,,0.7806988194444443,
+5.3.1,swissroll,PCA,reference,pca,trustworthiness,15,0.9586606137244984,
+5.3.1,swissroll,PCA,reference,pca,q_local,,0.7807011111111112,
+5.3.1,swissroll,Kernel PCA (RBF),overlay,pca,procrustes,15,1.87826525842435e-11,
+5.3.1,swissroll,Kernel PCA (RBF),overlay,pca,knn_overlap,15,1.0,
+5.3.1,swissroll,Kernel PCA (RBF),framework,pca,rv_final,,0.8264512419700623,
+5.3.1,swissroll,Kernel PCA (RBF),framework,pca,trustworthiness,15,0.8734477828359467,
+5.3.1,swissroll,Kernel PCA (RBF),framework,pca,q_local,,0.6310525694444444,
+5.3.1,swissroll,Kernel PCA (RBF),reference,pca,trustworthiness,15,0.8734477828359467,
+5.3.1,swissroll,Kernel PCA (RBF),reference,pca,q_local,,0.6310609027777777,
+5.3.1,swissroll,Isomap,overlay,pca,procrustes,15,0.02664059109341857,
+5.3.1,swissroll,Isomap,overlay,pca,knn_overlap,15,0.6775666666666667,
+5.3.1,swissroll,Isomap,framework,pca,rv_final,,0.9988808631896973,
+5.3.1,swissroll,Isomap,framework,pca,trustworthiness,15,0.9959369752149722,
+5.3.1,swissroll,Isomap,framework,pca,q_local,,0.9298072222222222,
+5.3.1,swissroll,Isomap,reference,pca,trustworthiness,15,0.9998796324397234,
+5.3.1,swissroll,Isomap,reference,pca,q_local,,0.9807975694444444,
+5.3.1,swissroll,LLE,overlay,pca,procrustes,15,0.47065053616652486,
+5.3.1,swissroll,LLE,overlay,pca,knn_overlap,15,0.28263333333333335,
+5.3.1,swissroll,LLE,framework,pca,rv_final,,0.9994813203811646,
+5.3.1,swissroll,LLE,framework,pca,trustworthiness,15,0.9702119709998314,
+5.3.1,swissroll,LLE,framework,pca,q_local,,0.8293523611111109,
+5.3.1,swissroll,LLE,reference,pca,trustworthiness,15,0.9966063227111785,
+5.3.1,swissroll,LLE,reference,pca,q_local,,0.9211154861111112,
+5.3.1,swissroll,Diffusion Maps,overlay,pca,procrustes,15,0.21703836054994385,
+5.3.1,swissroll,Diffusion Maps,overlay,pca,knn_overlap,15,0.5678666666666666,
+5.3.1,swissroll,Diffusion Maps,framework,pca,rv_final,,0.0776643231511116,
+5.3.1,swissroll,Diffusion Maps,framework,pca,trustworthiness,15,0.8998315798347665,
+5.3.1,swissroll,Diffusion Maps,framework,pca,q_local,,0.6659774305555556,
+5.3.1,swissroll,Diffusion Maps,reference,pca,trustworthiness,15,0.8792431630416456,
+5.3.1,swissroll,Diffusion Maps,reference,pca,q_local,,0.6247857638888888,
+5.3.1,swissroll,Laplacian Eigenmaps,overlay,pca,procrustes,15,0.12026970180129998,
+5.3.1,swissroll,Laplacian Eigenmaps,overlay,pca,knn_overlap,15,0.5818,
+5.3.1,swissroll,Laplacian Eigenmaps,framework,pca,rv_final,,0.9861944913864136,
+5.3.1,swissroll,Laplacian Eigenmaps,framework,pca,trustworthiness,15,0.8783137582195245,
+5.3.1,swissroll,Laplacian Eigenmaps,framework,pca,q_local,,0.6403535416666666,
+5.3.1,swissroll,Laplacian Eigenmaps,reference,pca,trustworthiness,15,0.8761578823132693,
+5.3.1,swissroll,Laplacian Eigenmaps,reference,pca,q_local,,0.6317535416666666,
+5.3.2,singlecell,t-SNE,floor,random,procrustes_floor_mean,15,0.04198445492343864,
+5.3.2,singlecell,t-SNE,floor,random,procrustes_floor_std,15,0.037678943494990964,
+5.3.2,singlecell,t-SNE,floor,random,knn_overlap_floor_mean,15,0.6034852441524162,
+5.3.2,singlecell,t-SNE,floor,random,knn_overlap_floor_std,15,0.10397958273550742,
+5.3.2,singlecell,t-SNE,reference,random,trustworthiness,15,0.8888670125454757,0
+5.3.2,singlecell,t-SNE,reference,random,q_local,15,0.5759855951478393,0
+5.3.2,singlecell,t-SNE,reference,random,ari,15,0.4624731109973569,0
+5.3.2,singlecell,t-SNE,reference,random,trustworthiness,15,0.891755878562617,1
+5.3.2,singlecell,t-SNE,reference,random,q_local,15,0.5774506675932947,1
+5.3.2,singlecell,t-SNE,reference,random,ari,15,0.45947943119286283,1
+5.3.2,singlecell,t-SNE,reference,random,trustworthiness,15,0.8915558989539075,2
+5.3.2,singlecell,t-SNE,reference,random,q_local,15,0.5792120503748631,2
+5.3.2,singlecell,t-SNE,reference,random,ari,15,0.4758736756369036,2
+5.3.2,singlecell,t-SNE,reference,random,trustworthiness,15,0.8909681272532497,3
+5.3.2,singlecell,t-SNE,reference,random,q_local,15,0.5789829205627158,3
+5.3.2,singlecell,t-SNE,reference,random,ari,15,0.4707487918337374,3
+5.3.2,singlecell,t-SNE,reference,random,trustworthiness,15,0.8908444265336111,4
+5.3.2,singlecell,t-SNE,reference,random,q_local,15,0.5788754633139584,4
+5.3.2,singlecell,t-SNE,reference,random,ari,15,0.46845869876942803,4
+5.3.2,singlecell,t-SNE,reference,random,trustworthiness,15,0.8920220187280957,5
+5.3.2,singlecell,t-SNE,reference,random,q_local,15,0.5801012972790834,5
+5.3.2,singlecell,t-SNE,reference,random,ari,15,0.47632576599332976,5
+5.3.2,singlecell,t-SNE,reference,random,trustworthiness,15,0.8911853863062337,6
+5.3.2,singlecell,t-SNE,reference,random,q_local,15,0.5770729087692698,6
+5.3.2,singlecell,t-SNE,reference,random,ari,15,0.48004826465525324,6
+5.3.2,singlecell,t-SNE,reference,random,trustworthiness,15,0.8925102113494444,7
+5.3.2,singlecell,t-SNE,reference,random,q_local,15,0.5800518595737513,7
+5.3.2,singlecell,t-SNE,reference,random,ari,15,0.47663452530104744,7
+5.3.2,singlecell,t-SNE,reference,random,trustworthiness,15,0.8907788941445588,8
+5.3.2,singlecell,t-SNE,reference,random,q_local,15,0.5787536328026283,8
+5.3.2,singlecell,t-SNE,reference,random,ari,15,0.47123518927594793,8
+5.3.2,singlecell,t-SNE,reference,random,trustworthiness,15,0.8913023221427671,9
+5.3.2,singlecell,t-SNE,reference,random,q_local,15,0.5762303618060821,9
+5.3.2,singlecell,t-SNE,reference,random,ari,15,0.4749169240688471,9
+5.3.2,singlecell,t-SNE,framework,pca,procrustes,15,0.3560390506684222,
+5.3.2,singlecell,t-SNE,framework,pca,knn_overlap,15,0.27033105888299214,
+5.3.2,singlecell,t-SNE,framework,pca,trustworthiness,15,0.8650493957268166,
+5.3.2,singlecell,t-SNE,framework,pca,q_local,15,0.5324209207311936,
+5.3.2,singlecell,t-SNE,framework,pca,ari,15,0.30430166741702563,
+5.3.2,singlecell,t-SNE,framework,pca,rv_final,,0.4460596442222595,
+5.3.2,singlecell,UMAP,floor,random,procrustes_floor_mean,15,0.12552853732986347,
+5.3.2,singlecell,UMAP,floor,random,procrustes_floor_std,15,0.06301860402321349,
+5.3.2,singlecell,UMAP,floor,random,knn_overlap_floor_mean,15,0.27685732738045093,
+5.3.2,singlecell,UMAP,floor,random,knn_overlap_floor_std,15,0.012956763679242679,
+5.3.2,singlecell,UMAP,reference,random,trustworthiness,15,0.8615605812194281,0
+5.3.2,singlecell,UMAP,reference,random,q_local,15,0.4574279757391963,0
+5.3.2,singlecell,UMAP,reference,random,ari,15,0.6416233728416284,0
+5.3.2,singlecell,UMAP,reference,random,trustworthiness,15,0.8613144554438222,1
+5.3.2,singlecell,UMAP,reference,random,q_local,15,0.4565503116839356,1
+5.3.2,singlecell,UMAP,reference,random,ari,15,0.5228807836214312,1
+5.3.2,singlecell,UMAP,reference,random,trustworthiness,15,0.8608559799875429,2
+5.3.2,singlecell,UMAP,reference,random,q_local,15,0.45636777651419425,2
+5.3.2,singlecell,UMAP,reference,random,ari,15,0.5214383846906525,2
+5.3.2,singlecell,UMAP,reference,random,trustworthiness,15,0.8604477676127356,3
+5.3.2,singlecell,UMAP,reference,random,q_local,15,0.4585505117513269,3
+5.3.2,singlecell,UMAP,reference,random,ari,15,0.5238283612584695,3
+5.3.2,singlecell,UMAP,reference,random,trustworthiness,15,0.862296387890666,4
+5.3.2,singlecell,UMAP,reference,random,q_local,15,0.46056161022660275,4
+5.3.2,singlecell,UMAP,reference,random,ari,15,0.5205258882632332,4
+5.3.2,singlecell,UMAP,reference,random,trustworthiness,15,0.8604736577867912,5
+5.3.2,singlecell,UMAP,reference,random,q_local,15,0.45979266700362226,5
+5.3.2,singlecell,UMAP,reference,random,ari,15,0.49634112135497227,5
+5.3.2,singlecell,UMAP,reference,random,trustworthiness,15,0.8610280882778589,6
+5.3.2,singlecell,UMAP,reference,random,q_local,15,0.4554907969000084,6
+5.3.2,singlecell,UMAP,reference,random,ari,15,0.5225043214832302,6
+5.3.2,singlecell,UMAP,reference,random,trustworthiness,15,0.8612818970278486,7
+5.3.2,singlecell,UMAP,reference,random,q_local,15,0.4554696318760003,7
+5.3.2,singlecell,UMAP,reference,random,ari,15,0.5170937371332598,7
+5.3.2,singlecell,UMAP,reference,random,trustworthiness,15,0.8615522604132088,8
+5.3.2,singlecell,UMAP,reference,random,q_local,15,0.4582444612922248,8
+5.3.2,singlecell,UMAP,reference,random,ari,15,0.6252964436976978,8
+5.3.2,singlecell,UMAP,reference,random,trustworthiness,15,0.859598475195348,9
+5.3.2,singlecell,UMAP,reference,random,q_local,15,0.45327963103361135,9
+5.3.2,singlecell,UMAP,reference,random,ari,15,0.532134016056707,9
+5.3.2,singlecell,UMAP,framework,pca,procrustes,15,0.43682087065620434,
+5.3.2,singlecell,UMAP,framework,pca,knn_overlap,15,0.13702299722011627,
+5.3.2,singlecell,UMAP,framework,pca,trustworthiness,15,0.8633586678205625,
+5.3.2,singlecell,UMAP,framework,pca,q_local,15,0.5213416098054081,
+5.3.2,singlecell,UMAP,framework,pca,ari,15,0.309968600177199,
+5.3.2,singlecell,UMAP,framework,pca,rv_final,,0.3745756149291992,
+5.3.2,singlecell,UMAP,reference,random_vs_pca,procrustes,15,0.1890329533280278,
+5.3.2,singlecell,UMAP,framework,pca,procrustes,15,0.43682087065620434,
+5.3.2,mnist,t-SNE,floor,random,procrustes_floor_mean,15,0.010132768438865257,
+5.3.2,mnist,t-SNE,floor,random,procrustes_floor_std,15,0.00432978057264105,
+5.3.2,mnist,t-SNE,floor,random,knn_overlap_floor_mean,15,0.881046666666667,
+5.3.2,mnist,t-SNE,floor,random,knn_overlap_floor_std,15,0.028459898926622713,
+5.3.2,mnist,t-SNE,reference,random,trustworthiness,15,0.9624382397572079,0
+5.3.2,mnist,t-SNE,reference,random,q_local,15,0.8101386805555556,0
+5.3.2,mnist,t-SNE,reference,random,ari,15,0.5574050650290755,0
+5.3.2,mnist,t-SNE,reference,random,trustworthiness,15,0.96029468892261,1
+5.3.2,mnist,t-SNE,reference,random,q_local,15,0.8080809027777779,1
+5.3.2,mnist,t-SNE,reference,random,ari,15,0.5512394826372645,1
+5.3.2,mnist,t-SNE,reference,random,trustworthiness,15,0.9603057494520317,2
+5.3.2,mnist,t-SNE,reference,random,q_local,15,0.8067009722222221,2
+5.3.2,mnist,t-SNE,reference,random,ari,15,0.55191594200933,2
+5.3.2,mnist,t-SNE,reference,random,trustworthiness,15,0.960879581858034,3
+5.3.2,mnist,t-SNE,reference,random,q_local,15,0.8092894444444445,3
+5.3.2,mnist,t-SNE,reference,random,ari,15,0.5579178678229767,3
+5.3.2,mnist,t-SNE,reference,random,trustworthiness,15,0.9598777440566515,4
+5.3.2,mnist,t-SNE,reference,random,q_local,15,0.8042054166666667,4
+5.3.2,mnist,t-SNE,reference,random,ari,15,0.5579837235599284,4
+5.3.2,mnist,t-SNE,reference,random,trustworthiness,15,0.9611778620805935,5
+5.3.2,mnist,t-SNE,reference,random,q_local,15,0.8086065972222222,5
+5.3.2,mnist,t-SNE,reference,random,ari,15,0.5478573460637653,5
+5.3.2,mnist,t-SNE,reference,random,trustworthiness,15,0.9610424380374305,6
+5.3.2,mnist,t-SNE,reference,random,q_local,15,0.8073069444444445,6
+5.3.2,mnist,t-SNE,reference,random,ari,15,0.5560345055696911,6
+5.3.2,mnist,t-SNE,reference,random,trustworthiness,15,0.960548406676783,7
+5.3.2,mnist,t-SNE,reference,random,q_local,15,0.804634861111111,7
+5.3.2,mnist,t-SNE,reference,random,ari,15,0.5554685502110391,7
+5.3.2,mnist,t-SNE,reference,random,trustworthiness,15,0.9601068116675097,8
+5.3.2,mnist,t-SNE,reference,random,q_local,15,0.8064150694444444,8
+5.3.2,mnist,t-SNE,reference,random,ari,15,0.5477296526990122,8
+5.3.2,mnist,t-SNE,reference,random,trustworthiness,15,0.9609150733434497,9
+5.3.2,mnist,t-SNE,reference,random,q_local,15,0.8084359027777777,9
+5.3.2,mnist,t-SNE,reference,random,ari,15,0.5529698392426724,9
+5.3.2,mnist,t-SNE,framework,pca,procrustes,15,0.3048806493512126,
+5.3.2,mnist,t-SNE,framework,pca,knn_overlap,15,0.5668666666666666,
+5.3.2,mnist,t-SNE,framework,pca,trustworthiness,15,0.937303658742202,
+5.3.2,mnist,t-SNE,framework,pca,q_local,15,0.7570216666666666,
+5.3.2,mnist,t-SNE,framework,pca,ari,15,0.29156099662911344,
+5.3.2,mnist,t-SNE,framework,pca,rv_final,,0.6370601058006287,
+5.3.2,mnist,UMAP,floor,random,procrustes_floor_mean,15,0.5173166068190761,
+5.3.2,mnist,UMAP,floor,random,procrustes_floor_std,15,0.20609831679941026,
+5.3.2,mnist,UMAP,floor,random,knn_overlap_floor_mean,15,0.6964214814814815,
+5.3.2,mnist,UMAP,floor,random,knn_overlap_floor_std,15,0.025828414017215993,
+5.3.2,mnist,UMAP,reference,random,trustworthiness,15,0.9505131680998146,0
+5.3.2,mnist,UMAP,reference,random,q_local,15,0.7770856944444445,0
+5.3.2,mnist,UMAP,reference,random,ari,15,0.5670480881121638,0
+5.3.2,mnist,UMAP,reference,random,trustworthiness,15,0.9533568538189175,1
+5.3.2,mnist,UMAP,reference,random,q_local,15,0.7831875,1
+5.3.2,mnist,UMAP,reference,random,ari,15,0.5331783506443577,1
+5.3.2,mnist,UMAP,reference,random,trustworthiness,15,0.9533225088517957,2
+5.3.2,mnist,UMAP,reference,random,q_local,15,0.7844941666666666,2
+5.3.2,mnist,UMAP,reference,random,ari,15,0.5310865642769976,2
+5.3.2,mnist,UMAP,reference,random,trustworthiness,15,0.9520340751981116,3
+5.3.2,mnist,UMAP,reference,random,q_local,15,0.7836647222222223,3
+5.3.2,mnist,UMAP,reference,random,ari,15,0.5318692590584967,3
+5.3.2,mnist,UMAP,reference,random,trustworthiness,15,0.9506904063395718,4
+5.3.2,mnist,UMAP,reference,random,q_local,15,0.7804056250000001,4
+5.3.2,mnist,UMAP,reference,random,ari,15,0.5462074748276974,4
+5.3.2,mnist,UMAP,reference,random,trustworthiness,15,0.9539100488956331,5
+5.3.2,mnist,UMAP,reference,random,q_local,15,0.7859320833333333,5
+5.3.2,mnist,UMAP,reference,random,ari,15,0.5407102949008868,5
+5.3.2,mnist,UMAP,reference,random,trustworthiness,15,0.951812038442084,6
+5.3.2,mnist,UMAP,reference,random,q_local,15,0.7831062499999999,6
+5.3.2,mnist,UMAP,reference,random,ari,15,0.5473221600938372,6
+5.3.2,mnist,UMAP,reference,random,trustworthiness,15,0.951924211768673,7
+5.3.2,mnist,UMAP,reference,random,q_local,15,0.7837096527777779,7
+5.3.2,mnist,UMAP,reference,random,ari,15,0.5382603585048706,7
+5.3.2,mnist,UMAP,reference,random,trustworthiness,15,0.9523736806609341,8
+5.3.2,mnist,UMAP,reference,random,q_local,15,0.7823025694444444,8
+5.3.2,mnist,UMAP,reference,random,ari,15,0.5077404547291383,8
+5.3.2,mnist,UMAP,reference,random,trustworthiness,15,0.9534899342438038,9
+5.3.2,mnist,UMAP,reference,random,q_local,15,0.7856734027777778,9
+5.3.2,mnist,UMAP,reference,random,ari,15,0.536057007942377,9
+5.3.2,mnist,UMAP,framework,pca,procrustes,15,0.35623111784509576,
+5.3.2,mnist,UMAP,framework,pca,knn_overlap,15,0.46563333333333334,
+5.3.2,mnist,UMAP,framework,pca,trustworthiness,15,0.9449484572584724,
+5.3.2,mnist,UMAP,framework,pca,q_local,15,0.7513823611111112,
+5.3.2,mnist,UMAP,framework,pca,ari,15,0.3137515762075766,
+5.3.2,mnist,UMAP,framework,pca,rv_final,,0.5964487791061401,
+5.3.2,mnist,UMAP,reference,random_vs_pca,procrustes,15,0.5218479869937047,
+5.3.2,mnist,UMAP,framework,pca,procrustes,15,0.35623111784509576,
+5.3.2,swissroll,t-SNE,floor,random,procrustes_floor_mean,15,0.26651509100960513,
+5.3.2,swissroll,t-SNE,floor,random,procrustes_floor_std,15,0.19979267245144713,
+5.3.2,swissroll,t-SNE,floor,random,knn_overlap_floor_mean,15,0.9562592592592594,
+5.3.2,swissroll,t-SNE,floor,random,knn_overlap_floor_std,15,0.01338024689079803,
+5.3.2,swissroll,t-SNE,reference,random,trustworthiness,15,0.9995383240600236,0
+5.3.2,swissroll,t-SNE,reference,random,q_local,15,0.9678918750000002,0
+5.3.2,swissroll,t-SNE,reference,random,trustworthiness,15,0.9995150564828865,1
+5.3.2,swissroll,t-SNE,reference,random,q_local,15,0.9690381944444443,1
+5.3.2,swissroll,t-SNE,reference,random,trustworthiness,15,0.9995112628561794,2
+5.3.2,swissroll,t-SNE,reference,random,q_local,15,0.9696475000000001,2
+5.3.2,swissroll,t-SNE,reference,random,trustworthiness,15,0.9995218512898331,3
+5.3.2,swissroll,t-SNE,reference,random,q_local,15,0.9683640972222222,3
+5.3.2,swissroll,t-SNE,reference,random,trustworthiness,15,0.999518647782836,4
+5.3.2,swissroll,t-SNE,reference,random,q_local,15,0.9687219444444445,4
+5.3.2,swissroll,t-SNE,reference,random,trustworthiness,15,0.9995201989546451,5
+5.3.2,swissroll,t-SNE,reference,random,q_local,15,0.96753375,5
+5.3.2,swissroll,t-SNE,reference,random,trustworthiness,15,0.9995290844714213,6
+5.3.2,swissroll,t-SNE,reference,random,q_local,15,0.968527013888889,6
+5.3.2,swissroll,t-SNE,reference,random,trustworthiness,15,0.9995354914854157,7
+5.3.2,swissroll,t-SNE,reference,random,q_local,15,0.9689212500000001,7
+5.3.2,swissroll,t-SNE,reference,random,trustworthiness,15,0.9995281402798853,8
+5.3.2,swissroll,t-SNE,reference,random,q_local,15,0.9639813888888887,8
+5.3.2,swissroll,t-SNE,reference,random,trustworthiness,15,0.9995478502781993,9
+5.3.2,swissroll,t-SNE,reference,random,q_local,15,0.9637987500000001,9
+5.3.2,swissroll,t-SNE,framework,pca,procrustes,15,0.7682939543769627,
+5.3.2,swissroll,t-SNE,framework,pca,knn_overlap,15,0.8809666666666667,
+5.3.2,swissroll,t-SNE,framework,pca,trustworthiness,15,0.9976949249704941,
+5.3.2,swissroll,t-SNE,framework,pca,q_local,15,0.9316574305555556,
+5.3.2,swissroll,t-SNE,framework,pca,rv_final,,0.8581326007843018,
+5.3.2,swissroll,UMAP,floor,random,procrustes_floor_mean,15,0.8254113382018954,
+5.3.2,swissroll,UMAP,floor,random,procrustes_floor_std,15,0.13598092816577007,
+5.3.2,swissroll,UMAP,floor,random,knn_overlap_floor_mean,15,0.8556696296296297,
+5.3.2,swissroll,UMAP,floor,random,knn_overlap_floor_std,15,0.012584097003507651,
+5.3.2,swissroll,UMAP,reference,random,trustworthiness,15,0.998244629910639,0
+5.3.2,swissroll,UMAP,reference,random,q_local,15,0.9287494444444445,0
+5.3.2,swissroll,UMAP,reference,random,trustworthiness,15,0.9989134715899511,1
+5.3.2,swissroll,UMAP,reference,random,q_local,15,0.9482520138888889,1
+5.3.2,swissroll,UMAP,reference,random,trustworthiness,15,0.9989200640701399,2
+5.3.2,swissroll,UMAP,reference,random,q_local,15,0.9495661111111112,2
+5.3.2,swissroll,UMAP,reference,random,trustworthiness,15,0.9989839993255775,3
+5.3.2,swissroll,UMAP,reference,random,q_local,15,0.9538954166666667,3
+5.3.2,swissroll,UMAP,reference,random,trustworthiness,15,0.9987926150733435,4
+5.3.2,swissroll,UMAP,reference,random,q_local,15,0.9431468055555555,4
+5.3.2,swissroll,UMAP,reference,random,trustworthiness,15,0.998823250716574,5
+5.3.2,swissroll,UMAP,reference,random,q_local,15,0.9308060416666667,5
+5.3.2,swissroll,UMAP,reference,random,trustworthiness,15,0.9988210251222391,6
+5.3.2,swissroll,UMAP,reference,random,q_local,15,0.9352788194444446,6
+5.3.2,swissroll,UMAP,reference,random,trustworthiness,15,0.9987717754172989,7
+5.3.2,swissroll,UMAP,reference,random,q_local,15,0.951210486111111,7
+5.3.2,swissroll,UMAP,reference,random,trustworthiness,15,0.9989466700387793,8
+5.3.2,swissroll,UMAP,reference,random,q_local,15,0.9492415972222222,8
+5.3.2,swissroll,UMAP,reference,random,trustworthiness,15,0.9987389984825493,9
+5.3.2,swissroll,UMAP,reference,random,q_local,15,0.9337883333333333,9
+5.3.2,swissroll,UMAP,framework,pca,procrustes,15,0.40917210597339876,
+5.3.2,swissroll,UMAP,framework,pca,knn_overlap,15,0.7910666666666667,
+5.3.2,swissroll,UMAP,framework,pca,trustworthiness,15,0.9959557410217501,
+5.3.2,swissroll,UMAP,framework,pca,q_local,15,0.8926843055555554,
+5.3.2,swissroll,UMAP,framework,pca,rv_final,,0.7767284512519836,
+5.3.2,swissroll,UMAP,reference,random_vs_pca,procrustes,15,0.8329356383501079,
+5.3.2,swissroll,UMAP,framework,pca,procrustes,15,0.40917210597339876,
+5.3.3,singlecell,globallocal_a0.0_nuinf,framework,pca,trustworthiness,15,0.8623272840782195,
+5.3.3,singlecell,globallocal_a0.0_nuinf,framework,pca,rv_final,,0.4676714539527893,
+5.3.3,singlecell,globallocal_a0.0_nuinf,framework,pca,ari,,0.3073771811983914,
+5.3.3,singlecell,globallocal_a0.0_nu1.0,framework,pca,trustworthiness,15,0.8642701005213309,
+5.3.3,singlecell,globallocal_a0.0_nu1.0,framework,pca,rv_final,,0.4460888206958771,
+5.3.3,singlecell,globallocal_a0.0_nu1.0,framework,pca,ari,,0.3340851753826218,
+5.3.3,singlecell,globallocal_a0.0_nu0.5,framework,pca,trustworthiness,15,0.862407467271254,
+5.3.3,singlecell,globallocal_a0.0_nu0.5,framework,pca,rv_final,,0.43080848455429077,
+5.3.3,singlecell,globallocal_a0.0_nu0.5,framework,pca,ari,,0.3531729317680816,
+5.3.3,singlecell,globallocal_a0.25_nuinf,framework,pca,trustworthiness,15,0.880453034557439,
+5.3.3,singlecell,globallocal_a0.25_nuinf,framework,pca,rv_final,,0.4257644712924957,
+5.3.3,singlecell,globallocal_a0.25_nuinf,framework,pca,ari,,0.3190084942597279,
+5.3.3,singlecell,globallocal_a0.25_nu1.0,framework,pca,trustworthiness,15,0.8742389675628688,
+5.3.3,singlecell,globallocal_a0.25_nu1.0,framework,pca,rv_final,,0.49956539273262024,
+5.3.3,singlecell,globallocal_a0.25_nu1.0,framework,pca,ari,,0.3362293909920355,
+5.3.3,singlecell,globallocal_a0.25_nu0.5,framework,pca,trustworthiness,15,0.8749570502403707,
+5.3.3,singlecell,globallocal_a0.25_nu0.5,framework,pca,rv_final,,0.5054401159286499,
+5.3.3,singlecell,globallocal_a0.25_nu0.5,framework,pca,ari,,0.33133921545333517,
+5.3.3,singlecell,globallocal_a0.5_nuinf,framework,pca,trustworthiness,15,0.8789159371465046,
+5.3.3,singlecell,globallocal_a0.5_nuinf,framework,pca,rv_final,,0.6250277161598206,
+5.3.3,singlecell,globallocal_a0.5_nuinf,framework,pca,ari,,0.2960441404426238,
+5.3.3,singlecell,globallocal_a0.5_nu1.0,framework,pca,trustworthiness,15,0.8805262112644001,
+5.3.3,singlecell,globallocal_a0.5_nu1.0,framework,pca,rv_final,,0.6399933099746704,
+5.3.3,singlecell,globallocal_a0.5_nu1.0,framework,pca,ari,,0.31132029180532134,
+5.3.3,singlecell,globallocal_a0.5_nu0.5,framework,pca,trustworthiness,15,0.8800650491831162,
+5.3.3,singlecell,globallocal_a0.5_nu0.5,framework,pca,rv_final,,0.6432093381881714,
+5.3.3,singlecell,globallocal_a0.5_nu0.5,framework,pca,ari,,0.320531613574958,
+5.3.3,singlecell,globallocal_a0.75_nuinf,framework,pca,trustworthiness,15,0.8755269046649184,
+5.3.3,singlecell,globallocal_a0.75_nuinf,framework,pca,rv_final,,0.7336172461509705,
+5.3.3,singlecell,globallocal_a0.75_nuinf,framework,pca,ari,,0.3435899383485192,
+5.3.3,singlecell,globallocal_a0.75_nu1.0,framework,pca,trustworthiness,15,0.8824683415550824,
+5.3.3,singlecell,globallocal_a0.75_nu1.0,framework,pca,rv_final,,0.7640154957771301,
+5.3.3,singlecell,globallocal_a0.75_nu1.0,framework,pca,ari,,0.298098427958997,
+5.3.3,singlecell,globallocal_a0.75_nu0.5,framework,pca,trustworthiness,15,0.8803728513644045,
+5.3.3,singlecell,globallocal_a0.75_nu0.5,framework,pca,rv_final,,0.7673078179359436,
+5.3.3,singlecell,globallocal_a0.75_nu0.5,framework,pca,ari,,0.2837806616083934,
+5.3.3,singlecell,globallocal_a1.0_nuinf,framework,pca,trustworthiness,15,0.8532154890696402,
+5.3.3,singlecell,globallocal_a1.0_nuinf,framework,pca,rv_final,,0.7336286306381226,
+5.3.3,singlecell,globallocal_a1.0_nuinf,framework,pca,ari,,0.685074321525714,
+5.3.3,singlecell,globallocal_a1.0_nu1.0,framework,pca,trustworthiness,15,0.8791244791644016,
+5.3.3,singlecell,globallocal_a1.0_nu1.0,framework,pca,rv_final,,0.7878590822219849,
+5.3.3,singlecell,globallocal_a1.0_nu1.0,framework,pca,ari,,0.27456588824917216,
+5.3.3,singlecell,globallocal_a1.0_nu0.5,framework,pca,trustworthiness,15,0.8774461793148236,
+5.3.3,singlecell,globallocal_a1.0_nu0.5,framework,pca,rv_final,,0.7925363183021545,
+5.3.3,singlecell,globallocal_a1.0_nu0.5,framework,pca,ari,,0.2783470725835239,
+5.3.3,singlecell,unsupsup_a0.0,framework,pca,trustworthiness,15,0.8181459001667544,
+5.3.3,singlecell,unsupsup_a0.0,framework,pca,ari,,0.31823520325376553,
+5.3.3,singlecell,unsupsup_a0.0,framework,pca,rv_final,,0.8870573043823242,
+5.3.3,singlecell,unsupsup_a0.25,framework,pca,trustworthiness,15,0.8657243087859886,
+5.3.3,singlecell,unsupsup_a0.25,framework,pca,ari,,0.3266068100325805,
+5.3.3,singlecell,unsupsup_a0.25,framework,pca,rv_final,,0.8590123653411865,
+5.3.3,singlecell,unsupsup_a0.5,framework,pca,trustworthiness,15,0.8717845520028644,
+5.3.3,singlecell,unsupsup_a0.5,framework,pca,ari,,0.3424510618535416,
+5.3.3,singlecell,unsupsup_a0.5,framework,pca,rv_final,,0.7061542868614197,
+5.3.3,singlecell,unsupsup_a0.75,framework,pca,trustworthiness,15,0.8737875372491376,
+5.3.3,singlecell,unsupsup_a0.75,framework,pca,ari,,0.3633336732007263,
+5.3.3,singlecell,unsupsup_a0.75,framework,pca,rv_final,,0.49762165546417236,
+5.3.3,singlecell,unsupsup_a1.0,framework,pca,trustworthiness,15,0.8642701005213309,
+5.3.3,singlecell,unsupsup_a1.0,framework,pca,ari,,0.3340851753826218,
+5.3.3,singlecell,unsupsup_a1.0,framework,pca,rv_final,,0.4460888206958771,
+5.3.3,mnist,globallocal_a0.0_nuinf,framework,pca,trustworthiness,15,0.9386376159163716,
+5.3.3,mnist,globallocal_a0.0_nuinf,framework,pca,rv_final,,0.6568542718887329,
+5.3.3,mnist,globallocal_a0.0_nuinf,framework,pca,ari,,0.37779248642460517,
+5.3.3,mnist,globallocal_a0.0_nu1.0,framework,pca,trustworthiness,15,0.937334125779801,
+5.3.3,mnist,globallocal_a0.0_nu1.0,framework,pca,rv_final,,0.6370652914047241,
+5.3.3,mnist,globallocal_a0.0_nu1.0,framework,pca,ari,,0.2909331425972722,
+5.3.3,mnist,globallocal_a0.0_nu0.5,framework,pca,trustworthiness,15,0.9299190524363514,
+5.3.3,mnist,globallocal_a0.0_nu0.5,framework,pca,rv_final,,0.6216915249824524,
+5.3.3,mnist,globallocal_a0.0_nu0.5,framework,pca,ari,,0.3422733979801743,
+5.3.3,mnist,globallocal_a0.25_nuinf,framework,pca,trustworthiness,15,0.9501454223571068,
+5.3.3,mnist,globallocal_a0.25_nuinf,framework,pca,rv_final,,0.6542425155639648,
+5.3.3,mnist,globallocal_a0.25_nuinf,framework,pca,ari,,0.3711996399970065,
+5.3.3,mnist,globallocal_a0.25_nu1.0,framework,pca,trustworthiness,15,0.9508179564997471,
+5.3.3,mnist,globallocal_a0.25_nu1.0,framework,pca,rv_final,,0.663901686668396,
+5.3.3,mnist,globallocal_a0.25_nu1.0,framework,pca,ari,,0.3747810740196914,
+5.3.3,mnist,globallocal_a0.25_nu0.5,framework,pca,trustworthiness,15,0.9487224582701063,
+5.3.3,mnist,globallocal_a0.25_nu0.5,framework,pca,rv_final,,0.6589981913566589,
+5.3.3,mnist,globallocal_a0.25_nu0.5,framework,pca,ari,,0.3604165522409072,
+5.3.3,mnist,globallocal_a0.5_nuinf,framework,pca,trustworthiness,15,0.9578107064575957,
+5.3.3,mnist,globallocal_a0.5_nuinf,framework,pca,rv_final,,0.5958636999130249,
+5.3.3,mnist,globallocal_a0.5_nuinf,framework,pca,ari,,0.39715274339465817,
+5.3.3,mnist,globallocal_a0.5_nu1.0,framework,pca,trustworthiness,15,0.9550667172483561,
+5.3.3,mnist,globallocal_a0.5_nu1.0,framework,pca,rv_final,,0.6516754031181335,
+5.3.3,mnist,globallocal_a0.5_nu1.0,framework,pca,ari,,0.383951614441757,
+5.3.3,mnist,globallocal_a0.5_nu0.5,framework,pca,trustworthiness,15,0.9521910470409711,
+5.3.3,mnist,globallocal_a0.5_nu0.5,framework,pca,rv_final,,0.6618539094924927,
+5.3.3,mnist,globallocal_a0.5_nu0.5,framework,pca,ari,,0.34029097091577504,
+5.3.3,mnist,globallocal_a0.75_nuinf,framework,pca,trustworthiness,15,0.9184952284606306,
+5.3.3,mnist,globallocal_a0.75_nuinf,framework,pca,rv_final,,0.6676381826400757,
+5.3.3,mnist,globallocal_a0.75_nuinf,framework,pca,ari,,0.3314365850542264,
+5.3.3,mnist,globallocal_a0.75_nu1.0,framework,pca,trustworthiness,15,0.9394990389479009,
+5.3.3,mnist,globallocal_a0.75_nu1.0,framework,pca,rv_final,,0.6777377128601074,
+5.3.3,mnist,globallocal_a0.75_nu1.0,framework,pca,ari,,0.3351537568405839,
+5.3.3,mnist,globallocal_a0.75_nu0.5,framework,pca,trustworthiness,15,0.9429778283594672,
+5.3.3,mnist,globallocal_a0.75_nu0.5,framework,pca,rv_final,,0.6763169169425964,
+5.3.3,mnist,globallocal_a0.75_nu0.5,framework,pca,ari,,0.2851241647211049,
+5.3.3,mnist,globallocal_a1.0_nuinf,framework,pca,trustworthiness,15,0.8971889900522677,
+5.3.3,mnist,globallocal_a1.0_nuinf,framework,pca,rv_final,,0.6855951547622681,
+5.3.3,mnist,globallocal_a1.0_nuinf,framework,pca,ari,,0.2747689312700101,
+5.3.3,mnist,globallocal_a1.0_nu1.0,framework,pca,trustworthiness,15,0.9051895970325409,
+5.3.3,mnist,globallocal_a1.0_nu1.0,framework,pca,rv_final,,0.6912116408348083,
+5.3.3,mnist,globallocal_a1.0_nu1.0,framework,pca,ari,,0.2345835426800721,
+5.3.3,mnist,globallocal_a1.0_nu0.5,framework,pca,trustworthiness,15,0.913094924970494,
+5.3.3,mnist,globallocal_a1.0_nu0.5,framework,pca,rv_final,,0.6858837008476257,
+5.3.3,mnist,globallocal_a1.0_nu0.5,framework,pca,ari,,0.27017764615482337,
+5.3.3,mnist,unsupsup_a0.0,framework,pca,trustworthiness,15,0.7846289833080425,
+5.3.3,mnist,unsupsup_a0.0,framework,pca,ari,,0.19854222883943523,
+5.3.3,mnist,unsupsup_a0.0,framework,pca,rv_final,,0.925211489200592,
+5.3.3,mnist,unsupsup_a0.25,framework,pca,trustworthiness,15,0.867694216826842,
+5.3.3,mnist,unsupsup_a0.25,framework,pca,ari,,0.4957983241233182,
+5.3.3,mnist,unsupsup_a0.25,framework,pca,rv_final,,0.8895220160484314,
+5.3.3,mnist,unsupsup_a0.5,framework,pca,trustworthiness,15,0.9404598718597201,
+5.3.3,mnist,unsupsup_a0.5,framework,pca,ari,,0.6973500494499757,
+5.3.3,mnist,unsupsup_a0.5,framework,pca,rv_final,,0.7244775295257568,
+5.3.3,mnist,unsupsup_a0.75,framework,pca,trustworthiness,15,0.9370212105884337,
+5.3.3,mnist,unsupsup_a0.75,framework,pca,ari,,0.5528618267306099,
+5.3.3,mnist,unsupsup_a0.75,framework,pca,rv_final,,0.665475606918335,
+5.3.3,mnist,unsupsup_a1.0,framework,pca,trustworthiness,15,0.937334125779801,
+5.3.3,mnist,unsupsup_a1.0,framework,pca,ari,,0.2909331425972722,
+5.3.3,mnist,unsupsup_a1.0,framework,pca,rv_final,,0.6370652914047241,
+5.3.3,swissroll,globallocal_a0.0_nuinf,framework,pca,trustworthiness,15,0.9987943854324735,
+5.3.3,swissroll,globallocal_a0.0_nuinf,framework,pca,rv_final,,0.8951783776283264,
+5.3.3,swissroll,globallocal_a0.0_nu1.0,framework,pca,trustworthiness,15,0.9976949249704941,
+5.3.3,swissroll,globallocal_a0.0_nu1.0,framework,pca,rv_final,,0.8581385612487793,
+5.3.3,swissroll,globallocal_a0.0_nu0.5,framework,pca,trustworthiness,15,0.9979134884505142,
+5.3.3,swissroll,globallocal_a0.0_nu0.5,framework,pca,rv_final,,0.839627742767334,
+5.3.3,swissroll,globallocal_a0.25_nuinf,framework,pca,trustworthiness,15,0.9993462485247008,
+5.3.3,swissroll,globallocal_a0.25_nuinf,framework,pca,rv_final,,0.8725801706314087,
+5.3.3,swissroll,globallocal_a0.25_nu1.0,framework,pca,trustworthiness,15,0.998123149553195,
+5.3.3,swissroll,globallocal_a0.25_nu1.0,framework,pca,rv_final,,0.8633500933647156,
+5.3.3,swissroll,globallocal_a0.25_nu0.5,framework,pca,trustworthiness,15,0.9976204181419659,
+5.3.3,swissroll,globallocal_a0.25_nu0.5,framework,pca,rv_final,,0.8545200824737549,
+5.3.3,swissroll,globallocal_a0.5_nuinf,framework,pca,trustworthiness,15,0.9992527904232001,
+5.3.3,swissroll,globallocal_a0.5_nuinf,framework,pca,rv_final,,0.7292022109031677,
+5.3.3,swissroll,globallocal_a0.5_nu1.0,framework,pca,trustworthiness,15,0.9979832911819255,
+5.3.3,swissroll,globallocal_a0.5_nu1.0,framework,pca,rv_final,,0.7848861813545227,
+5.3.3,swissroll,globallocal_a0.5_nu0.5,framework,pca,trustworthiness,15,0.9976140954307874,
+5.3.3,swissroll,globallocal_a0.5_nu0.5,framework,pca,rv_final,,0.798297107219696,
+5.3.3,swissroll,globallocal_a0.75_nuinf,framework,pca,trustworthiness,15,0.998192092395886,
+5.3.3,swissroll,globallocal_a0.75_nuinf,framework,pca,rv_final,,0.5835079550743103,
+5.3.3,swissroll,globallocal_a0.75_nu1.0,framework,pca,trustworthiness,15,0.9969743719440229,
+5.3.3,swissroll,globallocal_a0.75_nu1.0,framework,pca,rv_final,,0.7918639779090881,
+5.3.3,swissroll,globallocal_a0.75_nu0.5,framework,pca,trustworthiness,15,0.9972541224076884,
+5.3.3,swissroll,globallocal_a0.75_nu0.5,framework,pca,rv_final,,0.7954427599906921,
+5.3.3,swissroll,globallocal_a1.0_nuinf,framework,pca,trustworthiness,15,0.9859136401955826,
+5.3.3,swissroll,globallocal_a1.0_nuinf,framework,pca,rv_final,,0.4631860852241516,
+5.3.3,swissroll,globallocal_a1.0_nu1.0,framework,pca,trustworthiness,15,0.987546518293711,
+5.3.3,swissroll,globallocal_a1.0_nu1.0,framework,pca,rv_final,,0.7458558082580566,
+5.3.3,swissroll,globallocal_a1.0_nu0.5,framework,pca,trustworthiness,15,0.9850627887371438,
+5.3.3,swissroll,globallocal_a1.0_nu0.5,framework,pca,rv_final,,0.7640533447265625,

@@ -201,6 +201,17 @@ def main() -> None:
         rh, _ = proc_pair(ref_half, Y)
         print(f"  vs full-exponent ref  {rf:.4f}")
         print(f"  vs half-exponent ref  {rh:.4f}  (matches framework's √λ scaling)")
+
+        # ---- Test 5: larger t for diffusion ----
+        print("[Test 5] diffusion: larger t values (spectral gap effect)")
+        for t_val in (1.0, 2.0, 5.0, 10.0, 20.0):
+            K_d = compute_diffusion_kernel_torch(
+                X_t, param={"k": K_NEIGHBORS, "t": t_val}, weights=w, device=device
+            )
+            Y_d = rv_embed(K_d, init, device, "linear", weights=w)[0]
+            ref_d = diffusion_ref_exponent(X, K_NEIGHBORS, t_val, 2, exponent=1.0)
+            raw, _ = proc_pair(ref_d, Y_d)
+            print(f"  t={t_val:5.1f}  procrustes={raw:.4f}")
         print()
 
 

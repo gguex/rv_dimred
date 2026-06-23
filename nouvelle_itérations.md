@@ -1,0 +1,20 @@
+Voici les problèmes actuels :
+
+Kernel Laplacian : à décider — le plan définit le noyau comme L⁺ commute-time, qui n'est pas SpectralEmbedding. Deux options propres : (a) garder le noyau commute-time et changer la référence pour des Laplacian Eigenmaps non normalisés (bottom eigvecs de D−W) ; (b) changer le noyau en binaire+normalisé pour reproduire SpectralEmbedding (Procrustes ~0.02–0.11, déjà prototypé dans le test 2). 
+LLE : aligner reg sur sklearn (retirer le /k) est plus fidèle ; reste instable selon les données.
+Diffusion : augmenter t (décroissance spectrale plus marquée → meilleur gap) pourrait améliorer le single-cell/swissroll — c'est un test 5 possible.
+
+
+Nous allons maintenant refaire les résultats 5.3.1 et 5.3.2, de la manière suivante :
+
+NE TOUCHE PAS AUX PARTIES QUI CONCERNENT LES RESULTATS 5.3.3.
+
+1) Laplacian : modifie le kernel pour qu'il soit en accord avec la méthode SpectralEmbedding
+2) LLE : aligne reg sur sklearn
+3) Adapte le code pour avoir les résultats suivants :
+   - Ne réduit PAS la dimensionnalité des données avant de faire les tests (i.e. MNIST avec toutes les dimensions).
+   - Lorsque tu produits de comparaisons "méthode kernel - baseline", fais **2 graphiques**, dans **2 fichiers séparés**, avec nom adéquats (je vais les coller côte à côte dans le LateX).
+   - Abandonne les calculs du Qnx, les courbes vont prendre trop de place pour être incluses dans l'article. Les indices restants sont: Procrustes, kNN overlap, Trustworthiness et ARI (s'il y a a des labels).
+   - Pour t-SNE et UMAP (baseline) ne fait QUE les versions avec initialisation PCA.
+4) NETTOYE TOUS LES FICHIERS DES CODES, RESULTATS PRECEDANTS ET TESTS/DIAGNOSTIQUES: IL NE DOIT RESTER QUE LES RESULTATS ACTUELS ET LES CODES LES AYANT PRODUIT.
+

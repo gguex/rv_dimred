@@ -9,7 +9,8 @@ Each loader returns a :class:`Dataset`:
 
     name        short id for figure/CSV names ("singlecell", "mnist", "swissroll")
     X           (n, d) float32 feature matrix fed to every input kernel
-                (PCA->50 for MNIST / single-cell, raw 3D for Swiss-roll)
+                (raw 784 pixels for MNIST, PCA->50 for single-cell, raw 3D for
+                Swiss-roll — no extra dimensionality reduction before the kernels)
     labels      (n,) int class labels, or ``None`` for Swiss-roll
     label_names list of human-readable class names (labelled datasets only)
     color       (n,) array used to colour scatterplots (class id or roll angle)
@@ -26,10 +27,9 @@ from pathlib import Path
 
 import numpy as np
 from sklearn.datasets import make_swiss_roll
-from sklearn.decomposition import PCA
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-PCA_DIMS = 50  # working representation before any kNN (§0.1)
+PCA_DIMS = 50  # single-cell working representation (scanpy obsm['X_pca'])
 
 
 @dataclass
@@ -55,17 +55,14 @@ class Dataset:
 
 
 # ---------------------------------------------------------------------------
-# MNIST  (balanced subsample, flatten, PCA -> 50)
+# MNIST  (balanced subsample, flattened raw 784 pixels — no dimensionality
+# reduction before the kernels)
 # ---------------------------------------------------------------------------
-def load_mnist(
-    n_per_digit: int = 200, pca_dims: int = PCA_DIMS, random_state: int = 0
-) -> Dataset:
+def load_mnist(n_per_digit: int = 200, random_state: int = 0) -> Dataset:
     raw = np.genfromtxt(DATA_DIR / "mnist_test.csv", delimiter=",", skip_header=1)
     raw = np.vstack([raw[raw[:, 0] == d][:n_per_digit] for d in range(10)])
-    images = (raw[:, 1:] / 255.0).astype(np.float32)
+    X = (raw[:, 1:] / 255.0).astype(np.float32)  # full 784-dim pixel space
     labels = raw[:, 0].astype(int)
-    X = PCA(n_components=pca_dims, random_state=random_state).fit_transform(images)
-    X = X.astype(np.float32)
     return Dataset(
         name="mnist",
         X=X,

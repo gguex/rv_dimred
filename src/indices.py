@@ -10,7 +10,6 @@ Identity indices compare two *embeddings* (framework vs reference):
 
 Quality indices compare an *embedding* to the high-dimensional data / labels:
     * ``trustworthiness``      — scalar at fixed k (sklearn)
-    * ``qnx_curve`` / ``q_local`` — Q_NX(k) preservation curve and its AUC summary
     * ``ari``                  — adjusted Rand index of k-means(embedding) vs labels
 
 ``align_procrustes`` returns the reference-aligned framework embedding for overlay
@@ -74,30 +73,6 @@ def trustworthiness(X_high: np.ndarray, Y_emb: np.ndarray, k: int = 15) -> float
     return float(_sk_trustworthiness(X_high, Y_emb, n_neighbors=k))
 
 
-def qnx_curve(
-    X_high: np.ndarray, Y_emb: np.ndarray, ks: np.ndarray | list[int]
-) -> np.ndarray:
-    """Q_NX(k) for each k in ``ks``: mean fraction of the high-dim k-NN preserved
-    in the embedding. Computed once at k_max then truncated for efficiency."""
-    ks = np.asarray(ks, dtype=int)
-    k_max = int(ks.max())
-    n = X_high.shape[0]
-    idx_h = _knn_indices(X_high, k_max)
-    idx_e = _knn_indices(Y_emb, k_max)
-    # Precompute per-point sorted-membership for cumulative overlap by rank.
-    out = np.empty(len(ks), dtype=float)
-    sets_h = [set(idx_h[i]) for i in range(n)]
-    for j, k in enumerate(ks):
-        total = sum(len(sets_h[i] & set(idx_e[i, :k])) for i in range(n))
-        out[j] = total / (n * k)
-    return out
-
-
-def q_local(qnx: np.ndarray, ks: np.ndarray | list[int]) -> float:
-    """Scalar summary of a Q_NX curve: mean over the evaluated k grid (AUC/range)."""
-    return float(np.mean(np.asarray(qnx)))
-
-
 def ari(Y_emb: np.ndarray, labels: np.ndarray, random_state: int = 42) -> float:
     """Adjusted Rand index of k-means(embedding) vs true labels (k = #classes)."""
     n_clusters = len(np.unique(labels))
@@ -105,7 +80,3 @@ def ari(Y_emb: np.ndarray, labels: np.ndarray, random_state: int = 42) -> float:
         n_clusters=n_clusters, n_init=10, random_state=random_state
     ).fit_predict(Y_emb)
     return float(adjusted_rand_score(labels, pred))
-
-
-# k grid for the Q_NX(k) curve (§5.3.2 figure 2)
-QNX_KS = [1, 2, 5, 10, 15, 20, 30, 50, 75, 100, 150, 200]

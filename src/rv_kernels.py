@@ -45,12 +45,15 @@ import torch
 expm: Any = None
 pinvh: Any = None
 shortest_path: Any = None
+csgraph_laplacian: Any = None
 NearestNeighbors: Any = None
+kneighbors_graph: Any = None
 
 try:
     from scipy.linalg import expm, pinvh
+    from scipy.sparse.csgraph import laplacian as csgraph_laplacian
     from scipy.sparse.csgraph import shortest_path
-    from sklearn.neighbors import NearestNeighbors
+    from sklearn.neighbors import NearestNeighbors, kneighbors_graph
 
     _HAS_SCIPY = True
 except Exception:  # pragma: no cover
@@ -253,6 +256,10 @@ def compute_lle_kernel_torch(
     reconstruction weights.  The top eigenvectors of pinv(Phi) = the bottom
     eigenvectors of Phi = the standard LLE embedding.
 
+    Regularisation matches sklearn's ``barycenter_weights``: R = reg·trace(C)
+    added to the local Gram diagonal (no 1/k factor), so the framework reproduces
+    sklearn ``LocallyLinearEmbedding`` faithfully.
+
     param: dict {'k': int (default 10), 'reg': float (default 1e-3)}.
     """
     if not _HAS_SCIPY:
@@ -270,7 +277,9 @@ def compute_lle_kernel_torch(
     for i in range(n):
         Z = X[idx[i]] - X[i]  # (k, p): neighbours centred on x_i
         C = Z @ Z.T  # (k, k) local Gram
-        C += np.eye(k) * reg * np.trace(C) / k  # Tikhonov regularisation
+        trace = np.trace(C)
+        R = reg * trace if trace > 0 else reg  # sklearn convention (no /k)
+        C.flat[:: k + 1] += R  # Tikhonov regularisation on the diagonal
         w = np.linalg.solve(C, ones)
         w /= w.sum()
         W[i, idx[i]] = w
@@ -311,23 +320,23 @@ def compute_laplacian_kernel_torch(
     weights: torch.Tensor | None = None,
     device: str | torch.device = "cpu",
 ) -> torch.Tensor:
-    """Laplacian / commute-time input kernel: G = pinv(L), L = D - W.
-    Top eigenvectors of pinv(L) = bottom eigenvectors of L = Laplacian Eigenmaps.
-    (For the normalised variant Lv = lambda Dv, pass weights f_i proportional to
-    the node degree d_i.)
+    """Laplacian-eigenmaps input kernel matching sklearn ``SpectralEmbedding``:
+    a *binary* symmetric kNN connectivity graph A and the *normalised* Laplacian
+    L_sym = I - D^{-1/2} A D^{-1/2}.  The kernel is G = pinv(L_sym), whose top
+    eigenvectors are the bottom eigenvectors of L_sym, i.e. the spectral embedding.
 
-    param: dict {'k': int (default 10), 'sigma': float or None, 'binary': bool}.
+    param: dict {'k': int (default 10)}.
     """
     if not _HAS_SCIPY:
-        raise ImportError("laplacian kernel requires sklearn")
+        raise ImportError("laplacian kernel requires scipy + sklearn")
     X = _np(coords)
     n = X.shape[0]
-    p = param or {}
-    W = _knn_affinity(
-        X, int(p.get("k", 10)), p.get("sigma", None), bool(p.get("binary", False))
-    )
-    L = np.diag(W.sum(1)) - W
-    G = pinvh(L)  # symmetric pseudo-inverse
+    k = int((param or {}).get("k", 10))
+    A = kneighbors_graph(X, k, mode="connectivity", include_self=True)
+    A = 0.5 * (A + A.T)  # symmetrise the binary connectivity
+    A = np.asarray(A.todense())
+    L_sym = csgraph_laplacian(A, normed=True)  # I - D^{-1/2} A D^{-1/2}
+    G = pinvh(L_sym)  # symmetric pseudo-inverse
     weights = default_weights(n, device) if weights is None else weights
     return double_center(_as_tensor(G, device), weights.to(device), device)
 

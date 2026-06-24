@@ -6,87 +6,35 @@ For every (spectral method × dataset):
   * reference embedding (named library implementation, output = linear),
   * framework embedding (input kernel maximised against a LINEAR output kernel),
   * identity indices  (Procrustes disparity, kNN overlap)  → expect ~0 / ~1,
-  * quality indices   (trustworthiness, Q_local, ARI),
-  * a Procrustes-aligned overlay figure.
+  * quality indices   (trustworthiness, ARI for labelled datasets),
+  * two separate scatter figures (framework / reference) in a shared Procrustes
+    frame, for side-by-side placement in the paper.
 
-All indices are appended to results/results_indices.csv (this script writes it
-fresh; the other §5 scripts append). Figures follow the §0.5 naming convention.
+Indices append to results/results_indices.csv; this driver first drops any old
+§5.3.1 rows, so re-running is idempotent and leaves §5.3.2 / §5.3.3 untouched.
 """
 
 from __future__ import annotations
 
 import time
 
-import matplotlib
-import numpy as np
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-
 from src import indices as ix
-from src.datasets import Dataset, load_all
+from src.datasets import load_all
 from src.rv_kernels import default_weights
 from src.section5_common import (
     SEED,
     SPECTRAL_METHODS,
     TRUST_K,
     IndexLog,
-    fig_path,
+    drop_sections,
     get_device,
     pca_init,
     rv_embed,
+    save_pair_figures,
     to_tensor,
 )
 
 SECTION = "5.3.1"
-
-
-def overlay_figure(
-    ds: Dataset,
-    method_name: str,
-    key: str,
-    Y_ref: np.ndarray,
-    Y_fw: np.ndarray,
-    disparity: float,
-    rv: float,
-) -> None:
-    """Procrustes-aligned overlay: reference vs framework in a shared frame."""
-    ref_std, fw_aligned, _ = ix.align_procrustes(Y_ref, Y_fw)
-    fig, ax = plt.subplots(figsize=(6, 6))
-    ax.scatter(
-        ref_std[:, 0],
-        ref_std[:, 1],
-        c=ds.color,
-        cmap=ds.cmap,
-        s=24,
-        alpha=0.55,
-        marker="o",
-        linewidths=0,
-        label="reference",
-    )
-    ax.scatter(
-        fw_aligned[:, 0],
-        fw_aligned[:, 1],
-        c=ds.color,
-        cmap=ds.cmap,
-        s=14,
-        alpha=0.9,
-        marker="x",
-        linewidths=0.7,
-        label="framework",
-    )
-    ax.set_title(
-        f"{ds.name} — {method_name}\nProcrustes={disparity:.4f}  RV={rv:.4f}",
-        fontsize=10,
-    )
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.legend(loc="upper right", fontsize=8, framealpha=0.7)
-    fig.tight_layout()
-    fig.savefig(
-        fig_path(SECTION, ds.name, key, "overlay"), dpi=150, bbox_inches="tight"
-    )
-    plt.close(fig)
 
 
 def main() -> None:
@@ -113,41 +61,21 @@ def main() -> None:
             knn = ix.knn_overlap(Y_ref, Y_fw, k=TRUST_K)
 
             # identity indices (framework vs reference)
-            log.add(
-                SECTION,
-                ds.name,
-                m.name,
-                "procrustes",
-                disparity,
-                variant="overlay",
-                k=TRUST_K,
-            )
-            log.add(
-                SECTION,
-                ds.name,
-                m.name,
-                "knn_overlap",
-                knn,
-                variant="overlay",
-                k=TRUST_K,
-            )
-            log.add(SECTION, ds.name, m.name, "rv_final", rv, variant="framework")
+            log.add(SECTION, ds.name, m.name, "procrustes", disparity, k=TRUST_K)
+            log.add(SECTION, ds.name, m.name, "knn_overlap", knn, k=TRUST_K)
+            log.add(SECTION, ds.name, m.name, "rv_final", rv)
 
             # quality indices for BOTH embeddings
             for variant, Y in (("framework", Y_fw), ("reference", Y_ref)):
-                trust = ix.trustworthiness(ds.X, Y, k=TRUST_K)
-                qnx = ix.qnx_curve(ds.X, Y, ix.QNX_KS)
-                qloc = ix.q_local(qnx, ix.QNX_KS)
                 log.add(
                     SECTION,
                     ds.name,
                     m.name,
                     "trustworthiness",
-                    trust,
+                    ix.trustworthiness(ds.X, Y, k=TRUST_K),
                     variant=variant,
                     k=TRUST_K,
                 )
-                log.add(SECTION, ds.name, m.name, "q_local", qloc, variant=variant)
                 if ds.has_labels:
                     log.add(
                         SECTION,
@@ -158,13 +86,22 @@ def main() -> None:
                         variant=variant,
                     )
 
-            overlay_figure(ds, m.name, m.key, Y_ref, Y_fw, disparity, rv)
+            save_pair_figures(
+                SECTION,
+                ds,
+                m.key,
+                m.name,
+                Y_fw,
+                Y_ref,
+                fw_note=f"Procrustes={disparity:.4f}  RV={rv:.4f}",
+            )
             print(
                 f"  {m.name:<22} proc={disparity:.4f} knn={knn:.3f} "
                 f"rv={rv:.4f}  ({time.time() - t0:.1f}s)"
             )
 
-    path = log.write(append=False)  # §5.3.1 runs first → fresh CSV
+    drop_sections({SECTION})  # idempotent re-run; keep §5.3.2 / §5.3.3 rows
+    path = log.write(append=True)
     print(f"\nSaved indices → {path}")
 
 

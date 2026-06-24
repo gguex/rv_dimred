@@ -44,11 +44,10 @@ SEED = 0
 Q = 2  # embedding dimension
 K_NEIGHBORS = 15  # kNN for graph-based methods / UMAP n_neighbors
 PERPLEXITY = 30  # t-SNE perplexity / adaptive-Gaussian input kernel
-DIFFUSION_T = 1.0  # diffusion time
+DIFFUSION_T = 10.0  # diffusion time (larger t sharpens the spectral gap → recovery)
 N_ITER_RV = 500  # RV gradient-ascent iterations
 LR_RV = 0.1  # RV gradient-ascent learning rate
 TRUST_K = 15  # k for the scalar trustworthiness / kNN overlap
-SECTION_FLOOR_RUNS = 10  # stochastic-floor reference runs (§0.3)
 
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 
@@ -290,3 +289,63 @@ def fig_path(section: str, dataset: str, method: str, variant: str) -> Path:
     d = RESULTS_DIR / "figures"
     d.mkdir(parents=True, exist_ok=True)
     return d / f"fig_{section}_{dataset}_{method}_{variant}.png"
+
+
+def drop_sections(sections: set[str], path: Path | None = None) -> None:
+    """Remove rows of the given ``section`` values from results_indices.csv, keeping
+    every other row. Lets a driver re-run its own section without clobbering the
+    others (e.g. §5.3.1 / §5.3.2 re-run while §5.3.3 results are preserved)."""
+    path = path or (RESULTS_DIR / "results_indices.csv")
+    if not path.exists():
+        return
+    with path.open(newline="") as f:
+        rows = [r for r in csv.DictReader(f) if r["section"] not in sections]
+    with path.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def save_pair_figures(
+    section: str,
+    ds: Dataset,
+    method_key: str,
+    method_name: str,
+    Y_fw: np.ndarray,
+    Y_ref: np.ndarray,
+    fw_note: str = "",
+    ref_note: str = "",
+) -> None:
+    """Save a *framework* and a *reference* scatter as two separate files (for
+    side-by-side placement in LaTeX). Both are put in a shared Procrustes frame
+    (reference standardised, framework rigidly aligned onto it) so the two panels
+    are directly comparable."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    from src import indices as ix
+
+    ref_std, fw_aligned, _ = ix.align_procrustes(Y_ref, Y_fw)
+    for variant, Y, note in (
+        ("framework", fw_aligned, fw_note),
+        ("reference", ref_std, ref_note),
+    ):
+        fig, ax = plt.subplots(figsize=(5, 5))
+        ax.scatter(
+            Y[:, 0], Y[:, 1], c=ds.color, cmap=ds.cmap, s=10, alpha=0.85, linewidths=0
+        )
+        title = f"{ds.name} — {method_name} ({variant})"
+        if note:
+            title += f"\n{note}"
+        ax.set_title(title, fontsize=10)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        fig.tight_layout()
+        fig.savefig(
+            fig_path(section, ds.name, method_key, variant),
+            dpi=150,
+            bbox_inches="tight",
+        )
+        plt.close(fig)

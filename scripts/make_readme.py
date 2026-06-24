@@ -11,7 +11,6 @@ Run after the three §5 drivers so every figure is on disk.
 
 from __future__ import annotations
 
-from src import indices as ix
 from src.section5_common import (
     DIFFUSION_T,
     K_NEIGHBORS,
@@ -19,7 +18,6 @@ from src.section5_common import (
     N_ITER_RV,
     PERPLEXITY,
     RESULTS_DIR,
-    SECTION_FLOOR_RUNS,
     SEED,
     TRUST_K,
     Q,
@@ -27,19 +25,18 @@ from src.section5_common import (
 
 SECTION_TITLES = {
     "5.3.1": "Spectral methods — exact recovery",
-    "5.3.2": "Approximations — geometric (stochastic floor)",
+    "5.3.2": "Approximations — geometric (PCA-init reference)",
     "5.3.3": "Hybrid methods — novelty / flexibility",
 }
 VARIANT_DESC = {
-    "overlay": "Procrustes overlay / side-by-side scatter (framework vs reference)",
-    "qnx": "Q_NX(k) curve: framework vs reference vs stochastic-floor band",
-    "control": "UMAP init negative control (reference PCA-init vs random-init)",
+    "framework": "framework embedding (RV-maximised), Procrustes-aligned to reference",
+    "reference": "reference embedding (library implementation), standardised frame",
     "grid": "α×ν grid / α-sweep of embeddings",
     "quality": "quality-vs-sweep curves (trustworthiness / ARI)",
 }
 DATASET_DESC = {
     "singlecell": "10x PBMC3k (scanpy-processed, PCA→50, cell-type labels)",
-    "mnist": "MNIST 2000 balanced (PCA→50, digit labels)",
+    "mnist": "MNIST 2000 balanced (raw 784 pixels, digit labels)",
     "swissroll": "Swiss-roll 2000 (raw 3D, continuous roll angle)",
 }
 
@@ -81,8 +78,6 @@ def main() -> None:
     lines.append(
         f"- index neighbourhood k (trustworthiness / kNN overlap) = **{TRUST_K}**"
     )
-    lines.append(f"- Q_NX(k) grid = {ix.QNX_KS}")
-    lines.append(f"- stochastic-floor reference runs = **{SECTION_FLOOR_RUNS}**")
     lines.append(
         "- init: framework uses full-scale PCA; sklearn t-SNE / UMAP references use "
         "the PCA init scaled to PC1 std 1e-4 (§0.2). Both share PCA directions, so "
@@ -116,10 +111,7 @@ def main() -> None:
     )
     lines.append("Key `index_name` values:")
     lines.append("- `procrustes`, `knn_overlap` — identity (framework vs reference)")
-    lines.append(
-        "- `*_floor_mean`, `*_floor_std` — stochastic floor over reference runs"
-    )
-    lines.append("- `trustworthiness`, `q_local`, `ari` — quality")
+    lines.append("- `trustworthiness`, `ari` — quality (per variant)")
     lines.append("- `rv_final` — final RV coefficient of the framework optimisation\n")
 
     out = RESULTS_DIR / "README.md"

@@ -29,7 +29,6 @@ import csv
 import time
 
 import numpy as np
-import torch
 
 from src.benchmark_common import (
     PERPLEXITY,
@@ -44,6 +43,7 @@ from src.benchmark_common import (
     pca_init,
     project_out_of_sample,
     rv_embed,
+    supervised_output_kernel,
     supervised_split,
     to_tensor,
 )
@@ -51,29 +51,12 @@ from src.datasets import load_all
 from src.rv_kernels import (
     compute_class_kernel_torch,
     compute_gaussian_affinity_kernel_torch,
-    compute_linear_kernel_torch,
-    compute_student_t_kernel_torch,
     default_weights,
 )
 
 SECTION = "5.3.3"
 FAMILY = "hybrids"
 META_FIELDS = ["dataset", "key", "beta", "rv_final"]
-
-
-def blended_output(
-    coords: torch.Tensor,
-    param: object = None,
-    weights: torch.Tensor | None = None,
-    device: str | torch.device = "cpu",
-) -> torch.Tensor:
-    """K_out(β) = β·linear(Y) + (1-β)·StudentT(Y, ν=1), each unit-Frobenius."""
-    beta = float(param)  # type: ignore[arg-type]
-    k_lin = compute_linear_kernel_torch(coords, weights=weights, device=device)
-    k_t = compute_student_t_kernel_torch(
-        coords, param=1.0, weights=weights, device=device
-    )
-    return beta * normalize_kernel(k_lin) + (1.0 - beta) * normalize_kernel(k_t)
 
 
 def main() -> None:
@@ -112,7 +95,9 @@ def main() -> None:
         for beta in SUPERVISED_BETAS:
             key = f"supervised_b{beta}"
             k_in = beta * k_class + (1.0 - beta) * k_gauss
-            Y_tr, rv = rv_embed(k_in, init, device, blended_output, beta, weights=w)
+            Y_tr, rv = rv_embed(
+                k_in, init, device, supervised_output_kernel, beta, weights=w
+            )
             Y_te = project_out_of_sample(X_tr, Y_tr, X_te)
             np.save(coord_path(FAMILY, ds.name, key, "train"), Y_tr.astype(np.float32))
             np.save(coord_path(FAMILY, ds.name, key, "test"), Y_te)

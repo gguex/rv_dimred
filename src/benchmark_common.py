@@ -38,6 +38,7 @@ from src.rv_kernels import (
     compute_linear_kernel_torch,
     compute_lle_kernel_torch,
     compute_rbf_kernel_torch,
+    compute_student_t_kernel_torch,
     rv_dimred,
 )
 
@@ -135,6 +136,22 @@ def supervised_split(
     return train_test_split(
         X, labels, test_size=test_frac, stratify=labels, random_state=SEED
     )
+
+
+def supervised_output_kernel(
+    coords: torch.Tensor,
+    param: Any = None,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """Blended output kernel of the §5.3.3 supervised interpolation, pass β as param:
+        K_out(β) = β·linear(Y) + (1-β)·StudentT(Y, ν=1)   (each unit-Frobenius)."""
+    beta = float(param)
+    k_lin = compute_linear_kernel_torch(coords, weights=weights, device=device)
+    k_t = compute_student_t_kernel_torch(
+        coords, param=1.0, weights=weights, device=device
+    )
+    return beta * normalize_kernel(k_lin) + (1.0 - beta) * normalize_kernel(k_t)
 
 
 def project_out_of_sample(

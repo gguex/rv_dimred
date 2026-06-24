@@ -1,0 +1,11 @@
+dataset,key,beta,rv_final
+singlecell,supervised_b0.0,0.0,0.47967788577079773
+singlecell,supervised_b0.25,0.25,0.6310913562774658
+singlecell,supervised_b0.5,0.5,0.7895236015319824
+singlecell,supervised_b0.75,0.75,0.8930065035820007
+singlecell,supervised_b1.0,1.0,0.8825790882110596
+mnist,supervised_b0.0,0.0,0.6705949902534485
+mnist,supervised_b0.25,0.25,0.736936628818512
+mnist,supervised_b0.5,0.5,0.8332580327987671
+mnist,supervised_b0.75,0.75,0.9034071564674377
+mnist,supervised_b1.0,1.0,0.8608722686767578

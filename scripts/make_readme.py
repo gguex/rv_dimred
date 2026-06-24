@@ -36,6 +36,7 @@ VARIANT_DESC = {
     "comparison": "output-kernel comparison: Procrustes & kNN overlap per method",
     "grid": "α×ν grid / α-sweep of embeddings",
     "sweep": "β sweep panels: train (grey) + projected test (coloured by label)",
+    "fulldata": "β sweep on ALL points (illustration; whole cloud coloured by label)",
     "quality": "quality-vs-sweep curves (trustworthiness / ARI)",
 }
 DATASET_DESC = {

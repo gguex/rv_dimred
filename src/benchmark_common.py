@@ -49,6 +49,7 @@ DIFFUSION_T = 10.0  # diffusion time (larger t sharpens the spectral gap → rec
 N_ITER_RV = 500  # RV gradient-ascent iterations
 LR_RV = 0.1  # RV gradient-ascent learning rate
 TRUST_K = 15  # k for the scalar trustworthiness / kNN overlap
+SOFTENING = 0.5  # §5.3.2 input-affinity softening exponent (G -> (G/max)^gamma)
 
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 COORDS_ROOT = RESULTS_DIR / "coordinates"  # saved embeddings, one subdir per family

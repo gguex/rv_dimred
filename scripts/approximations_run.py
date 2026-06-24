@@ -3,8 +3,9 @@ approximations_run.py  —  §5.3.2  compute & save approximation embeddings
 =========================================================================
 
 t-SNE and UMAP across the 3 datasets. For every (dataset × method) it computes:
-  * framework — adaptive-Gaussian / fuzzy input kernel + Student-t / UMAP output,
-                RV-maximised from the shared full-scale PCA init,
+  * framework — adaptive-Gaussian / fuzzy input kernel (softened with gamma=
+                SOFTENING, §5.3.2) + Student-t / UMAP output, RV-maximised from
+                the shared full-scale PCA init,
   * reference — the library implementation (sklearn t-SNE / umap-learn), started
                 from the shared PCA init (1e-4 convention) → deterministic.
 
@@ -26,6 +27,7 @@ from src.benchmark_common import (
     K_NEIGHBORS,
     PERPLEXITY,
     SEED,
+    SOFTENING,
     Q,
     coord_path,
     coords_dir,
@@ -78,10 +80,16 @@ def main() -> None:
         init_ref = pca_init_sklearn(ds.X)  # 1e-4 PCA — sklearn/UMAP convention
 
         K_gauss = compute_gaussian_affinity_kernel_torch(
-            X_t, param={"perplexity": PERPLEXITY}, weights=w, device=device
+            X_t,
+            param={"perplexity": PERPLEXITY, "gamma": SOFTENING},
+            weights=w,
+            device=device,
         )
         K_fuzzy = compute_fuzzy_topological_kernel_torch(
-            X_t, param={"k": K_NEIGHBORS}, weights=w, device=device
+            X_t,
+            param={"k": K_NEIGHBORS, "gamma": SOFTENING},
+            weights=w,
+            device=device,
         )
 
         configs = (

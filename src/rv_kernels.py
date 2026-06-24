@@ -445,8 +445,10 @@ def compute_gaussian_affinity_kernel_torch(
     """Adaptive-Gaussian (perplexity) input kernel = the symmetrised t-SNE P matrix.
     With a Student-t output this gives t-SNE-like embeddings.
 
-    param: dict {'perplexity': float (default 30), 'hellinger': bool}.
-           hellinger=True applies G = sqrt(P) (Bhattacharyya/Hellinger variant).
+    param: dict {'perplexity': float (default 30), 'gamma': float (default 1.0)}.
+           gamma softens the affinity via G = (P / max P)^gamma. gamma=0.5 is the
+           Bhattacharyya/Hellinger variant (sharpens the intra/inter contrast,
+           §5.3.2); gamma=1.0 leaves P unchanged (up to the RV-invariant scale).
     """
     if not _HAS_SCIPY:
         raise ImportError("gaussian-affinity kernel requires sklearn for distances")
@@ -454,11 +456,12 @@ def compute_gaussian_affinity_kernel_torch(
     n = X.shape[0]
     p = param or {}
     perp = float(p.get("perplexity", 30.0))
+    gamma = float(p.get("gamma", 1.0))
     sq = (X**2).sum(1)
     D2 = np.maximum(sq[:, None] + sq[None, :] - 2 * X @ X.T, 0.0)
     Pcond = _perplexity_probabilities(D2, perp)
     P = (Pcond + Pcond.T) / (2.0 * n)
-    G = np.sqrt(P) if bool(p.get("hellinger", False)) else P
+    G = (P / (P.max() + 1e-12)) ** gamma
     weights = default_weights(n, device) if weights is None else weights
     return double_center(_as_tensor(G, device), weights.to(device), device)
 
@@ -475,13 +478,17 @@ def compute_fuzzy_topological_kernel_torch(
     by sigma_i (binary-searched so sum_j w_ij = log2(k)). The fuzzy set union gives
         G = W + W^T - W o W^T.
 
-    param: dict {'k': int (default 15)}.
+    param: dict {'k': int (default 15), 'gamma': float (default 1.0)}.
+           gamma softens the affinity via G = (G / max G)^gamma (§5.3.2); gamma=1.0
+           leaves G unchanged (up to the RV-invariant scale).
     """
     if not _HAS_SCIPY:
         raise ImportError("fuzzy-topological kernel requires sklearn")
     X = _np(coords)
     n = X.shape[0]
-    k = int((param or {}).get("k", 15))
+    p = param or {}
+    k = int(p.get("k", 15))
+    gamma = float(p.get("gamma", 1.0))
     nbrs = NearestNeighbors(n_neighbors=k + 1).fit(X)
     dist, idx = nbrs.kneighbors(X)
     dist, idx = dist[:, 1:], idx[:, 1:]
@@ -503,6 +510,7 @@ def compute_fuzzy_topological_kernel_torch(
                 sigma = sigma * 2 if hi == np.inf else (lo + hi) / 2
         W[i, idx[i]] = np.exp(-d / sigma)
     G = W + W.T - W * W.T  # probabilistic (fuzzy) union
+    G = (G / (G.max() + 1e-12)) ** gamma
     weights = default_weights(n, device) if weights is None else weights
     return double_center(_as_tensor(G, device), weights.to(device), device)
 

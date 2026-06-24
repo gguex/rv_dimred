@@ -48,19 +48,21 @@ Overview of the experimental design
 ## NEW
 
 5 Case Studies
-Overview of the section
+(Overview of the section)
 
 5.1 Tested methods
 (Every time, describe the input and output kernel, and find a short mathematical name like K_something)
 5.1.1 Spectral methods:
-(State why using the output kernels )
+(Exact methods. State why using the projection output kernels is better for some methods)
 - PCA
 - Kernel PCA (RBF)
 - Isomap
 - LLE
 - Diffusion Maps
 - Laplacian 
+(Say why LLE do not work that well on swiss roll)
 5.1.2 Approximations:
+(Note about the fact that it a approximation, where is the difference, and the corrections done (softening), and which could have been done (new objective function))
 - t-SNE
 - UMAP
 5.1.3 Hybrid methods:
@@ -87,11 +89,11 @@ Overview of the experimental design
 
 5.3.1 Spectral methods
 - Table of the 4 indices, for all methods for the 3 datasets (not ARI for swissroll).
-- 6 graphics : 1 row for the kernel method 1 row for the references : MNIST-PCA, ISOMAP-SINGLECELL, DIFFUSION-SWISSROLL)
+- 6 graphics : 1 row for the kernel methods 1 row for the references : PCA-MNIST, ISOMAP-SINGLECELL, DIFFUSION-SWISSROLL)
 - Discussions
 5.3.2 Approximations
 - Table of the 4 indices, for all methods for the 3 datasets (not ARI for swissroll).
-- Results for the reference methods and the kernels combinations (4 scatterplots - dataset to select).
+- 4 graphics : 1 row for the kernel methods 1 row for the references : TSNE-MNIST, UMAP-SINGLECELL 
 5.3.3 Hybrid methods
 - Grid of interpolated results regarding $\alpha$ and $\nu$ (9 scatterplots - dataset to select).
 - 3 scatterplots for interpolation regarding $\alpha$ (dataset to select).

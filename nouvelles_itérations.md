@@ -18,3 +18,14 @@ NE TOUCHE PAS AUX PARTIES QUI CONCERNENT LES RESULTATS 5.3.3.
 
 ## Itération 2
 
+NOUVEAU FORMAT DE SORTIE (RESULTATS), A APPLIQUER POUR LE MOMENT SUR LA PARTIE 5.3.1 : 
+- SAUVE LES COORDONNEES RESULTANTES (KERNELS ET REFERENCES) dans results/coordinates/spectral/.
+- Fais 2 scripts complémentaires qui, à partir des ces coordonnées: (1) calcule les différents indices (2) construit les graphiques. 
+
+En ayant cela en tête, fais les opérations suivantes
+1) Construit ce nouveau kernel "projecteur" de sortie, n'oublie pas de le rendre pondéré et centré, avec la matrice Q = diag(sqrt(f)) (I - 1 f^T).
+2) Refais toutes les méthodes spectrales du point 5.3.1 avec ce kernel de sortie ET refais aussi touts les résultats précédants, avec kernel de sortie linéaire.
+3) Produit les résultats indépendamment, et fais des comparaisons pour voir quel kernel de sortie fonctionne le mieux.
+
+
+

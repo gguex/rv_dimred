@@ -50,6 +50,7 @@ LR_RV = 0.1  # RV gradient-ascent learning rate
 TRUST_K = 15  # k for the scalar trustworthiness / kNN overlap
 
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
+COORDS_DIR = RESULTS_DIR / "coordinates" / "spectral"  # §5.3.1 saved embeddings
 
 # tidy-CSV schema (§0.5)
 CSV_COLUMNS = [
@@ -289,6 +290,13 @@ def fig_path(section: str, dataset: str, method: str, variant: str) -> Path:
     d = RESULTS_DIR / "figures"
     d.mkdir(parents=True, exist_ok=True)
     return d / f"fig_{section}_{dataset}_{method}_{variant}.png"
+
+
+def coord_path(dataset: str, method_key: str, role: str) -> Path:
+    """results/coordinates/spectral/{dataset}__{method}__{role}.npy. ``role`` is
+    one of 'reference', 'framework_linear', 'framework_projector'."""
+    COORDS_DIR.mkdir(parents=True, exist_ok=True)
+    return COORDS_DIR / f"{dataset}__{method_key}__{role}.npy"
 
 
 def drop_sections(sections: set[str], path: Path | None = None) -> None:

@@ -29,8 +29,11 @@ SECTION_TITLES = {
     "5.3.3": "Hybrid methods — novelty / flexibility",
 }
 VARIANT_DESC = {
+    "linear": "framework w/ LINEAR output kernel (√λ-scaled axes)",
+    "projector": "framework w/ PROJECTOR output kernel (balanced axes)",
     "framework": "framework embedding (RV-maximised), Procrustes-aligned to reference",
     "reference": "reference embedding (library implementation), standardised frame",
+    "comparison": "output-kernel comparison: Procrustes & kNN overlap per method",
     "grid": "α×ν grid / α-sweep of embeddings",
     "quality": "quality-vs-sweep curves (trustworthiness / ARI)",
 }
@@ -102,6 +105,68 @@ def main() -> None:
             desc = VARIANT_DESC.get(variant, "")
             lines.append(f"| `{fname}` | {dataset} | {method} | {variant} | {desc} |")
         lines.append("")
+
+    # ── saved coordinates ──
+    lines.append("## Saved coordinates (§5.3.1)\n")
+    lines.append(
+        "`results/coordinates/spectral/{dataset}__{method}__{role}.npy` holds the raw "
+        "(n×2) embeddings, role ∈ {`reference`, `framework_linear`, "
+        "`framework_projector`}; `run_meta.csv` logs the final RV per run. "
+        "`spectral_indices.py` and `spectral_figures.py` are built entirely from "
+        "these files.\n"
+    )
+
+    # ── output-kernel choice ──
+    lines.append("## Output kernels: linear vs projector (§5.3.1)\n")
+    lines.append(
+        "Each spectral method is run twice, with a LINEAR output kernel "
+        "(`K_Y = ỸỸᵀ`, axis i scaled by √λ_i) and with the PROJECTOR output kernel "
+        "(`K_Y = Ỹ(ỸᵀỸ)⁻¹Ỹᵀ`, the orthogonal projector onto span(Ỹ), all nonzero "
+        "eigenvalues = 1). The projector is invariant to any reparametrisation "
+        "`Y → Y M`, so RV depends only on the embedding *subspace* and the recovered "
+        "axes are balanced by construction (no √λ anisotropy).\n"
+    )
+    lines.append("**Recommended use: projector for LLE and Laplacian Eigenmaps only; "
+                 "linear for PCA, Kernel PCA, Isomap and Diffusion Maps.**\n")
+    lines.append("Why this split:")
+    lines.append(
+        "- PCA / Kernel PCA / Isomap / Diffusion have a well-conditioned input "
+        "spectrum: a clear gap *and* comparable top eigenvalues. The linear kernel "
+        "recovers them almost exactly (Procrustes ≈ 0). The projector only adds a "
+        "small gauge/orthonormalisation rotation, so linear is marginally better."
+    )
+    lines.append(
+        "- LLE and Laplacian Eigenmaps are pseudo-inverses of a graph operator; their "
+        "bottom spectrum is strongly imbalanced (λ₂ ≪ λ₃, e.g. λ₃/λ₂ ≈ 59 on "
+        "single-cell LLE). Under the linear kernel the embedding axes inherit a "
+        "√(λ₃/λ₂) anisotropy that Procrustes (one global scale, not per-axis) cannot "
+        "absorb, while the reference eigenvectors are unit-norm/balanced. The "
+        "projector removes this scaling degree of freedom and recovers the same "
+        "subspace with balanced axes — hence the large gains (LLE single-cell "
+        "0.384→0.066, mnist 0.028→0.000; Laplacian swissroll 0.108→0.003)."
+    )
+    lines.append(
+        "- Decision rule = the ratio of the top-two input eigenvalues (effective "
+        "spectral dimensionality): ≈1 → kernels agree, keep linear; ≫1 → use the "
+        "projector.\n"
+    )
+
+    # ── LLE on swissroll ──
+    lines.append("### Why LLE recovers poorly on swissroll\n")
+    lines.append(
+        "LLE stays high on swissroll under *both* output kernels (linear 0.489, "
+        "projector 0.667). This is not a readout issue but intrinsic to LLE on a "
+        "smooth manifold: the bottom of `Φ = (I−W)ᵀ(I−W)` is **near-degenerate** "
+        "(several smallest eigenvalues almost equal), so the 2-D embedding subspace "
+        "is not uniquely defined — the boundary-gap degeneracy `λ_q ≈ λ_{q+1}` that "
+        "no output kernel can fix, since it is a property of the data + LLE, not of "
+        "the readout. sklearn's eigensolver and the RV optimiser each pick a valid "
+        "but different subspace from the degenerate bottom cluster, so their "
+        "Procrustes is large even though both are legitimate LLE embeddings with "
+        "near-identical RV. Isomap and diffusion, which have a clean spectral gap on "
+        "the swiss roll, recover near-exactly. This is a documented weakness of LLE "
+        "(regularisation sensitivity + eigenvalue crowding), not a framework bug.\n"
+    )
 
     # ── CSV guide ──
     lines.append("## results_indices.csv\n")

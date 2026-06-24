@@ -1,5 +1,5 @@
 """
-run_spectral.py  —  §5.3.1  compute & save spectral embeddings (coordinates)
+spectral_run.py  —  §5.3.1  compute & save spectral embeddings (coordinates)
 ============================================================================
 
 For every (dataset × spectral method) this computes three embeddings:
@@ -22,20 +22,22 @@ import time
 import numpy as np
 import torch
 
-from src.datasets import load_all
-from src.rv_kernels import centering_operator, default_weights
 from src.benchmark_common import (
-    COORDS_DIR,
     SEED,
     SPECTRAL_METHODS,
     coord_path,
+    coords_dir,
     get_device,
+    meta_path,
     pca_init,
     rv_embed,
     to_tensor,
 )
+from src.datasets import load_all
+from src.rv_kernels import centering_operator, default_weights
 
 SECTION = "5.3.1"
+FAMILY = "spectral"
 META_FIELDS = ["dataset", "method_key", "method", "output_kernel", "rv_final"]
 
 
@@ -53,7 +55,6 @@ def canonicalize_projector(
 def main() -> None:
     device = get_device()
     print(f"device: {device}\n")
-    COORDS_DIR.mkdir(parents=True, exist_ok=True)
     datasets = load_all(random_state=SEED)
     meta_rows: list[dict[str, object]] = []
 
@@ -68,19 +69,19 @@ def main() -> None:
         for m in SPECTRAL_METHODS:
             t0 = time.time()
             Y_ref = np.asarray(m.reference(ds.X, ds), dtype=np.float32)
-            np.save(coord_path(ds.name, m.key, "reference"), Y_ref)
+            np.save(coord_path(FAMILY, ds.name, m.key, "reference"), Y_ref)
 
             K_in = m.input_kernel(X_t, ds, device, w)
 
             Y_lin, rv_lin = rv_embed(K_in, init, device, "linear", weights=w)
             np.save(
-                coord_path(ds.name, m.key, "framework_linear"),
+                coord_path(FAMILY, ds.name, m.key, "framework_linear"),
                 Y_lin.astype(np.float32),
             )
 
             Y_proj_raw, rv_proj = rv_embed(K_in, init, device, "projector", weights=w)
             Y_proj = canonicalize_projector(Y_proj_raw, w, device)
-            np.save(coord_path(ds.name, m.key, "framework_projector"), Y_proj)
+            np.save(coord_path(FAMILY, ds.name, m.key, "framework_projector"), Y_proj)
 
             for ok, rv in (("linear", rv_lin), ("projector", rv_proj)):
                 meta_rows.append(
@@ -97,11 +98,11 @@ def main() -> None:
                 f"({time.time() - t0:.1f}s)"
             )
 
-    with (COORDS_DIR / "run_meta.csv").open("w", newline="") as f:
+    with meta_path(FAMILY).open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=META_FIELDS)
         writer.writeheader()
         writer.writerows(meta_rows)
-    print(f"\nSaved coordinates + run_meta.csv → {COORDS_DIR}")
+    print(f"\nSaved coordinates + run_meta.csv → {coords_dir(FAMILY)}")
 
 
 if __name__ == "__main__":

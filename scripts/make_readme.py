@@ -107,13 +107,26 @@ def main() -> None:
         lines.append("")
 
     # ── saved coordinates ──
-    lines.append("## Saved coordinates (§5.3.1)\n")
+    lines.append("## Saved coordinates\n")
     lines.append(
-        "`results/coordinates/spectral/{dataset}__{method}__{role}.npy` holds the raw "
-        "(n×2) embeddings, role ∈ {`reference`, `framework_linear`, "
-        "`framework_projector`}; `run_meta.csv` logs the final RV per run. "
-        "`spectral_indices.py` and `spectral_figures.py` are built entirely from "
-        "these files.\n"
+        "Every section saves its raw (n×2) embeddings under "
+        "`results/coordinates/{family}/{dataset}__{key}__{role}.npy` (+ `run_meta.csv` "
+        "for the final RV, which cannot be recomputed from the output alone). Indices "
+        "and figures are built entirely from these files, by `{family}_indices.py` and "
+        "`{family}_figures.py`:\n"
+    )
+    lines.append(
+        "- **spectral** (§5.3.1): role ∈ {`reference`, `framework_linear`, "
+        "`framework_projector`}; key = method (pca / kpca / isomap / lle / diffusion / "
+        "laplacian)."
+    )
+    lines.append(
+        "- **approximations** (§5.3.2): role ∈ {`framework`, `reference`}; key ∈ "
+        "{tsne, umap}."
+    )
+    lines.append(
+        "- **hybrids** (§5.3.3): role = `embedding`; key encodes the sweep "
+        "(`globallocal_a{α}_nu{ν}`, `unsupsup_a{α}`).\n"
     )
 
     # ── output-kernel choice ──
@@ -126,8 +139,10 @@ def main() -> None:
         "`Y → Y M`, so RV depends only on the embedding *subspace* and the recovered "
         "axes are balanced by construction (no √λ anisotropy).\n"
     )
-    lines.append("**Recommended use: projector for LLE and Laplacian Eigenmaps only; "
-                 "linear for PCA, Kernel PCA, Isomap and Diffusion Maps.**\n")
+    lines.append(
+        "**Recommended use: projector for LLE and Laplacian Eigenmaps only; "
+        "linear for PCA, Kernel PCA, Isomap and Diffusion Maps.**\n"
+    )
     lines.append("Why this split:")
     lines.append(
         "- PCA / Kernel PCA / Isomap / Diffusion have a well-conditioned input "

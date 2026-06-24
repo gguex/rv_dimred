@@ -1,0 +1,7 @@
+dataset,method_key,method,rv_final
+singlecell,tsne,t-SNE,0.4460596442222595
+singlecell,umap,UMAP,0.3745756149291992
+mnist,tsne,t-SNE,0.6226201057434082
+mnist,umap,UMAP,0.5830078721046448
+swissroll,tsne,t-SNE,0.8581326007843018
+swissroll,umap,UMAP,0.7767284512519836

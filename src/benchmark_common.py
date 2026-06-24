@@ -51,7 +51,16 @@ LR_RV = 0.1  # RV gradient-ascent learning rate
 TRUST_K = 15  # k for the scalar trustworthiness / kNN overlap
 
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
-COORDS_DIR = RESULTS_DIR / "coordinates" / "spectral"  # §5.3.1 saved embeddings
+COORDS_ROOT = RESULTS_DIR / "coordinates"  # saved embeddings, one subdir per family
+
+# Hybrid sweep grid (§5.3.3), shared by the run / indices / figures scripts.
+HYBRID_ALPHAS = [0.0, 0.25, 0.5, 0.75, 1.0]
+# ν=∞ rendered via the Gaussian (SNE) output kernel; finite ν via Student-t.
+HYBRID_NUS: list[tuple[str, str, float | None]] = [
+    ("inf", "gaussian", None),  # ν → ∞  (Gaussian / light tail)
+    ("1.0", "student_t", 1.0),  # ν = 1  (classic t-SNE tail)
+    ("0.5", "student_t", 0.5),  # ν = 0.5 (heavy tail)
+]
 
 # tidy-CSV schema (§0.5)
 CSV_COLUMNS = [
@@ -293,11 +302,23 @@ def fig_path(section: str, dataset: str, method: str, variant: str) -> Path:
     return d / f"fig_{section}_{dataset}_{method}_{variant}.png"
 
 
-def coord_path(dataset: str, method_key: str, role: str) -> Path:
-    """results/coordinates/spectral/{dataset}__{method}__{role}.npy. ``role`` is
-    one of 'reference', 'framework_linear', 'framework_projector'."""
-    COORDS_DIR.mkdir(parents=True, exist_ok=True)
-    return COORDS_DIR / f"{dataset}__{method_key}__{role}.npy"
+def coords_dir(family: str) -> Path:
+    """results/coordinates/{family}/ ('spectral' | 'approximations' | 'hybrids')."""
+    d = COORDS_ROOT / family
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def coord_path(family: str, dataset: str, key: str, role: str) -> Path:
+    """results/coordinates/{family}/{dataset}__{key}__{role}.npy. ``role`` labels
+    the embedding (e.g. 'reference', 'framework', 'framework_linear', 'embedding')."""
+    return coords_dir(family) / f"{dataset}__{key}__{role}.npy"
+
+
+def meta_path(family: str) -> Path:
+    """results/coordinates/{family}/run_meta.csv (carries final RV per run, since
+    RV cannot be recomputed from the output coordinates alone)."""
+    return coords_dir(family) / "run_meta.csv"
 
 
 def drop_sections(sections: set[str], path: Path | None = None) -> None:

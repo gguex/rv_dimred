@@ -27,5 +27,7 @@ En ayant cela en tête, fais les opérations suivantes
 2) Refais toutes les méthodes spectrales du point 5.3.1 avec ce kernel de sortie ET refais aussi touts les résultats précédants, avec kernel de sortie linéaire.
 3) Produit les résultats indépendamment, et fais des comparaisons pour voir quel kernel de sortie fonctionne le mieux.
 
+## Itération 3
 
-
+1) Applique le nouveau format de sortie sur le section 5.3.2 et 5.3.3.
+2) Nettoye le code et les résultats de tout ce qui est superflu.

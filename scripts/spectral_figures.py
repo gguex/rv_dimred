@@ -19,7 +19,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from src import indices as ix
-from src.datasets import Dataset, load_all
 from src.benchmark_common import (
     SEED,
     SPECTRAL_METHODS,
@@ -27,8 +26,10 @@ from src.benchmark_common import (
     coord_path,
     fig_path,
 )
+from src.datasets import Dataset, load_all
 
 SECTION = "5.3.1"
+FAMILY = "spectral"
 OUTPUT_KERNELS = ["linear", "projector"]
 
 
@@ -90,10 +91,10 @@ def main() -> None:
 
         for m in SPECTRAL_METHODS:
             names.append(m.name)
-            ref = np.load(coord_path(ds.name, m.key, "reference"))
+            ref = np.load(coord_path(FAMILY, ds.name, m.key, "reference"))
             ref_std = None
             for ok in OUTPUT_KERNELS:
-                fw = np.load(coord_path(ds.name, m.key, f"framework_{ok}"))
+                fw = np.load(coord_path(FAMILY, ds.name, m.key, f"framework_{ok}"))
                 d = ix.procrustes_disparity(fw, ref)
                 proc[ok].append(d)
                 knn[ok].append(ix.knn_overlap(fw, ref, k=TRUST_K))

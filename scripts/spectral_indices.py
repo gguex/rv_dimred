@@ -2,7 +2,7 @@
 spectral_indices.py  —  §5.3.1  indices from saved coordinates
 ==============================================================
 
-Reads the embeddings saved by run_spectral.py (results/coordinates/spectral/*.npy
+Reads the embeddings saved by spectral_run.py (results/coordinates/spectral/*.npy
 + run_meta.csv) and computes, for each (dataset × method × output kernel):
   * identity vs the reference: Procrustes disparity, kNN overlap,
   * quality: trustworthiness, ARI (labelled datasets only),
@@ -21,24 +21,25 @@ import csv
 import numpy as np
 
 from src import indices as ix
-from src.datasets import load_all
 from src.benchmark_common import (
-    COORDS_DIR,
     SEED,
     SPECTRAL_METHODS,
     TRUST_K,
     IndexLog,
     coord_path,
     drop_sections,
+    meta_path,
 )
+from src.datasets import load_all
 
 SECTION = "5.3.1"
+FAMILY = "spectral"
 OUTPUT_KERNELS = ["linear", "projector"]
 
 
 def load_rv_meta() -> dict[tuple[str, str, str], float]:
     meta: dict[tuple[str, str, str], float] = {}
-    with (COORDS_DIR / "run_meta.csv").open() as f:
+    with meta_path(FAMILY).open() as f:
         for r in csv.DictReader(f):
             meta[(r["dataset"], r["method_key"], r["output_kernel"])] = float(
                 r["rv_final"]
@@ -53,9 +54,9 @@ def main() -> None:
 
     for ds in datasets.values():
         for m in SPECTRAL_METHODS:
-            ref = np.load(coord_path(ds.name, m.key, "reference"))
+            ref = np.load(coord_path(FAMILY, ds.name, m.key, "reference"))
             for ok in OUTPUT_KERNELS:
-                fw = np.load(coord_path(ds.name, m.key, f"framework_{ok}"))
+                fw = np.load(coord_path(FAMILY, ds.name, m.key, f"framework_{ok}"))
                 variant = f"framework_{ok}"
                 log.add(
                     SECTION,

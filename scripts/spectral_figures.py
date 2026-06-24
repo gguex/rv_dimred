@@ -20,7 +20,7 @@ import numpy as np
 
 from src import indices as ix
 from src.datasets import Dataset, load_all
-from src.section5_common import (
+from src.benchmark_common import (
     SEED,
     SPECTRAL_METHODS,
     TRUST_K,

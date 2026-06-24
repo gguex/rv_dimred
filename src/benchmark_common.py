@@ -1,10 +1,11 @@
 """
-section5_common.py
-==================
+benchmark_common.py
+===================
 
-Shared machinery for the §5 case studies: device handling, the protocol's fixed
-hyperparameters and seeds, the shared PCA initialisation (§0.2), reference
-spectral embeddings, the RV-maximisation runner and the tidy-CSV writer (§0.5).
+Shared machinery for the dimensionality-reduction benchmarks: device handling,
+the fixed hyperparameters and seeds, the shared PCA initialisation, reference
+spectral embeddings, the RV-maximisation runner, the spectral-method registry,
+the tidy-CSV writer and the figure/coordinate path helpers.
 
 The aim is that every driver script (spectral / approximations / hybrids) builds
 on the *same* kernels, init and indices so results are comparable.

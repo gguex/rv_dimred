@@ -22,7 +22,7 @@ import numpy as np
 
 from src import indices as ix
 from src.datasets import load_all
-from src.section5_common import (
+from src.benchmark_common import (
     COORDS_DIR,
     SEED,
     SPECTRAL_METHODS,

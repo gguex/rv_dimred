@@ -40,7 +40,7 @@ from src.rv_kernels import (
     compute_linear_kernel_torch,
     default_weights,
 )
-from src.section5_common import (
+from src.benchmark_common import (
     PERPLEXITY,
     SEED,
     TRUST_K,

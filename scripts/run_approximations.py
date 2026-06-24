@@ -32,7 +32,7 @@ from src.rv_kernels import (
     compute_gaussian_affinity_kernel_torch,
     default_weights,
 )
-from src.section5_common import (
+from src.benchmark_common import (
     K_NEIGHBORS,
     PERPLEXITY,
     SEED,

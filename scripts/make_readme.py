@@ -11,7 +11,7 @@ Run after the three §5 drivers so every figure is on disk.
 
 from __future__ import annotations
 
-from src.section5_common import (
+from src.benchmark_common import (
     DIFFUSION_T,
     K_NEIGHBORS,
     LR_RV,

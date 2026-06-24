@@ -24,7 +24,7 @@ import torch
 
 from src.datasets import load_all
 from src.rv_kernels import centering_operator, default_weights
-from src.section5_common import (
+from src.benchmark_common import (
     COORDS_DIR,
     SEED,
     SPECTRAL_METHODS,

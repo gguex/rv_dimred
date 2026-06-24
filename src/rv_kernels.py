@@ -553,8 +553,14 @@ def compute_class_kernel_torch(
 ) -> torch.Tensor:
     """Inter-class (label) kernel K_Z = P_Z K_X P_Z^T, where
         P_Z = Z (Z^T Pi Z)^{-1} Z^T Pi
-    relocates every point to its (weighted) class centroid. Recovers LDA with a
-    linear output and a projection constraint; the alpha=1 limit of supervision.
+    relocates every point onto its (weighted) class centroid, so all within-class
+    variance is removed and only the between-class (centroid) structure remains.
+
+    NOTE: this is NOT LDA. With a linear output, RV-maximising against K_Z drives
+    every class to a single point (zero within-class spread), whereas LDA keeps
+    within-class spread along the discriminant axes. K_Z is the fully-supervised
+    (between-class only) limit; use it as the alpha=1 endpoint of a supervised
+    interpolation, not as an LDA surrogate.
 
     param: dict {'labels': array-like (n,), 'base_kernel': (n,n) tensor or None}.
            If base_kernel is None, the linear kernel of `coords` is used as K_X.

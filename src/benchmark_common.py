@@ -27,6 +27,7 @@ from sklearn.manifold import (
     LocallyLinearEmbedding,
     SpectralEmbedding,
 )
+from sklearn.model_selection import train_test_split
 from sklearn.neighbors import NearestNeighbors
 
 from src.datasets import Dataset
@@ -63,14 +64,13 @@ APPROX_HYPERPARAMS: dict[str, dict[str, int]] = {
     "swissroll": {"perplexity": 30, "n_neighbors": 15},
 }
 
-# Hybrid sweep grid (§5.3.3), shared by the run / indices / figures scripts.
-HYBRID_ALPHAS = [0.0, 0.25, 0.5, 0.75, 1.0]
-# ν=∞ rendered via the Gaussian (SNE) output kernel; finite ν via Student-t.
-HYBRID_NUS: list[tuple[str, str, float | None]] = [
-    ("inf", "gaussian", None),  # ν → ∞  (Gaussian / light tail)
-    ("1.0", "student_t", 1.0),  # ν = 1  (classic t-SNE tail)
-    ("0.5", "student_t", 0.5),  # ν = 0.5 (heavy tail)
-]
+# §5.3.3 supervised interpolation (class-kernel ↔ t-SNE), shared by run / indices
+# / figures. β dials the input AND output kernels together:
+#   K_in(β)  = β·K_class + (1-β)·K_gaussianAffinity
+#   K_out(β) = β·linear(Y) + (1-β)·StudentT(Y, ν=1)
+# β=0 → t-SNE (unsupervised), β=1 → class-centroid kernel (fully supervised).
+SUPERVISED_BETAS = [0.0, 0.25, 0.5, 0.75, 1.0]
+TEST_FRAC = 0.3  # held-out fraction for the train/test generalisation protocol
 
 # tidy-CSV schema (§0.5)
 CSV_COLUMNS = [
@@ -124,6 +124,31 @@ def normalize_kernel(K: torch.Tensor) -> torch.Tensor:
     ``α·K1 + (1-α)·K2`` a genuine interpolation — otherwise the kernel with the
     larger norm dominates (e.g. linear ‖K‖≈9 vs adaptive-Gaussian ‖K‖≈3e-6)."""
     return K / (K.norm() + 1e-12)
+
+
+def supervised_split(
+    X: np.ndarray, labels: np.ndarray, test_frac: float = TEST_FRAC
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Deterministic stratified train/test split for the §5.3.3 supervised protocol.
+    Shared by run / indices / figures so they all see the same partition (and thus
+    the saved test coordinates line up with the re-derived test labels)."""
+    return train_test_split(
+        X, labels, test_size=test_frac, stratify=labels, random_state=SEED
+    )
+
+
+def project_out_of_sample(
+    X_tr: np.ndarray, Y_tr: np.ndarray, X_te: np.ndarray, k: int = K_NEIGHBORS
+) -> np.ndarray:
+    """Place each test point at the Gaussian-weighted mean of its k feature-space
+    nearest TRAIN neighbours' embedding positions — uses no test labels, so it is a
+    fair out-of-sample extension for the supervised embedding (cf. openTSNE/UMAP)."""
+    nbrs = NearestNeighbors(n_neighbors=k).fit(X_tr)
+    dist, idx = nbrs.kneighbors(X_te)
+    sigma = float(np.median(dist)) + 1e-12
+    wts = np.exp(-(dist**2) / (sigma**2))
+    wts /= wts.sum(1, keepdims=True)
+    return np.einsum("tk,tkd->td", wts, Y_tr[idx]).astype(np.float32)
 
 
 def rbf_gamma(X: np.ndarray) -> float:

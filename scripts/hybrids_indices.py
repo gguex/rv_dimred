@@ -2,14 +2,15 @@
 hybrids_indices.py  —  §5.3.3  indices from saved coordinates
 =============================================================
 
-Reads results/coordinates/hybrids/*.npy + run_meta.csv and logs, for every hybrid
-embedding (global-local α×ν grid, and unsup-sup α-sweep on labelled datasets):
-trustworthiness, ARI (labelled datasets) and rv_final. The hybrids have no library
-reference, so there is no Procrustes / kNN-overlap here.
+Reads results/coordinates/hybrids/*.npy + run_meta.csv and logs, for every β of
+the supervised interpolation (class-kernel ↔ t-SNE), on each labelled dataset:
+trustworthiness and ARI computed BOTH on the train embedding and on the projected
+test embedding (variant ``train`` / ``test``), plus rv_final. The train/test split
+is re-derived deterministically so the saved test coordinates line up with labels.
 
 Rows are appended to results/results_indices.csv after dropping old §5.3.3 rows
-(so §5.3.1 / §5.3.2 stay untouched). The `method` field carries the sweep key
-(e.g. ``globallocal_a0.5_nu1.0`` / ``unsupsup_a0.25``).
+(so §5.3.1 / §5.3.2 stay untouched). The ``method`` field carries the sweep key
+(e.g. ``supervised_b0.5``).
 """
 
 from __future__ import annotations
@@ -20,16 +21,16 @@ import numpy as np
 
 from src import indices as ix
 from src.benchmark_common import (
-    HYBRID_ALPHAS,
-    HYBRID_NUS,
     SEED,
+    SUPERVISED_BETAS,
     TRUST_K,
     IndexLog,
     coord_path,
     drop_sections,
     meta_path,
+    supervised_split,
 )
-from src.datasets import Dataset, load_all
+from src.datasets import load_all
 
 SECTION = "5.3.3"
 FAMILY = "hybrids"
@@ -43,35 +44,33 @@ def load_rv_meta() -> dict[tuple[str, str], float]:
     return meta
 
 
-def dataset_keys(ds: Dataset) -> list[str]:
-    keys = [
-        f"globallocal_a{a}_nu{nk}" for a in HYBRID_ALPHAS for nk, _, _ in HYBRID_NUS
-    ]
-    if ds.has_labels:
-        keys += [f"unsupsup_a{a}" for a in HYBRID_ALPHAS]
-    return keys
-
-
 def main() -> None:
     datasets = load_all(random_state=SEED)
     meta = load_rv_meta()
     log = IndexLog()
 
     for ds in datasets.values():
-        for key in dataset_keys(ds):
-            Y = np.load(coord_path(FAMILY, ds.name, key, "embedding"))
-            log.add(
-                SECTION,
-                ds.name,
-                key,
-                "trustworthiness",
-                ix.trustworthiness(ds.X, Y, k=TRUST_K),
-                k=TRUST_K,
-            )
+        if not ds.has_labels:
+            continue
+        X_tr, X_te, y_tr, y_te = supervised_split(ds.X, ds.labels)
+        for beta in SUPERVISED_BETAS:
+            key = f"supervised_b{beta}"
+            Y_tr = np.load(coord_path(FAMILY, ds.name, key, "train"))
+            Y_te = np.load(coord_path(FAMILY, ds.name, key, "test"))
             log.add(SECTION, ds.name, key, "rv_final", meta[(ds.name, key)])
-            if ds.has_labels:
-                log.add(SECTION, ds.name, key, "ari", ix.ari(Y, ds.labels))
-        print(f"  {ds.name:<11} {len(dataset_keys(ds))} embeddings")
+            for variant, X, Y, y in (
+                ("train", X_tr, Y_tr, y_tr),
+                ("test", X_te, Y_te, y_te),
+            ):
+                log.add(
+                    SECTION, ds.name, key, "trustworthiness",
+                    ix.trustworthiness(X, Y, k=TRUST_K), variant=variant, k=TRUST_K,
+                )
+                log.add(
+                    SECTION, ds.name, key, "ari",
+                    ix.ari(Y, y), variant=variant,
+                )
+        print(f"  {ds.name:<11} {len(SUPERVISED_BETAS)} β × (train+test)")
 
     drop_sections({SECTION})  # idempotent; keep §5.3.1 / §5.3.2 rows
     path = log.write(append=True)

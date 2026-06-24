@@ -26,7 +26,7 @@ from src.benchmark_common import (
 SECTION_TITLES = {
     "5.3.1": "Spectral methods — exact recovery",
     "5.3.2": "Approximations — geometric (PCA-init reference)",
-    "5.3.3": "Hybrid methods — novelty / flexibility",
+    "5.3.3": "Supervised interpolation (class-kernel ↔ t-SNE) — novelty",
 }
 VARIANT_DESC = {
     "linear": "framework w/ LINEAR output kernel (√λ-scaled axes)",
@@ -35,6 +35,7 @@ VARIANT_DESC = {
     "reference": "reference embedding (library implementation), standardised frame",
     "comparison": "output-kernel comparison: Procrustes & kNN overlap per method",
     "grid": "α×ν grid / α-sweep of embeddings",
+    "sweep": "β sweep panels: train (grey) + projected test (coloured by label)",
     "quality": "quality-vs-sweep curves (trustworthiness / ARI)",
 }
 DATASET_DESC = {
@@ -125,8 +126,10 @@ def main() -> None:
         "{tsne, umap}."
     )
     lines.append(
-        "- **hybrids** (§5.3.3): role = `embedding`; key encodes the sweep "
-        "(`globallocal_a{α}_nu{ν}`, `unsupsup_a{α}`).\n"
+        "- **hybrids** (§5.3.3): supervised interpolation (class-kernel ↔ t-SNE) on "
+        "labelled datasets; role ∈ {`train`, `test`}; key = `supervised_b{β}`. K_class "
+        "is built on a TRAIN split; TEST points are projected out-of-sample (no test "
+        "labels) so ARI/trustworthiness are reported on held-out points too.\n"
     )
 
     # ── output-kernel choice ──

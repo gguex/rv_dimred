@@ -9,9 +9,12 @@ t-SNE and UMAP across the 3 datasets. For every (dataset × method) it computes:
   * reference — the library implementation (sklearn t-SNE / umap-learn), started
                 from the shared PCA init (1e-4 convention) → deterministic.
 
+Both sides use the per-dataset hyperparameter from APPROX_HYPERPARAMS (perplexity
+for t-SNE, n_neighbors for UMAP), so the framework and its reference are matched.
+
 Only coordinates are saved, to results/coordinates/approximations/ (+ run_meta.csv
-for the framework RV). Indices and figures are built from these by the companion
-scripts approximations_indices.py / approximations_figures.py.
+for the framework RV and the hyperparameter). Indices and figures are built from
+these by approximations_indices.py / approximations_figures.py.
 """
 
 from __future__ import annotations
@@ -24,8 +27,7 @@ import umap
 from sklearn.manifold import TSNE
 
 from src.benchmark_common import (
-    K_NEIGHBORS,
-    PERPLEXITY,
+    APPROX_HYPERPARAMS,
     SEED,
     SOFTENING,
     Q,
@@ -47,19 +49,19 @@ from src.rv_kernels import (
 
 SECTION = "5.3.2"
 FAMILY = "approximations"
-META_FIELDS = ["dataset", "method_key", "method", "rv_final"]
+META_FIELDS = ["dataset", "method_key", "method", "hyperparam", "rv_final"]
 
 
-def tsne_ref(X: np.ndarray, init: np.ndarray) -> np.ndarray:
+def tsne_ref(X: np.ndarray, init: np.ndarray, perplexity: int) -> np.ndarray:
     return TSNE(
-        n_components=Q, perplexity=PERPLEXITY, init=init, random_state=SEED
+        n_components=Q, perplexity=perplexity, init=init, random_state=SEED
     ).fit_transform(X)
 
 
-def umap_ref(X: np.ndarray, init: np.ndarray) -> np.ndarray:
+def umap_ref(X: np.ndarray, init: np.ndarray, n_neighbors: int) -> np.ndarray:
     return np.asarray(
         umap.UMAP(
-            n_neighbors=K_NEIGHBORS, n_components=Q, init=init, random_state=SEED
+            n_neighbors=n_neighbors, n_components=Q, init=init, random_state=SEED
         ).fit_transform(X)
     )
 
@@ -79,40 +81,44 @@ def main() -> None:
         init_fw = pca_init(ds.X)  # full-scale PCA — framework optimiser
         init_ref = pca_init_sklearn(ds.X)  # 1e-4 PCA — sklearn/UMAP convention
 
+        hp = APPROX_HYPERPARAMS[ds.name]
+        perp, k = hp["perplexity"], hp["n_neighbors"]
+
         K_gauss = compute_gaussian_affinity_kernel_torch(
             X_t,
-            param={"perplexity": PERPLEXITY, "gamma": SOFTENING},
+            param={"perplexity": perp, "gamma": SOFTENING},
             weights=w,
             device=device,
         )
         K_fuzzy = compute_fuzzy_topological_kernel_torch(
             X_t,
-            param={"k": K_NEIGHBORS, "gamma": SOFTENING},
+            param={"k": k, "gamma": SOFTENING},
             weights=w,
             device=device,
         )
 
         configs = (
-            ("t-SNE", "tsne", K_gauss, "student_t", 1.0, tsne_ref),
-            ("UMAP", "umap", K_fuzzy, "umap", None, umap_ref),
+            ("t-SNE", "tsne", K_gauss, "student_t", 1.0, perp, tsne_ref),
+            ("UMAP", "umap", K_fuzzy, "umap", None, k, umap_ref),
         )
-        for name, key, K_in, out_kernel, out_param, ref_fn in configs:
+        for name, key, K_in, out_kernel, out_param, hparam, ref_fn in configs:
             t0 = time.time()
             Y_fw, rv = rv_embed(K_in, init_fw, device, out_kernel, out_param, weights=w)
             np.save(
                 coord_path(FAMILY, ds.name, key, "framework"), Y_fw.astype(np.float32)
             )
-            Y_ref = np.asarray(ref_fn(ds.X, init_ref), dtype=np.float32)
+            Y_ref = np.asarray(ref_fn(ds.X, init_ref, hparam), dtype=np.float32)
             np.save(coord_path(FAMILY, ds.name, key, "reference"), Y_ref)
             meta_rows.append(
                 {
                     "dataset": ds.name,
                     "method_key": key,
                     "method": name,
+                    "hyperparam": hparam,
                     "rv_final": rv,
                 }
             )
-            print(f"  {name:<6} rv={rv:.4f}  ({time.time() - t0:.1f}s)")
+            print(f"  {name:<6} hp={hparam:<4} rv={rv:.4f}  ({time.time() - t0:.1f}s)")
 
     with meta_path(FAMILY).open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=META_FIELDS)

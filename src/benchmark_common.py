@@ -54,6 +54,15 @@ SOFTENING = 0.5  # §5.3.2 input-affinity softening exponent (G -> (G/max)^gamma
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 COORDS_ROOT = RESULTS_DIR / "coordinates"  # saved embeddings, one subdir per family
 
+# §5.3.2 per-dataset hyperparameters (perplexity for t-SNE, n_neighbors for UMAP),
+# tuned for framework↔reference agreement with the γ=SOFTENING input affinity.
+# The same value is used on both the framework and the library-reference side.
+APPROX_HYPERPARAMS: dict[str, dict[str, int]] = {
+    "singlecell": {"perplexity": 100, "n_neighbors": 100},
+    "mnist": {"perplexity": 30, "n_neighbors": 50},
+    "swissroll": {"perplexity": 30, "n_neighbors": 15},
+}
+
 # Hybrid sweep grid (§5.3.3), shared by the run / indices / figures scripts.
 HYBRID_ALPHAS = [0.0, 0.25, 0.5, 0.75, 1.0]
 # ν=∞ rendered via the Gaussian (SNE) output kernel; finite ν via Student-t.

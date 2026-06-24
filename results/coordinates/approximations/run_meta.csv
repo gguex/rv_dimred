@@ -1,7 +1,7 @@
-dataset,method_key,method,rv_final
-singlecell,tsne,t-SNE,0.47967728972435
-singlecell,umap,UMAP,0.36198049783706665
-mnist,tsne,t-SNE,0.6705949902534485
-mnist,umap,UMAP,0.5754668712615967
-swissroll,tsne,t-SNE,0.8904021978378296
-swissroll,umap,UMAP,0.7889196872711182
+dataset,method_key,method,hyperparam,rv_final
+singlecell,tsne,t-SNE,100,0.5920235514640808
+singlecell,umap,UMAP,100,0.46956586837768555
+mnist,tsne,t-SNE,30,0.6705949902534485
+mnist,umap,UMAP,50,0.6222470998764038
+swissroll,tsne,t-SNE,30,0.8904021978378296
+swissroll,umap,UMAP,15,0.7889196872711182

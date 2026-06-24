@@ -34,11 +34,11 @@ FAMILY = "approximations"
 METHODS = [("t-SNE", "tsne"), ("UMAP", "umap")]
 
 
-def load_rv_meta() -> dict[tuple[str, str], float]:
-    meta: dict[tuple[str, str], float] = {}
+def load_meta() -> dict[tuple[str, str], dict[str, str]]:
+    meta: dict[tuple[str, str], dict[str, str]] = {}
     with meta_path(FAMILY).open() as f:
         for r in csv.DictReader(f):
-            meta[(r["dataset"], r["method_key"])] = float(r["rv_final"])
+            meta[(r["dataset"], r["method_key"])] = r
     return meta
 
 
@@ -60,7 +60,7 @@ def log_quality(
 
 def main() -> None:
     datasets = load_all(random_state=SEED)
-    meta = load_rv_meta()
+    meta = load_meta()
     log = IndexLog()
 
     for ds in datasets.values():
@@ -87,8 +87,16 @@ def main() -> None:
                 SECTION,
                 ds.name,
                 name,
+                "hyperparam",
+                float(meta[(ds.name, key)]["hyperparam"]),
+                variant="framework",
+            )
+            log.add(
+                SECTION,
+                ds.name,
+                name,
                 "rv_final",
-                meta[(ds.name, key)],
+                float(meta[(ds.name, key)]["rv_final"]),
                 variant="framework",
             )
             log_quality(log, ds, name, "framework", fw)

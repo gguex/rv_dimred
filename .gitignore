@@ -3,3 +3,5 @@ scripts/__pycache__
 .claude
 .ruff_cache
 .venv
+.DS_Store
+**/.DS_Store

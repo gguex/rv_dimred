@@ -36,9 +36,9 @@ from sklearn.manifold import TSNE
 
 from src import indices as ix
 from src.benchmark_common import (
-    Q,
     SEED,
     TRUST_K,
+    Q,
     coord_path,
     coords_dir,
     get_device,
@@ -145,7 +145,9 @@ def main() -> None:
 
                 # reference (shared neighbour hp; independent of lambda)
                 ref = np.asarray(ref_fn(ds.X, init_ref, hp), dtype=np.float32)
-                np.save(coord_path(FAMILY, ds.name, ref_key(mkey, hp), "reference"), ref)
+                np.save(
+                    coord_path(FAMILY, ds.name, ref_key(mkey, hp), "reference"), ref
+                )
                 _add_quality(rows, ds, name, mkey, hp_name, hp, "", "reference", ref)
 
                 for lam in LAMBDAS:
@@ -158,13 +160,45 @@ def main() -> None:
                         coord_path(FAMILY, ds.name, fw_key(mkey, hp, lam), "framework"),
                         fw,
                     )
-                    _add(rows, ds, name, mkey, hp_name, hp, lam, "framework",
-                         "procrustes", ix.procrustes_disparity(fw, ref))
-                    _add(rows, ds, name, mkey, hp_name, hp, lam, "framework",
-                         "knn_overlap", ix.knn_overlap(fw, ref, k=TRUST_K))
-                    _add(rows, ds, name, mkey, hp_name, hp, lam, "framework",
-                         "rv_final", rv)
-                    _add_quality(rows, ds, name, mkey, hp_name, hp, lam, "framework", fw)
+                    _add(
+                        rows,
+                        ds,
+                        name,
+                        mkey,
+                        hp_name,
+                        hp,
+                        lam,
+                        "framework",
+                        "procrustes",
+                        ix.procrustes_disparity(fw, ref),
+                    )
+                    _add(
+                        rows,
+                        ds,
+                        name,
+                        mkey,
+                        hp_name,
+                        hp,
+                        lam,
+                        "framework",
+                        "knn_overlap",
+                        ix.knn_overlap(fw, ref, k=TRUST_K),
+                    )
+                    _add(
+                        rows,
+                        ds,
+                        name,
+                        mkey,
+                        hp_name,
+                        hp,
+                        lam,
+                        "framework",
+                        "rv_final",
+                        rv,
+                    )
+                    _add_quality(
+                        rows, ds, name, mkey, hp_name, hp, lam, "framework", fw
+                    )
                 print(
                     f"  {name:<6} {hp_name}={hp:<4}  swept {len(LAMBDAS)} lambdas  "
                     f"({time.time() - t0:.1f}s)"
@@ -182,26 +216,61 @@ def main() -> None:
 
 
 def _add(rows, ds, method, mkey, hp_name, hp, lam, variant, index_name, value) -> None:
-    rows.append({
-        "dataset": ds.name, "method": method, "method_key": mkey, "hp_name": hp_name,
-        "hp_value": hp, "lambda": lam, "variant": variant, "index_name": index_name,
-        "value": value,
-    })
+    rows.append(
+        {
+            "dataset": ds.name,
+            "method": method,
+            "method_key": mkey,
+            "hp_name": hp_name,
+            "hp_value": hp,
+            "lambda": lam,
+            "variant": variant,
+            "index_name": index_name,
+            "value": value,
+        }
+    )
 
 
 def _add_quality(rows, ds: Dataset, method, mkey, hp_name, hp, lam, variant, Y) -> None:
-    _add(rows, ds, method, mkey, hp_name, hp, lam, variant,
-         "trustworthiness", ix.trustworthiness(ds.X, Y, k=TRUST_K))
+    _add(
+        rows,
+        ds,
+        method,
+        mkey,
+        hp_name,
+        hp,
+        lam,
+        variant,
+        "trustworthiness",
+        ix.trustworthiness(ds.X, Y, k=TRUST_K),
+    )
     if ds.has_labels:
-        _add(rows, ds, method, mkey, hp_name, hp, lam, variant,
-             "ari", ix.ari(Y, ds.labels))
+        _add(
+            rows,
+            ds,
+            method,
+            mkey,
+            hp_name,
+            hp,
+            lam,
+            variant,
+            "ari",
+            ix.ari(Y, ds.labels),
+        )
 
 
 # wide table per (dataset, method): one row per (hp, lambda), framework indices +
 # the (lambda-independent) reference quality broadcast alongside.
 TABLE_COLUMNS = [
-    "hp_value", "lambda", "rv_final", "procrustes", "knn_overlap",
-    "trustworthiness_fw", "ari_fw", "trustworthiness_ref", "ari_ref",
+    "hp_value",
+    "lambda",
+    "rv_final",
+    "procrustes",
+    "knn_overlap",
+    "trustworthiness_fw",
+    "ari_fw",
+    "trustworthiness_ref",
+    "ari_ref",
 ]
 DEC = 4
 
@@ -231,16 +300,19 @@ def write_tables(rows: list[dict[str, object]], out_dir) -> None:
             for hp, lam in sorted(hp_lams, key=lambda t: (t[0], t[1])):
                 c = fw.get((dataset, method, hp, lam), {})
                 rq = ref.get((dataset, method, hp), {})
-                writer.writerow([
-                    hp, lam,
-                    fmt(c.get("rv_final", "")),
-                    fmt(c.get("procrustes", "")),
-                    fmt(c.get("knn_overlap", "")),
-                    fmt(c.get("trustworthiness", "")),
-                    fmt(c.get("ari", "")),
-                    fmt(rq.get("trustworthiness", "")),
-                    fmt(rq.get("ari", "")),
-                ])
+                writer.writerow(
+                    [
+                        hp,
+                        lam,
+                        fmt(c.get("rv_final", "")),
+                        fmt(c.get("procrustes", "")),
+                        fmt(c.get("knn_overlap", "")),
+                        fmt(c.get("trustworthiness", "")),
+                        fmt(c.get("ari", "")),
+                        fmt(rq.get("trustworthiness", "")),
+                        fmt(rq.get("ari", "")),
+                    ]
+                )
         print(f"Wrote table → {path}")
 
 

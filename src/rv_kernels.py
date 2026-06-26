@@ -320,10 +320,19 @@ def compute_laplacian_kernel_torch(
     weights: torch.Tensor | None = None,
     device: str | torch.device = "cpu",
 ) -> torch.Tensor:
-    """Laplacian-eigenmaps input kernel matching sklearn ``SpectralEmbedding``:
-    a *binary* symmetric kNN connectivity graph A and the *normalised* Laplacian
-    L_sym = I - D^{-1/2} A D^{-1/2}.  The kernel is G = pinv(L_sym), whose top
-    eigenvectors are the bottom eigenvectors of L_sym, i.e. the spectral embedding.
+    """Laplacian-eigenmaps input kernel: a *binary* symmetric kNN connectivity graph
+    A and the *normalised* Laplacian L_sym = I - D^{-1/2} A D^{-1/2}. The kernel is
+    G = pinv(L_sym), whose top eigenvectors are the bottom eigenvectors of L_sym.
+
+    Convention note. This yields the *symmetric-normalised* Laplacian eigenmaps
+    (the raw eigenvectors u_i of L_sym), consistent with our Diffusion-Maps kernel.
+    sklearn's ``SpectralEmbedding`` instead applies a *degree recovery*, returning
+    D^{-1/2} u_i (the random-walk / Belkin-Niyogi eigenmaps, generalised problem
+    L v = mu D v). The two coincide when degrees are uniform but diverge when they
+    are heterogeneous: e.g. on single-cell data (degree CV ~ 0.76) the framework vs
+    sklearn Procrustes is ~0.10, entirely explained by the D^{-1/2} factor; on
+    Swiss-roll (CV ~ 0.10) it is negligible. This is a normalisation convention, not
+    an error.
 
     param: dict {'k': int (default 10)}.
     """

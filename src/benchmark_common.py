@@ -190,8 +190,10 @@ def rv_embed(
     weights: torch.Tensor | None = None,
     n_iter: int = N_ITER_RV,
     lr: float = LR_RV,
+    hollow: bool = False,
 ) -> tuple[np.ndarray, float]:
-    """Run RV gradient ascent from the shared init; return (embedding, final RV)."""
+    """Run RV gradient ascent from the shared init; return (embedding, final RV).
+    ``hollow`` selects the hollow-RV objective (both kernel diagonals zeroed)."""
     Y, rv = rv_dimred(
         K_in,
         output_kernel=output_kernel,
@@ -203,6 +205,7 @@ def rv_embed(
         device=device,
         init=to_tensor(init, device),
         verbose=False,
+        hollow=hollow,
     )
     return Y.cpu().numpy(), float(rv)
 

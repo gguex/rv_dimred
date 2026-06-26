@@ -490,6 +490,73 @@ def compute_fuzzy_topological_kernel_torch(
     return double_center(_as_tensor(G, device), weights.to(device), device)
 
 
+# ---------------------------------------------------------------------------
+# Cached input-affinity helpers (for hyperparameter sweeps)
+# ---------------------------------------------------------------------------
+# The expensive part of the t-SNE / UMAP input kernels (the perplexity binary
+# search, the fuzzy-set construction) depends ONLY on perplexity / n_neighbors,
+# NOT on the softening exponent gamma. These return the raw symmetric affinity so
+# a sweep can compute it once per neighbour hyperparameter and re-apply gamma +
+# double-centering cheaply for every gamma via `soften_and_center`.
+def gaussian_affinity_base(
+    coords: np.ndarray | torch.Tensor, perplexity: float = 30.0
+) -> np.ndarray:
+    """Symmetric t-SNE affinity P (pre-softening, pre-centering)."""
+    if not _HAS_SCIPY:
+        raise ImportError("gaussian-affinity kernel requires sklearn for distances")
+    X = _np(coords)
+    n = X.shape[0]
+    sq = (X**2).sum(1)
+    D2 = np.maximum(sq[:, None] + sq[None, :] - 2 * X @ X.T, 0.0)
+    Pcond = _perplexity_probabilities(D2, float(perplexity))
+    return (Pcond + Pcond.T) / (2.0 * n)
+
+
+def fuzzy_topological_base(
+    coords: np.ndarray | torch.Tensor, k: int = 15
+) -> np.ndarray:
+    """UMAP fuzzy-topological affinity G = W + W^T - W o W^T (pre-softening, pre-centering)."""
+    if not _HAS_SCIPY:
+        raise ImportError("fuzzy-topological kernel requires sklearn")
+    X = _np(coords)
+    n = X.shape[0]
+    nbrs = NearestNeighbors(n_neighbors=int(k) + 1).fit(X)
+    dist, idx = nbrs.kneighbors(X)
+    dist, idx = dist[:, 1:], idx[:, 1:]
+    rho = dist[:, 0]
+    target = np.log2(int(k))
+    W = np.zeros((n, n))
+    for i in range(n):
+        d = np.maximum(dist[i] - rho[i], 0.0)
+        sigma, lo, hi = 1.0, 0.0, np.inf
+        for _ in range(64):
+            psum = np.exp(-d / sigma).sum()
+            if abs(psum - target) < 1e-5:
+                break
+            if psum > target:
+                hi = sigma
+                sigma = (lo + hi) / 2
+            else:
+                lo = sigma
+                sigma = sigma * 2 if hi == np.inf else (lo + hi) / 2
+        W[i, idx[i]] = np.exp(-d / sigma)
+    return W + W.T - W * W.T
+
+
+def soften_and_center(
+    base: np.ndarray,
+    gamma: float,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> torch.Tensor:
+    """Apply the softening G = (base / max base)^gamma and double-center to K_n.
+    `base` is a raw affinity from gaussian_affinity_base / fuzzy_topological_base."""
+    n = base.shape[0]
+    weights = default_weights(n, device) if weights is None else weights.to(device)
+    G = (base / (base.max() + 1e-12)) ** float(gamma)
+    return double_center(_as_tensor(G, device), weights, device)
+
+
 def compute_rbf_kernel_torch(
     coords: np.ndarray | torch.Tensor,
     param: float | None = None,
@@ -586,9 +653,19 @@ OUTPUT_KERNELS: dict[str, Callable[..., torch.Tensor]] = {
 # RV coefficient and gradient-ascent driver
 # ===========================================================================
 def rv_coefficient(
-    K1: torch.Tensor, K2: torch.Tensor, eps: float = 1e-12
+    K1: torch.Tensor, K2: torch.Tensor, eps: float = 1e-12, hollow: bool = False
 ) -> torch.Tensor:
-    """RV(K1, K2) = <K1,K2> / (||K1|| ||K2||), using <A,B> = sum(A*B) for symmetric A,B."""
+    """RV(K1, K2) = <K1,K2> / (||K1|| ||K2||), using <A,B> = sum(A*B) for symmetric A,B.
+
+    If ``hollow`` is True, both diagonals are zeroed before the cosine (the *hollow-RV*
+    objective). The alignment then ignores the self-terms K_ii, which on the output
+    side act as a spread-suppressing 'global tether' (sum_i K_ii^2 is a near-constant
+    floor in ||K_Y||); removing them frees the embedding to spread, recovering the
+    neighbour-embedding regime (cf. scripts/tests/test_diag_energy.py)."""
+    if hollow:
+        off = 1.0 - torch.eye(K1.shape[0], device=K1.device, dtype=K1.dtype)
+        K1 = K1 * off
+        K2 = K2 * off
     num = (K1 * K2).sum()
     den = torch.sqrt((K1 * K1).sum() * (K2 * K2).sum()) + eps
     return num / den
@@ -672,11 +749,14 @@ def rv_dimred(
     device: str | torch.device = "cpu",
     init: np.ndarray | torch.Tensor | None = None,
     verbose: bool = False,
+    hollow: bool = False,
 ) -> tuple[torch.Tensor, float]:
     """Maximise RV(K_X, K_Y(Y)) over the embedding Y by autograd gradient ascent.
 
     K_X            : (n,n) fixed input kernel (any INPUT_KERNELS output).
     output_kernel  : name in OUTPUT_KERNELS, or a callable with the kernel signature.
+    hollow         : if True, optimise the hollow-RV (both diagonals zeroed) — the
+                     neighbour-embedding objective that frees the spread.
     Returns (Y, final_rv).
     """
     n = K_X.shape[0]
@@ -697,7 +777,7 @@ def rv_dimred(
     for it in range(n_iter):
         opt.zero_grad()
         K_Y = out_fn(Y, param=output_param, weights=weights, device=device)
-        rv = rv_coefficient(K_X, K_Y)
+        rv = rv_coefficient(K_X, K_Y, hollow=hollow)
         (-rv).backward()  # maximise RV
         opt.step()
         if verbose and (it % max(1, n_iter // 10) == 0):

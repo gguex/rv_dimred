@@ -22,11 +22,7 @@ import numpy as np
 import torch
 from scipy.linalg import eigh as scipy_eigh
 from sklearn.decomposition import PCA, KernelPCA
-from sklearn.manifold import (
-    Isomap,
-    LocallyLinearEmbedding,
-    SpectralEmbedding,
-)
+from sklearn.manifold import Isomap, LocallyLinearEmbedding, SpectralEmbedding
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import NearestNeighbors
 
@@ -133,8 +129,10 @@ def supervised_split(
     """Deterministic stratified train/test split for the §5.3.3 supervised protocol.
     Shared by run / indices / figures so they all see the same partition (and thus
     the saved test coordinates line up with the re-derived test labels)."""
-    return train_test_split(
-        X, labels, test_size=test_frac, stratify=labels, random_state=SEED
+    return tuple(
+        train_test_split(
+            X, labels, test_size=test_frac, stratify=labels, random_state=SEED
+        )
     )
 
 
@@ -145,7 +143,7 @@ def supervised_output_kernel(
     device: str | torch.device = "cpu",
 ) -> torch.Tensor:
     """Blended output kernel of the §5.3.3 supervised interpolation, pass β as param:
-        K_out(β) = β·linear(Y) + (1-β)·StudentT(Y, ν=1)   (each unit-Frobenius)."""
+    K_out(β) = β·linear(Y) + (1-β)·StudentT(Y, ν=1)   (each unit-Frobenius)."""
     beta = float(param)
     k_lin = compute_linear_kernel_torch(coords, weights=weights, device=device)
     k_t = compute_student_t_kernel_torch(

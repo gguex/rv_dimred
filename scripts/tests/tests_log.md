@@ -1,4 +1,4 @@
-# Log des Expériences (`scripts/test_*.py`)
+# Log des Expériences (`scripts/tests/test_*.py`)
 
 Résumé de tous les scripts de test exploratoires, **organisés par lien avec les propositions**
 de `new_article_plan.md`. Données : MNIST réduit ($n=500$, sauf Test D : $n=50$), perplexité 30

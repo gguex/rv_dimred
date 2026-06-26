@@ -6,3 +6,5 @@ scripts/__pycache__
 .venv
 .DS_Store
 **/.DS_Store
+article_v1
+article_v1/*

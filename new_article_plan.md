@@ -375,7 +375,10 @@ choix de $g$ sur $\mathbf G_Y$ sélectionne le membre (linéaire → elastic emb
 
 **Réserves (à écrire).** C'est le **PUSH**, pas le PULL ; succès pratique conditionné à Prop. 6 ;
 $\log Z$ non borné (réglage de $\lambda$) ; optimisation locale. Appui empirique : Test C (volume réel),
-Test F/G (comportement avec hollow-RV).
+Test F/G (comportement avec hollow-RV). **Corrobore (c) :** une tentative de PUSH spectral *intra*-$\mathcal K_n$
+(pseudo-log-det de $\mathbf K_Y$, pour répulser sans le mode volume) échoue — elle maximise l'entropie
+spectrale, égalise les valeurs propres et **combat** le PULL (spec\_ratio $\mathbf K_Y$ : $4.6\!\times\!10^{10}\to15$ ;
+ARI $0.37\to0.16$). Confirme qu'aucune répulsion ne vient de $\mathcal K_n$.
 
 ---
 

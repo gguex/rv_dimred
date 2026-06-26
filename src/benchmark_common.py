@@ -235,6 +235,10 @@ class SpectralMethod:
     input_kernel: Callable[[torch.Tensor, Dataset, str, torch.Tensor], torch.Tensor]
     # reference embedding: (X_np, ds) -> (n, q) array
     reference: Callable[[np.ndarray, Dataset], np.ndarray]
+    # closed-form readout matching the reference's axis convention:
+    #   "linear"      -> sqrt(lambda) scaling (PCA / MDS / Isomap / KPCA / diffusion)
+    #   "orthonormal" -> balanced unit axes (Laplacian Eigenmaps, LLE)
+    readout: str = "linear"
 
 
 def _k_pca_ref(X: np.ndarray, ds: Dataset) -> np.ndarray:
@@ -279,6 +283,7 @@ SPECTRAL_METHODS: list[SpectralMethod] = [
         reference=lambda X, ds: LocallyLinearEmbedding(
             n_neighbors=K_NEIGHBORS, n_components=Q, random_state=SEED
         ).fit_transform(X),
+        readout="orthonormal",  # LLE reference = orthonormal eigenvectors
     ),
     SpectralMethod(
         key="diffusion",
@@ -297,6 +302,7 @@ SPECTRAL_METHODS: list[SpectralMethod] = [
         reference=lambda X, ds: SpectralEmbedding(
             n_neighbors=K_NEIGHBORS, n_components=Q, random_state=SEED
         ).fit_transform(X),
+        readout="orthonormal",  # Laplacian Eigenmaps reference = orthonormal eigenvectors
     ),
 ]
 
@@ -361,6 +367,13 @@ def fig_path(section: str, dataset: str, method: str, variant: str) -> Path:
 def coords_dir(family: str) -> Path:
     """results/coordinates/{family}/ ('spectral' | 'approximations' | 'hybrids')."""
     d = COORDS_ROOT / family
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def indices_dir(family: str) -> Path:
+    """results/indices/{family}/ (tidy + wide-table index CSVs, one subdir per family)."""
+    d = RESULTS_DIR / "indices" / family
     d.mkdir(parents=True, exist_ok=True)
     return d
 

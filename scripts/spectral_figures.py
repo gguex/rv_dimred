@@ -51,15 +51,15 @@ def main() -> None:
     for ds in datasets.values():
         for m in SPECTRAL_METHODS:
             ref = np.load(coord_path(FAMILY, ds.name, m.key, "reference"))
-            fw = np.load(coord_path(FAMILY, ds.name, m.key, "framework_linear"))
+            fw = np.load(coord_path(FAMILY, ds.name, m.key, "framework"))
             d = ix.procrustes_disparity(fw, ref)
             ref_std, fw_aligned, _ = ix.align_procrustes(ref, fw)
             scatter(
                 ds,
                 m.key,
-                "linear",
+                "framework",
                 fw_aligned,
-                f"{ds.name} — {m.name} (linear)\nProcrustes={d:.4f}",
+                f"{ds.name} — {m.name} (framework)\nProcrustes={d:.4f}",
             )
             scatter(
                 ds, m.key, "reference", ref_std, f"{ds.name} — {m.name} (reference)"

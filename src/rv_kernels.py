@@ -591,9 +591,12 @@ def rv_coefficient(
 # Theorem 2: on the cone S_d = {K >= 0, rank(K) <= d}, maximising the RV cosine
 # is a Frobenius projection, solved by truncating K_X to its top-d eigenpairs
 # (Eckart-Young / classical MDS). No iteration: eigh gives the global optimum,
-# which reaches the alignment ceiling RV_max(d) of Prop. 3 exactly. The solver is
-# modular in the *input* kernel: feed any centred K_X = Q G_X^kappa Q^T built by
-# the INPUT_KERNELS bricks, and the right spectral method follows.
+# which reaches the alignment ceiling RV_max(d) of Prop. 3 exactly. The solvers are
+# modular in the *input* kernel: feed any centred K_X = Q G_X^kappa Q^T built by the
+# INPUT_KERNELS bricks, and the right spectral method follows. Two readouts differ
+# only in the axis scaling: `linear` uses the sqrt(lambda) (PCA/MDS) scaling;
+# `orthonormal` uses balanced unit axes (the native readout of methods defined as
+# orthonormal eigenvectors, e.g. Laplacian Eigenmaps, LLE).
 # ===========================================================================
 def _truncated_eig(K_X: torch.Tensor, q: int) -> tuple[torch.Tensor, torch.Tensor]:
     """Top-q eigenpairs of a symmetric kernel, eigenvalues sorted descending.
@@ -625,6 +628,27 @@ def spectral_embed_linear(
     lam = lam.clamp_min(0.0)  # PSD projection: clip negative eigenvalues
     Y = torch.diag(1.0 / torch.sqrt(weights)) @ U @ torch.diag(torch.sqrt(lam))
     K_Y = double_center(Y @ Y.T, weights, device)
+    return Y.detach(), float(rv_coefficient(K_X, K_Y))
+
+
+def spectral_embed_orthonormal(
+    K_X: torch.Tensor,
+    q: int = 2,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> tuple[torch.Tensor, float]:
+    """Closed-form RV optimum with ORTHONORMAL (balanced) axes Y = Pi^{-1/2} U_q --
+    no sqrt(lambda) scaling. The induced output kernel is the rank-q projector
+    U_q U_q^T. This is the native readout for spectral methods defined as orthonormal
+    eigenvectors (Laplacian Eigenmaps, LLE), where spectral_embed_linear's sqrt(lambda)
+    scaling would stretch the axes by sqrt(lambda_j) and diverge from the reference.
+    Returns (Y, rv).
+    """
+    n = K_X.shape[0]
+    weights = default_weights(n, device) if weights is None else weights.to(device)
+    _, U = _truncated_eig(K_X, q)
+    Y = torch.diag(1.0 / torch.sqrt(weights)) @ U
+    K_Y = U @ U.T  # projector onto the top-q eigenspace (Q Y = U, orthonormal)
     return Y.detach(), float(rv_coefficient(K_X, K_Y))
 
 

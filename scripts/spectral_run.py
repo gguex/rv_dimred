@@ -3,14 +3,15 @@ spectral_run.py  —  §5.3.1  compute & save spectral embeddings (closed-form s
 ===================================================================================
 
 For every (dataset × spectral method) this computes two embeddings:
-  * reference         — the named library implementation,
-  * framework_linear  — closed-form RV optimum with a LINEAR output kernel
-                        (√λ-scaled axes; Theorem 2 / classical MDS).
+  * reference  — the named library implementation,
+  * framework  — closed-form RV optimum from a single eigendecomposition of the
+                 centred input kernel K_X (src/rv_kernels spectral solvers). The
+                 readout matches the reference's axis convention, set per method by
+                 SpectralMethod.readout: ``linear`` (√λ scaling; PCA / MDS / Isomap /
+                 KPCA / diffusion) or ``orthonormal`` (balanced unit axes; Laplacian
+                 Eigenmaps, LLE).
 
-The framework embedding comes from the *spectral solver* in src/rv_kernels
-(``spectral_embed_linear``): a single eigendecomposition of the centred input
-kernel K_X, modular in the input kernel. No gradient ascent, no initialisation —
-the eigh gives the global RV optimum.
+No gradient ascent, no initialisation — the eigh gives the global RV optimum.
 
 It only *saves coordinates* to results/coordinates/spectral/ plus the final RV of
 each run in run_meta.csv. Indices and figures are built from these coordinates by
@@ -35,10 +36,20 @@ from src.benchmark_common import (
     to_tensor,
 )
 from src.datasets import load_all
-from src.rv_kernels import default_weights, spectral_embed_linear
+from src.rv_kernels import (
+    default_weights,
+    spectral_embed_linear,
+    spectral_embed_orthonormal,
+)
 
 FAMILY = "spectral"
-META_FIELDS = ["dataset", "method_key", "method", "output_kernel", "rv_final"]
+META_FIELDS = ["dataset", "method_key", "method", "readout", "rv_final"]
+
+# readout name (SpectralMethod.readout) -> closed-form spectral solver
+READOUTS = {
+    "linear": spectral_embed_linear,
+    "orthonormal": spectral_embed_orthonormal,
+}
 
 
 def main() -> None:
@@ -61,9 +72,9 @@ def main() -> None:
 
             K_in = m.input_kernel(X_t, ds, device, w)
 
-            Y, rv = spectral_embed_linear(K_in, q=Q, weights=w, device=device)
+            Y, rv = READOUTS[m.readout](K_in, q=Q, weights=w, device=device)
             np.save(
-                coord_path(FAMILY, ds.name, m.key, "framework_linear"),
+                coord_path(FAMILY, ds.name, m.key, "framework"),
                 Y.cpu().numpy().astype(np.float32),
             )
             meta_rows.append(
@@ -71,11 +82,14 @@ def main() -> None:
                     "dataset": ds.name,
                     "method_key": m.key,
                     "method": m.name,
-                    "output_kernel": "linear",
+                    "readout": m.readout,
                     "rv_final": rv,
                 }
             )
-            print(f"  {m.name:<22} rv_linear={rv:.4f}  ({time.time() - t0:.1f}s)")
+            print(
+                f"  {m.name:<22} readout={m.readout:<11} rv={rv:.4f}  "
+                f"({time.time() - t0:.1f}s)"
+            )
 
     with meta_path(FAMILY).open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=META_FIELDS)

@@ -1,0 +1,37 @@
+dataset,method_key,method,output_kernel,rv_final
+singlecell,pca,PCA,linear,0.8102056384086609
+singlecell,pca,PCA,projector,0.7834699153900146
+singlecell,kpca,Kernel PCA (RBF),linear,0.8564151525497437
+singlecell,kpca,Kernel PCA (RBF),projector,0.8114880919456482
+singlecell,isomap,Isomap,linear,0.9484736323356628
+singlecell,isomap,Isomap,projector,0.9037401676177979
+singlecell,lle,LLE,linear,0.9999507069587708
+singlecell,lle,LLE,projector,0.7173985838890076
+singlecell,diffusion,Diffusion Maps,linear,0.6815879940986633
+singlecell,diffusion,Diffusion Maps,projector,0.6819356679916382
+singlecell,laplacian,Laplacian Eigenmaps,linear,0.9501218199729919
+singlecell,laplacian,Laplacian Eigenmaps,projector,0.9291799664497375
+mnist,pca,PCA,linear,0.6791595816612244
+mnist,pca,PCA,projector,0.6733601093292236
+mnist,kpca,Kernel PCA (RBF),linear,0.6985769867897034
+mnist,kpca,Kernel PCA (RBF),projector,0.6891362071037292
+mnist,isomap,Isomap,linear,0.7199309468269348
+mnist,isomap,Isomap,projector,0.7152775526046753
+mnist,lle,LLE,linear,0.9183233380317688
+mnist,lle,LLE,projector,0.8716397285461426
+mnist,diffusion,Diffusion Maps,linear,0.6521508693695068
+mnist,diffusion,Diffusion Maps,projector,0.6515522003173828
+mnist,laplacian,Laplacian Eigenmaps,linear,0.5073037147521973
+mnist,laplacian,Laplacian Eigenmaps,projector,0.5026912689208984
+swissroll,pca,PCA,linear,0.8771896958351135
+swissroll,pca,PCA,projector,0.8700119256973267
+swissroll,kpca,Kernel PCA (RBF),linear,0.8264512419700623
+swissroll,kpca,Kernel PCA (RBF),projector,0.8235676884651184
+swissroll,isomap,Isomap,linear,0.9988808631896973
+swissroll,isomap,Isomap,projector,0.7393707036972046
+swissroll,lle,LLE,linear,0.9998667240142822
+swissroll,lle,LLE,projector,0.7074596881866455
+swissroll,diffusion,Diffusion Maps,linear,0.310455858707428
+swissroll,diffusion,Diffusion Maps,projector,0.3104429543018341
+swissroll,laplacian,Laplacian Eigenmaps,linear,0.983852207660675
+swissroll,laplacian,Laplacian Eigenmaps,projector,0.83853679895401

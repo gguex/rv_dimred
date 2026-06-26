@@ -1,17 +1,16 @@
 """
-spectral_indices.py  —  §5.3.1  indices from saved coordinates
-==============================================================
+spectral_indices.py  —  indices from saved spectral coordinates
+===============================================================
 
 Reads the embeddings saved by spectral_run.py (results/coordinates/spectral/*.npy
-+ run_meta.csv) and computes, for each (dataset × method × output kernel):
++ run_meta.csv) and computes, for each (dataset × method):
   * identity vs the reference: Procrustes disparity, kNN overlap,
   * quality: trustworthiness, ARI (labelled datasets only),
   * rv_final (read from run_meta.csv).
 
-Reference-only quality (trustworthiness, ARI) is logged once per method. Rows are
-appended to results/results_indices.csv after dropping old §5.3.1 rows (so the
-§5.3.2 / §5.3.3 results stay untouched). Variants: framework_linear,
-framework_projector, reference.
+Reference-only quality (trustworthiness, ARI) is logged once per method. The whole
+results/results_indices.csv is rewritten on each run. Variants: framework_linear,
+reference.
 """
 
 from __future__ import annotations
@@ -27,14 +26,12 @@ from src.benchmark_common import (
     TRUST_K,
     IndexLog,
     coord_path,
-    drop_sections,
     meta_path,
 )
 from src.datasets import load_all
 
-SECTION = "5.3.1"
 FAMILY = "spectral"
-OUTPUT_KERNELS = ["linear", "projector"]
+OUTPUT_KERNELS = ["linear"]
 
 
 def load_rv_meta() -> dict[tuple[str, str, str], float]:
@@ -59,7 +56,7 @@ def main() -> None:
                 fw = np.load(coord_path(FAMILY, ds.name, m.key, f"framework_{ok}"))
                 variant = f"framework_{ok}"
                 log.add(
-                    SECTION,
+                    FAMILY,
                     ds.name,
                     m.name,
                     "procrustes",
@@ -68,7 +65,7 @@ def main() -> None:
                     k=TRUST_K,
                 )
                 log.add(
-                    SECTION,
+                    FAMILY,
                     ds.name,
                     m.name,
                     "knn_overlap",
@@ -77,7 +74,7 @@ def main() -> None:
                     k=TRUST_K,
                 )
                 log.add(
-                    SECTION,
+                    FAMILY,
                     ds.name,
                     m.name,
                     "trustworthiness",
@@ -87,7 +84,7 @@ def main() -> None:
                 )
                 if ds.has_labels:
                     log.add(
-                        SECTION,
+                        FAMILY,
                         ds.name,
                         m.name,
                         "ari",
@@ -95,7 +92,7 @@ def main() -> None:
                         variant=variant,
                     )
                 log.add(
-                    SECTION,
+                    FAMILY,
                     ds.name,
                     m.name,
                     "rv_final",
@@ -105,7 +102,7 @@ def main() -> None:
 
             # reference quality (output-kernel independent), logged once
             log.add(
-                SECTION,
+                FAMILY,
                 ds.name,
                 m.name,
                 "trustworthiness",
@@ -115,7 +112,7 @@ def main() -> None:
             )
             if ds.has_labels:
                 log.add(
-                    SECTION,
+                    FAMILY,
                     ds.name,
                     m.name,
                     "ari",
@@ -124,9 +121,8 @@ def main() -> None:
                 )
             print(f"  {ds.name:<11} {m.name}")
 
-    drop_sections({SECTION})  # idempotent; keep §5.3.2 / §5.3.3 rows
-    path = log.write(append=True)
-    print(f"\nAppended indices → {path}")
+    path = log.write(append=False)
+    print(f"\nWrote indices → {path}")
 
 
 if __name__ == "__main__":

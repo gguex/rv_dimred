@@ -215,40 +215,6 @@ def compute_umap_kernel_torch(
     return double_center(G, weights, device)
 
 
-def compute_projector_kernel_torch(
-    coords: np.ndarray | torch.Tensor,
-    param: Any = None,
-    weights: torch.Tensor | None = None,
-    device: str | torch.device = "cpu",
-) -> torch.Tensor:
-    """Subspace-projector output kernel.
-
-        K_Y = Ỹ (Ỹ^T Ỹ)^{-1} Ỹ^T ,   Ỹ = Q Y ,   Q = diag(sqrt(f)) (I - 1 f^T)
-
-    i.e. the orthogonal projector onto the *centered, weighted* column space of
-    the embedding Y. It is symmetric, idempotent (K_Y^2 = K_Y), of rank q, and its
-    nonzero eigenvalues are all equal to 1, so ||K_Y||_F = sqrt(q) is constant.
-
-    Because the projector is invariant to any reparametrisation Y -> Y M (per-axis
-    scaling *and* in-subspace rotation), maximising RV(K_X, K_Y) depends only on
-    span(Y): the optimum is the dominant q-eigenspace of K_X (Ky-Fan), with axes
-    *balanced by construction* — no sqrt(lambda) anisotropy. The right output kernel
-    for spectral references (PCA / Isomap / LLE / Laplacian / diffusion), which are
-    themselves defined as eigen-subspaces read in an orthonormal basis.
-
-    Note Y -> Y M invariance leaves a gauge (flat) direction in the loss; the
-    embedding's per-axis scale is meaningless, so callers should canonicalise
-    (e.g. orthonormalise Ỹ) before reading coordinates off K_Y.
-    """
-    coords = _as_tensor(coords, device)
-    n, q = coords.shape[0], coords.shape[1]
-    weights = default_weights(n, device) if weights is None else weights.to(device)
-    Q = centering_operator(weights, device=device)
-    Ytil = Q @ coords  # (n, q) centered, sqrt(f)-weighted coordinates
-    M = Ytil.T @ Ytil + 1e-8 * torch.eye(q, device=device, dtype=Ytil.dtype)
-    return Ytil @ torch.linalg.inv(M) @ Ytil.T
-
-
 # ===========================================================================
 # INPUT kernels  (computed once from the fixed data X)
 # ===========================================================================
@@ -604,7 +570,6 @@ OUTPUT_KERNELS: dict[str, Callable[..., torch.Tensor]] = {
     "gaussian": compute_gaussian_kernel_torch,
     "student_t": compute_student_t_kernel_torch,
     "umap": compute_umap_kernel_torch,
-    "projector": compute_projector_kernel_torch,
 }
 
 
@@ -618,6 +583,49 @@ def rv_coefficient(
     num = (K1 * K2).sum()
     den = torch.sqrt((K1 * K1).sum() * (K2 * K2).sum()) + eps
     return num / den
+
+
+# ===========================================================================
+# Spectral (closed-form) solvers  —  exact RV optima on the linear cone
+# ---------------------------------------------------------------------------
+# Theorem 2: on the cone S_d = {K >= 0, rank(K) <= d}, maximising the RV cosine
+# is a Frobenius projection, solved by truncating K_X to its top-d eigenpairs
+# (Eckart-Young / classical MDS). No iteration: eigh gives the global optimum,
+# which reaches the alignment ceiling RV_max(d) of Prop. 3 exactly. The solver is
+# modular in the *input* kernel: feed any centred K_X = Q G_X^kappa Q^T built by
+# the INPUT_KERNELS bricks, and the right spectral method follows.
+# ===========================================================================
+def _truncated_eig(K_X: torch.Tensor, q: int) -> tuple[torch.Tensor, torch.Tensor]:
+    """Top-q eigenpairs of a symmetric kernel, eigenvalues sorted descending.
+
+    The eigendecomposition runs on CPU (a single dense op; MPS has no eigh), then
+    the result is moved back to the kernel's device.
+    """
+    lam, U = torch.linalg.eigh(K_X.cpu())  # ascending order; eigh unsupported on MPS
+    lam, U = lam.flip(0)[:q], U.flip(1)[:, :q]
+    return lam.to(K_X.device), U.to(K_X.device)
+
+
+def spectral_embed_linear(
+    K_X: torch.Tensor,
+    q: int = 2,
+    weights: torch.Tensor | None = None,
+    device: str | torch.device = "cpu",
+) -> tuple[torch.Tensor, float]:
+    """Closed-form RV optimum for a LINEAR output kernel (Theorem 2 / classical MDS).
+
+    Truncates K_X to its top-q positive eigenpairs and reads coordinates with the
+    sqrt(lambda) axis scaling Y = Pi^{-1/2} U_q Lambda_q^{1/2} (anisotropic, like
+    PCA / cMDS / Isomap / Kernel PCA). Negative eigenvalues are clipped (PSD
+    projection). Returns (Y, rv) where rv = RV_max(q) (Prop. 3).
+    """
+    n = K_X.shape[0]
+    weights = default_weights(n, device) if weights is None else weights.to(device)
+    lam, U = _truncated_eig(K_X, q)
+    lam = lam.clamp_min(0.0)  # PSD projection: clip negative eigenvalues
+    Y = torch.diag(1.0 / torch.sqrt(weights)) @ U @ torch.diag(torch.sqrt(lam))
+    K_Y = double_center(Y @ Y.T, weights, device)
+    return Y.detach(), float(rv_coefficient(K_X, K_Y))
 
 
 def rv_dimred(

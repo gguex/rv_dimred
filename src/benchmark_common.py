@@ -348,10 +348,14 @@ class IndexLog:
 
 
 def fig_path(section: str, dataset: str, method: str, variant: str) -> Path:
-    """results/fig_{section}_{dataset}_{method}_{variant}.png (§0.5)."""
+    """results/figures/fig_[{section}_]{dataset}_{method}_{variant}.png.
+
+    ``section`` is prefixed only when non-empty; pass "" for section-free names
+    (the GitHub showcase convention). Archived drivers keep their §-prefixed names."""
     d = RESULTS_DIR / "figures"
     d.mkdir(parents=True, exist_ok=True)
-    return d / f"fig_{section}_{dataset}_{method}_{variant}.png"
+    prefix = f"{section}_" if section else ""
+    return d / f"fig_{prefix}{dataset}_{method}_{variant}.png"
 
 
 def coords_dir(family: str) -> Path:

@@ -6,3 +6,4 @@ scripts/__pycache__
 .venv
 .DS_Store
 **/.DS_Store
+rv_dimred_new

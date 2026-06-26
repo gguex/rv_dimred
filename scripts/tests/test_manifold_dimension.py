@@ -37,6 +37,7 @@ from src.rv_kernels import centering_operator, default_weights
 
 N = 50                      # plan: N = 50 sample points
 DS = (1, 2, 3)              # embedding dimensions to test
+N_SAMPLES = 5               # random base points Y0 per d (test genericity)
 SEED = 0
 torch.set_default_dtype(torch.float64)   # accurate singular values / rank
 
@@ -66,32 +67,45 @@ def main() -> None:
     w = default_weights(N, "cpu")
     Q = centering_operator(w, "cpu")
 
-    print(f"Test D  -  intrinsic dimension of S_d^kappa  (Student-t), n = {N}\n")
+    print(f"Test D  -  intrinsic dimension of S_d^kappa  (Student-t), n = {N}")
+    print(f"  rank checked on {N_SAMPLES} random base points Y0 per d (genericity)\n")
     print(f"  {'d':>2} {'n*d':>5} {'C(d+1,2)':>9} {'predicted':>10} "
-          f"{'measured':>9} {'sv[r-1]':>11} {'sv[r]':>11} {'gap(x)':>9}")
-    print("  " + "-" * 72)
+          f"{'ranks':>14} {'min gap(x)':>11}")
+    print("  " + "-" * 65)
 
+    all_ok = True
     for d in DS:
-        Y0 = torch.randn(N * d)
         f = k_map_factory(N, d, Q)
-        J = torch.autograd.functional.jacobian(f, Y0)      # (n*n, n*d)
-        sv = torch.linalg.svdvals(J).cpu().numpy()
         n_in = N * d
-
-        rank, _ = numerical_rank(sv, n_in)
         predicted = N * d - comb(d + 1, 2)
 
-        sv_last = sv[rank - 1] if rank >= 1 else float("nan")     # last "live" sv
-        sv_next = sv[rank] if rank < len(sv) else 0.0             # first "null" sv
-        gap = (sv_last / sv_next) if sv_next > 0 else float("inf")
+        ranks: list[int] = []
+        min_gap = float("inf")
+        for s in range(N_SAMPLES):
+            torch.manual_seed(SEED + s)
+            Y0 = torch.randn(n_in)
+            J = torch.autograd.functional.jacobian(f, Y0)      # (n*n, n*d)
+            sv = torch.linalg.svdvals(J).cpu().numpy()
 
-        flag = "OK" if rank == predicted else "<-- MISMATCH"
+            rank, _ = numerical_rank(sv, n_in)
+            ranks.append(rank)
+            sv_last = sv[rank - 1] if rank >= 1 else float("nan")
+            sv_next = sv[rank] if rank < len(sv) else 0.0
+            gap = (sv_last / sv_next) if sv_next > 0 else float("inf")
+            min_gap = min(min_gap, gap)
+
+        consistent = len(set(ranks)) == 1
+        rank_str = str(ranks[0]) if consistent else "/".join(map(str, ranks))
+        ok = consistent and ranks[0] == predicted
+        all_ok = all_ok and ok
+        flag = "OK" if ok else "<-- MISMATCH"
         print(f"  {d:>2} {n_in:>5} {comb(d + 1, 2):>9} {predicted:>10} "
-              f"{rank:>9} {sv_last:>11.3e} {sv_next:>11.3e} {gap:>9.2e}  {flag}")
+              f"{rank_str:>14} {min_gap:>11.2e}  {flag}")
 
     print("\n  predicted = n*d - C(d+1,2)   (translation d + rotation d(d-1)/2)")
-    print("  large gap(x) = clean spectral cliff => the rank is well defined")
+    print("  same rank across all Y0 + large gap => well-defined GENERIC dimension")
     print(f"  headline (d=2): dim = 2n - 3 = {2 * N - 3}")
+    print(f"\n  ALL GENERIC: {all_ok}")
 
 
 if __name__ == "__main__":

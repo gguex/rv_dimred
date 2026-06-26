@@ -47,6 +47,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from sklearn.cluster import KMeans
+from sklearn.manifold import TSNE
 from sklearn.metrics import adjusted_rand_score
 
 from src.benchmark_common import (
@@ -55,7 +56,6 @@ from src.benchmark_common import (
     SOFTENING,
     normalize_kernel,
     pca_init,
-    rv_embed,
     to_tensor,
 )
 from src.datasets import load_mnist
@@ -120,7 +120,8 @@ def optimize(
         opt.zero_grad()
         G = gram_student(Y)
         K_Y = double_center(G, w, DEV)
-        align = (K_X * K_Y).sum()              # <K_X, K_Y> Hilbert-Schmidt (PULL)
+        K_Y_frob = (K_Y * K_Y).sum().sqrt().clamp_min(1e-10)
+        align = (K_X * K_Y).sum() / K_Y_frob   # RV normalisé (||K_X||=1)
         vbar = mean_offdiag(G)                  # crowding on RAW Gram (PUSH target)
         loss = -(align - lam * vbar)            # maximize L => minimize -L
         loss.backward()
@@ -164,8 +165,10 @@ def main() -> None:
     # (c) full primal-dual (dual ascent to volume target c)
     Ypd, lam_traj = optimize(K_X, w, init, lam0=0.0, c=c, adapt_dual=True)
 
-    # (d) reference: gradient t-SNE-like (RV ascent, Student-t)
-    Yref, _ = rv_embed(K_X, init, DEV, "student_t", 1.0, weights=w)
+    # (d) reference: t-SNE sklearn
+    print("  (calcul t-SNE sklearn...)", flush=True)
+    Yref = TSNE(n_components=D, perplexity=PERPLEXITY,
+                random_state=SEED).fit_transform(ds.X)
 
     # --- report ---
     print(f"  {'configuration':<28} {'RV':>7} {'ARI':>7} {'spread':>8} {'lambda':>8}")
@@ -181,14 +184,14 @@ def main() -> None:
     print(f"  {'primal-dual (auto lambda)':<28} {rvpd:>7.4f} {aripd:>7.4f} "
           f"{sppd:>8.3f} {lam_traj[-1]:>8.3f}")
     rvr, arir, spr = metrics(Yref, K_X, w, labels)
-    print(f"  {'reference gradient t-SNE':<28} {rvr:>7.4f} {arir:>7.4f} "
+    print(f"  {'reference t-SNE (sklearn)':<28} {rvr:>7.4f} {arir:>7.4f} "
           f"{spr:>8.3f} {'--':>8}")
     print(f"\n  lambda trajectory (primal-dual): "
           f"{lam_traj[0]:.2f} -> {max(lam_traj):.2f} -> {lam_traj[-1]:.2f}")
 
     # --- figures: lambda=0 vs primal-dual vs reference ---
     panels = [("lambda=0 (PULL only)", Y0), (f"primal-dual c={c:.3f}", Ypd),
-              ("reference t-SNE", Yref)]
+              ("t-SNE sklearn (ref)", Yref)]
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
     for ax, (title, Y) in zip(axes, panels):
         ax.scatter(Y[:, 0], Y[:, 1], c=labels, cmap="tab10", s=8, alpha=0.8)

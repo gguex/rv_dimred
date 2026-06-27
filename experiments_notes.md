@@ -2,13 +2,17 @@
 
 Running log of empirical findings worth remembering (not a formal write-up).
 
+**Notation.** `γ` = input-affinity softening exponent (the sweep's `lambda` / `LAMBDAS` column — the
+code names it `lambda`, but it is *not* the Prop. 7 push). `λ` = the volume-push strength in `−λ log Z`
+(Prop. 7). Different quantities; kept distinct below.
+
 ---
 
 ## 2026-06-26 — Why the framework approximates t-SNE but not UMAP
 
 **Setup.** `approximations_finetune` sweep: hollow-RV objective, framework =
 adaptive-Gaussian / fuzzy input kernel + Student-t / UMAP output kernel, swept over
-(perplexity|n_neighbors) × lambda (input-affinity softening exponent γ). Reference =
+(perplexity|n_neighbors) × γ (input-affinity softening exponent). Reference =
 sklearn t-SNE / umap-learn with the same neighbour hyperparameter.
 
 **Observation.** Across all datasets the framework reproduces t-SNE noticeably better
@@ -16,7 +20,7 @@ than UMAP (lower Procrustes, higher kNN overlap to the reference).
 
 **Diagnosis — the objective dominates, not the kernels.** We only swap the input/output
 *kernels*; the *objective* (RV-cosine, hollow) is the same for both. Procrustes at
-(hp=15, λ=0.5):
+(hp=15, γ=0.5):
 
 | | mnist | singlecell |
 |---|---|---|
@@ -46,17 +50,17 @@ extension, not the RV cadre. Reproducing UMAP is a missing *mode*, not a missing
 umap-learn (overriding its default spectral init), which already makes the reference
 somewhat atypical.
 
-### Related: lambda (input softening γ) and the "push" without a volume term
+### Related: γ (input softening) and the "push" without a volume term
 
-The spread that appears as λ→1 is **not** a t-SNE volume repulsion. Every centered kernel
+The spread that appears as γ→1 is **not** a t-SNE volume repulsion. Every centered kernel
 obeys K√f = 0 (zero weighted row-sums), so attraction on neighbour pairs is exactly
 balanced by **negative (repulsive) off-diagonal entries** for non-neighbours — a zero-sum
-push-pull baked in by the double-centering. λ=γ controls the *contrast* of the target:
+push-pull baked in by the double-centering. γ controls the *contrast* of the target:
 γ=1 (no softening) gives a peaked affinity → after centering ~94% of off-diagonal entries
 are negative → strong spread; γ=0.25 fills in the affinity → ~68% negative, low contrast →
 compact. The hollow-RV removes the diagonal "tether" that otherwise suppresses this spread.
 Measured on mnist (perplexity=30): spread 7.4 → 26.3 and %negative off-diagonal 67.6 →
-94.2 as λ goes 0.25 → 1.0. The push is genuine but **bounded** (matches a fixed target),
+94.2 as γ goes 0.25 → 1.0. The push is genuine but **bounded** (matches a fixed target),
 not a runaway volume term.
 
 ---
@@ -87,7 +91,7 @@ power of the output affinity, visible in the gradient.
 **Consequences.**
 - The framework's attraction is **strictly more local** than t-SNE's (far pairs crushed by
   the square) → tighter, less-spread embeddings at fixed input affinity; part of why spread
-  needs the softening γ / hollow-RV (cf. the lambda note above).
+  needs the softening γ / hollow-RV (cf. the γ note above).
 - Clean structural statement: the framework is **symmetric in q̃²** (PULL and PUSH both come
   from the same chain rule through the bounded Student-t readout), whereas **t-SNE is
   asymmetric** (q̃¹ attraction, q̃² repulsion). The framework is the *RV-cosine cousin* of

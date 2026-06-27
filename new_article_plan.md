@@ -7,8 +7,12 @@ On resserre : moins de prospection, un récit théorique net, une partie expéri
 Statut : ✅ dérivé + vérifié · 🟡 à formaliser (matériel prêt) · 🔶 à dériver (faisable) ·
 🔴 ouvert / hors-scope.
 
-> **Décision de cadrage (ce plan).** Pièce signature = **Prop. 6** (la diagonale = métrique de
-> degré). On *ne* met *pas* au premier plan « on reproduit / on bat t-SNE » : c'est contre-productif
+> **Convention de numérotation.** « §N » réfère à une section du *présent plan* ; les sections de
+> l'*article* (structure en §3) sont citées « art. §N ».
+
+> **Décision de cadrage (ce plan).** Pièces signature = **Prop. 6** (la diagonale = métrique de degré,
+> *le* hook) et **Prop. 7** (forme/taille, aveuglement au volume — second pilier). On *ne* met *pas* au
+> premier plan « on reproduit / on bat t-SNE » : c'est contre-productif
 > pour JMVA et ça invite une revue de type benchmark. Ce qui sort du corps de l'article est listé en
 > §8 (pour mémoire, avec raisons).
 
@@ -32,20 +36,24 @@ Arc en trois temps :
 
 ---
 
-## 1. Les trois contributions à vendre (et l'argument de nouveauté)
+## 1. Les quatre contributions à vendre (et l'argument de nouveauté)
 
 **Risque dominant pour JMVA : la nouveauté.** La « vue noyau » de la réduction de dimension existe
 déjà (Ham 2004 ; CKA/Cortes 2012 ; Bengio). L'intro doit répondre frontalement à *« qu'y a-t-il de
-neuf au-delà du kernel view ? »* par les trois contributions, *toutes* absentes de la littérature
+neuf au-delà du kernel view ? »* par les quatre contributions, *toutes* absentes de la littérature
 kernel-view :
 
 1. **Caractérisation exacte de l'ensemble atteignable** : cône PSD de rang $\le d$ (linéaire,
-   Th. 1) vs **variété de dimension $2n-3$** (non linéaire, Prop. 4). Pas « c'est un noyau » : *quels*
+   Th. 1) vs **variété de dimension $nd-\binom{d+1}{2}$** (soit $2n-3$ pour $d=2$ ; non linéaire,
+   Prop. 4). Pas « c'est un noyau » : *quels*
    noyaux, et de quelle forme géométrique.
 2. **Plafond d'alignement en forme close** $\mathrm{RV}_{\max}(d)$ (Prop. 3) — analogue Frobenius de
    la variance expliquée, quantité neuve et interprétable.
-3. **La diagonale comme métrique de degré** (Prop. 6) — full-RV vs hollow-RV $=$ une seule métrique
-   $\mathbf M=\mathbf I+\mathcal D^*\mathcal D$ ; curseur MDS ↔ SNE. *Personne ne l'a écrit.*
+3. **La diagonale comme métrique de degré** (Prop. 6) — *non pas* « diagonale $=$ degré » (la relation
+   standard du Laplacien $\mathbf K=\mathbf D_W-\mathbf W$), mais : full-RV vs hollow-RV $=$ une seule
+   métrique de degré $\mathbf M=\mathbf I+\mathcal D^*\mathcal D$ sur les affinités de paires, **justifiée
+   (Eckart–Young) ssi le readout est linéaire** — le curseur algébrique exact MDS ↔ neighbor-embedding.
+   *Caractérisation neuve à notre connaissance.*
 4. **Aveuglement au volume et origine de la répulsion** (Prop. 7) — $\mathbf Q\mathbf 1=0\Rightarrow$
    la RV ignore le volume $Z$ ; la répulsion t-SNE *est* le gradient de ce mode jeté. Lecture
    **forme/taille** (statistique de forme) — transforme le caveat d'échelle en théorème, très JMVA.
@@ -68,7 +76,7 @@ fondamentale que celle des solveurs. Le solveur paramétrique standard est *re-c
 ## 3. Structure de l'article (~25–30 p.)
 
 1. **Introduction** `[réorienter]` — public stat : analyse multivariée (Escoufier, diagramme de
-   dualité) ∪ manifold learning. Les 3 contributions de §1, formulées comme théorèmes.
+   dualité) ∪ manifold learning. Les 4 contributions de §1, formulées comme théorèmes.
 2. **L'espace $\mathcal K_n$** `[polir]` — $\mathbf Q=\bm\Pi^{1/2}\mathbf H$, double-centrage,
    dualité MDS ; RV = cosinus ; cône PSD $\mathcal K_n^+$, projection de Higham. **Positionnement
    (attribué, ~3 phrases, pas un résultat) :** lu avec $\mathbf K_X$ comme opérateur de lag, l'objectif
@@ -80,7 +88,7 @@ fondamentale que celle des solveurs. Le solveur paramétrique standard est *re-c
 4. **Au-delà du cône : la variété** `[nouveau]` — Prop. 4 (dim $2n-3$) ; I.2 comme **proposition**
    (gradient = projection tangente), *la* justification du solveur paramétrique.
 5. **La diagonale comme métrique de degré** `[nouveau — section signature]` — Prop. 6 ; referme la
-   dichotomie §3↔§4 (diagonale = signal sur le cône, artefact sur la variété).
+   dichotomie art. §3↔§4 (diagonale = signal sur le cône, artefact sur la variété).
 6. **Attraction–répulsion : forme et taille** `[nouveau — résultat, pas simple discussion]` —
    Prop. 7 : $\mathcal K_n$ aveugle au volume, la répulsion comme gradient du mode jeté, lecture
    forme/taille. Relié à Prop. 6 (le hollow lève le tether, le volume sépare) et à la dichotomie
@@ -135,7 +143,7 @@ Avec un readout non linéaire $\kappa_y$, l'ensemble atteignable
 $\mathcal{S}_d^\kappa=\{\mathbf{Q}\,\kappa(\mathbf{D}^2(\mathbf{Y}))\,\mathbf{Q}^\top:\mathbf{Y}\in\mathbb{R}^{n\times d}\}$
 est l'image d'une application non linéaire : variété courbe, **non convexe, plus un cône**
 (scaler $\mathbf{Y}$ ne scale plus $\mathbf{K}_Y$). Dimension (modulo invariances de centrage
-+ groupe euclidien) $\approx nd-\binom{d+1}{2}$, soit **$2n-3$ pour $d=2$** — nappe mince
++ groupe euclidien) $=nd-\binom{d+1}{2}$ exactement (Prop. 4(ii)–(iii)), soit **$2n-3$ pour $d=2$** — nappe mince
 dans $\mathcal{K}_n$ ($\sim n^2/2$).
 **Dimension vérifiée numériquement (Test D)** : le rang du jacobien $\mathbf{Y}\mapsto\mathbf{K}_Y$
 vaut exactement $nd-\binom{d+1}{2}$ pour $d=1,2,3$ ($49,97,144$ à $n=50$), avec une falaise
@@ -263,10 +271,17 @@ préconditionnée) de l'optimisation riemannienne, pas un hack.
 $\mathbf{K}=\mathrm{diag}(\mathbf d)+\mathbf o$ ($\mathbf d\in\mathbb R^n$ diagonale,
 $\mathbf o\in\mathrm{Hollow}(n)$). La contrainte de centrage $\mathbf{K}\sqrt{\mathbf f}=0$ est
 équivalente à $\mathbf d=\mathcal D\mathbf o$ où
-$(\mathcal D\mathbf o)_i=-\tfrac1{\sqrt{f_i}}\sum_{j\neq i}o_{ij}\sqrt{f_j}$.
-*Donc la diagonale d'un noyau centré est une fonction linéaire déterministe du hors-diagonal* :
-$\mathbf o$ est un système de coordonnées **libre et complet** de $\mathcal{K}_n$
-($\dim=\binom n2$), et $\mathrm{diag}$ n'apporte aucune information indépendante.
+$(\mathcal D\mathbf o)_i=-\tfrac1{\sqrt{f_i}}\sum_{j\neq i}o_{ij}\sqrt{f_j}$ : la diagonale d'un noyau
+centré est une fonction linéaire déterministe du hors-diagonal, donc $\mathbf o$ est un système de
+coordonnées **libre et complet** de $\mathcal{K}_n$ ($\dim=\binom n2$).
+
+*Mise au point sur la nouveauté (anti-rebuttal « c'est le Laplacien »).* Cette première observation
+**n'est pas neuve** : à poids uniformes $\mathbf{K}\sqrt{\mathbf f}=0$ dit que $\mathbf K$ est à somme de
+lignes nulle, i.e. **un Laplacien de graphe** $\mathbf K=\mathbf D_W-\mathbf W$ à poids (signés)
+$W_{ij}=-o_{ij}$, de diagonale $=$ degré $d_i=\sum_{j\neq i}W_{ij}$ — fait standard (Chung ; von Luxburg).
+Le *contenu* de la Proposition n'est donc **pas** « diagonale $=$ degré » mais **le rôle exact de cette
+diagonale-degré dans le cosinus RV** (la métrique $\mathbf M$ ci-dessous) et **sa justification dépendante
+du readout** — ce qui, à notre connaissance, n'a pas été écrit.
 
 **Identité exacte (le cœur de la Proposition).** Comme $\mathrm{Diag}\perp\mathrm{Hollow}$ sous
 Frobenius, pour $\mathbf{K}_X,\mathbf{K}_Y\in\mathcal{K}_n$ :
@@ -373,20 +388,35 @@ proprement. Enfin il referme la dichotomie : la **bornitude** de $\mathcal S_d^\
 la contre-force *nécessaire* (queue lourde, affinités saturantes), là où le cône linéaire (non borné)
 n'en a pas besoin.
 
-**Corollaire (taxonomie de la famille PUSH).** Le choix du PUSH se paramètre par **deux axes
-orthogonaux** : le *domaine* de normalisation ($\mathbf K_Y$ centré vs Gram brut $\mathbf G_Y$) et la
-*forme* $g$ appliquée à la masse $Z$. (Pour la discussion §6 — situe le cadre vs les méthodes.)
+**Corollaire (taxonomie de la famille PUSH).** Pour situer le cadre (discussion art. §6). **L'axe qui décide**
+de l'existence d'une répulsion est le *domaine* : sur $\mathbf K_Y$ **centré**, la composante
+$\mathbf 1\mathbf 1^\top$ — seul support d'une masse globale — est annihilée par $\mathbf Q$ (Prop. 7(a)),
+donc *aucun* PUSH ; tout PUSH exige un terme sur le Gram **brut** $\mathbf G_Y$ (Prop. 7(c)). Parmi les
+méthodes à domaine brut, l'*agrégation* sépare deux sous-familles : **normalisation globale** (une unique
+fonction de partition $Z$) vs répulsion **par-paire** (somme d'arêtes indépendantes, sans $Z$).
 
-| méthode | domaine | $g$ | $\lambda=g'(Z)$ | PUSH |
-|---|---|---|---|---|
-| **RV (ce cadre)** | $\mathbf K_Y$ **centré** | quadratique | — (mode volume nul) | **non** (redistribution à somme nulle) |
-| Elastic Embedding | $\mathbf G_Y$ **brut** | linéaire | const. | oui, constant |
-| t-SNE / SNE | $\mathbf G_Y$ **brut** | $\log Z$ | $1/Z$ | oui, auto-ajustant |
-| UMAP | $\mathbf G_Y$ brut | log-rationnel | $\partial_Z g$ | oui |
+| méthode | domaine | forme du PUSH | couplage |
+|---|---|---|---|
+| **RV (ce cadre)** | $\mathbf K_Y$ **centré** | *aucun* (mode volume annihilé par $\mathbf Q$) ; redistribution à somme nulle | — |
+| Elastic Embedding | $\mathbf G_Y$ **brut** | $\lambda\sum_{ij}w^-_{ij}\,e^{-d_{ij}^2}$, poids $\lambda$ **constant** | par-paire (non normalisé) |
+| t-SNE / SNE | $\mathbf G_Y$ **brut** | $+\log Z$, $Z=\sum_{kl}\tilde q_{kl}$ ; force $\propto\tfrac1Z\,\tilde q^2$ | **global** (un seul $Z$) |
+| UMAP | $\mathbf G_Y$ **brut** | $\sum_{ij}(1-\mu_{ij})\log(1-\nu_{ij})$, BCE floue ($\mu,\nu$ appartenances entrée/sortie) | **par-paire**, sans $Z$ (negative sampling) |
 
-Le RV ne répulse pas pour *deux* raisons cumulées : domaine (normalisation sur $\mathbf K_Y$ centré, de
-composante $\mathbf 1\mathbf 1^\top$ nulle) **et** forme (auto-pénalité quadratique à somme nulle). Le
-choix de $g$ sur $\mathbf G_Y$ sélectionne le membre (linéaire → elastic embedding ; $\log$ → t-SNE).
+Le RV ne répulse pas pour *deux* raisons cumulées : domaine ($\mathbf K_Y$ centré, composante
+$\mathbf 1\mathbf 1^\top$ nulle) **et** forme (auto-pénalité quadratique à somme nulle). La distinction
+**global vs par-paire** est exactement la *place du $\log$* : t-SNE prend $\log\!\big(\sum_{kl}\tilde q_{kl}\big)$
+— $\log$ **hors** de la somme → un $Z$ couple toutes les paires, force auto-ajustante $1/Z$ ; UMAP prend
+$\sum_{ij}\log(1-\nu_{ij})$ — $\log$ **dans** la somme → répulsions d'arête indépendantes, aucune masse
+globale. (La « forme $g(Z)$ » ne paramètre donc que la sous-famille *globale* : linéaire → elastic
+embedding, $\log$ → t-SNE ; UMAP est hors de cette famille.)
+
+**Conséquence (pont avec `experiments_notes.md`).** La seule répulsion que le cadre puisse réinjecter est
+le mode volume $-\lambda\log Z$ (Prop. 7(b)) : elle tombe **exactement** dans la sous-famille *globale* —
+c'est la répulsion de t-SNE. Donc le cadre **approche t-SNE** (même PUSH global) mais **pas UMAP**, dont le
+PUSH par-paire est hors de la famille $g(Z)$ ; l'atteindre exigerait une répulsion par-paire sur
+$\mathbf G_Y$ (negative sampling, §8) — un PUSH d'une autre *nature*, pas un réglage. Ce n'est donc pas le
+noyau de sortie qui sépare t-SNE de UMAP (tous deux à queue rationnelle), mais la **structure du PUSH**
+(global vs par-paire) — cohérent avec l'asymétrie d'attraction $\tilde q^2/\tilde q^1$ (corollaire Prop. 5).
 
 **Réserves (à écrire).** C'est le **PUSH**, pas le PULL ; succès pratique conditionné à Prop. 6 ;
 $\log Z$ non borné (réglage de $\lambda$) ; optimisation locale. Appui empirique : Test C (volume réel),
@@ -404,7 +434,7 @@ ARI $0.37\to0.16$). Confirme qu'aucune répulsion ne vient de $\mathcal K_n$.
 - (b) **Géométrie diagonale / hollow** : full-RV (compact, `frac_diag` 0.14) → hollow-RV (étalé,
   0.36) → t-SNE (0.58), avec spread et `frac_diag` qui co-varient (Tests F+G). *Meilleure figure :
   elle illustre Prop. 6, la pièce signature.*
-- (c) *optionnel* : **dimension de la variété** $\approx 2n-3$ (Test D, rang du jacobien).
+- (c) *optionnel* : **dimension de la variété** $=2n-3$ ($d=2$) (Test D, rang du jacobien).
 
 Datasets : Swiss-roll (variété connue) + MNIST réduit ou single-cell. Tout le reste (grilles de
 scatterplots, multi-datasets, comparaisons librairies, dial supervisé) → annexe ou coupé (§8).
@@ -416,7 +446,7 @@ scatterplots, multi-datasets, comparaisons librairies, dial supervisé) → anne
 | Test | Objectif | Statut / rôle |
 |------|----------|---------------|
 | **A** | Plafond linéaire $\to\mathrm{RV}_{\max}(d)$ (Prop. 3) | ✅ → **figure (a)** — coïncidence exacte (0.4294) |
-| **D** | Dimension intrinsèque, rang jacobien $\approx2n-3$ (Prop. 4) | ✅ → **figure (c) optionnelle** — $49,97,144$ ($n=50$), falaise $\sim10^{14}$ |
+| **D** | Dimension intrinsèque, rang jacobien $=2n-3$ ($d=2$) (Prop. 4) | ✅ → **figure (c) optionnelle** — $49,97,144$ ($n=50$), falaise $\sim10^{14}$ |
 | **F** | Hollow-RV vs RV plein (Prop. 6) | ✅ → **figure (b)** — hollow-RV pur ARI 0.40, étalement libéré |
 | **G** | Mécanisme métrique (Prop. 6) : $\sum_i r_i^2$ = plancher | ✅ → **figure (b)** (`test_diag_energy.py`, `tests_log2.md`) — `frac_diag` 0.14→0.36→0.58 suit le spread |
 | **B** | Solveur directionnel | 🔻 **DEMOTE** → §8 (remarque conceptuelle, pas figure) |
@@ -439,14 +469,14 @@ $Nd-\binom{d+1}{2}=2N-3$ pour $d=2$ ($97$ à $N=50$), confirmant la minceur de l
 3. ✅→📝 **Prop. 4** — énoncé + preuve faits (rang constant via Lemmes A/B, non-cône par bornitude) ;
    vérifié (Test D, multi-points). Reste : mise au propre rédactionnelle.
 4. **Finir Prop. 6** — algèbre faite (adjoint inclus) ; reste : lemme « $\mathbf M$ data-justifiée
-   ⟺ readout linéaire » + régularité $\mathbf M\succ0$. Rédiger la section signature §5(article).
+   ⟺ readout linéaire » + régularité $\mathbf M\succ0$. Rédiger la section signature art. §5.
 5. ✅→📝 **Prop. 7 (volume → répulsion)** — énoncé + preuve faits ($\mathbf Q\mathbf 1=0$, gradient
-   $-\log Z=$ répulsion t-SNE, forme/taille). Reste : mise au propre + intégration au §6.
-6. **Positionnement Moran** — ~3 phrases en §2 (attribué : Bavaud, MEM, MULTISPATI) + 1 perspective
+   $-\log Z=$ répulsion t-SNE, forme/taille). Reste : mise au propre + intégration à l'art. §6.
+6. **Positionnement Moran** — ~3 phrases en art. §2 (attribué : Bavaud, MEM, MULTISPATI) + 1 perspective
    non-linéaire en conclusion. *Pas* un résultat ; aucune dérivation à faire.
 7. **Réduire les figures à 3** (a/b/c ci-dessus) ; tout le reste en annexe ou coupé.
-8. **Intro + positionnement nouveauté** (§1) — le levier d'acceptation n°1.
-9. **Discussion** — Prop. 7 (§6) ; MM (Yang et al.) en programme, honnête et bref.
+8. **Intro + positionnement nouveauté** (art. §1) — le levier d'acceptation n°1.
+9. **Discussion** — Prop. 7 (art. §6) ; MM (Yang et al.) en programme, honnête et bref.
 
 ---
 
@@ -501,7 +531,9 @@ scripts) ; il n'entre simplement pas comme résultat principal.
   découvrons que t-SNE est un MM ».
 - **Nouveauté à défendre frontalement vs Ham (2004) / CKA (Cortes 2012)** : ce n'est pas « la vue
   noyau », c'est la *caractérisation géométrique de l'ensemble atteignable* + le *plafond* + la
-  *métrique de degré* (§1).
+  *métrique de degré* (§1). **Et vs le Laplacien de graphe** (Chung ; von Luxburg) : la nouveauté de
+  Prop. 6 n'est *pas* « diagonale $=$ degré » (standard) mais la métrique $\mathbf M=\mathbf I+\mathcal D^*\mathcal D$,
+  justifiée ssi readout linéaire, comme curseur MDS ↔ neighbor-embedding.
 - Honnêteté assumée sur (i) la non-convexité intrinsèque de la variété (localité), (ii) la RV cosinus
   invariante d'échelle ⇒ pas de fonction de partition ⇒ séparation inter-clusters un peu moindre que
   t-SNE (caveat I.3). *Les relecteurs stat récompensent l'honnêteté* — contrairement aux venues ML.
@@ -521,6 +553,11 @@ Sugiyama (2007, LFDA), Cortes (2012, CKA), Fouss (2005, commute-time), Bavaud (2
   Carreira-Perpiñán — *Elastic Embedding*, ICML 2010 ; Vladymyrov & Carreira-Perpiñán —
   *Partial-Hessian*, ICML 2012 ; Böhm, Berens, Kobak — *Attraction-Repulsion Spectrum*, JMLR 2022 ;
   de Leeuw — SMACOF / Guttman.
+- **Neighbor embedding — PUSH par-paire vs global (taxonomie Prop. 7)** : McInnes, Healy & Melville
+  — *UMAP* (2018, BCE floue par-paire, negative sampling, pas de $Z$) ; Damrich & Hamprecht —
+  *On UMAP's True Loss Function*, NeurIPS 2021. *(Étayent : UMAP hors de la famille $g(Z)$.)*
+- **Laplacien de graphe (attribution Prop. 6 : « diagonale $=$ degré » est standard)** : Chung —
+  *Spectral Graph Theory* (1997) ; von Luxburg — *A Tutorial on Spectral Clustering* (2007).
 - **EDM (remarque solveur directionnel)** : Dattorro ; Krislock & Wolkowicz — *Euclidean Distance Matrices*.
 - **Autocorrélation spatiale (positionnement, antérieur)** : Moran (1950) ; Bavaud (autocorrélation
   multivariée) ; Dray, Legendre & Peres-Neto (2006, *Moran Eigenvector Maps*) ; Dray, Saïd & Débias

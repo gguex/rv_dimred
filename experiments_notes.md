@@ -58,3 +58,44 @@ compact. The hollow-RV removes the diagonal "tether" that otherwise suppresses t
 Measured on mnist (perplexity=30): spread 7.4 → 26.3 and %negative off-diagonal 67.6 →
 94.2 as λ goes 0.25 → 1.0. The push is genuine but **bounded** (matches a fixed target),
 not a runaway volume term.
+
+---
+
+## 2026-06-27 — The gradient-level mechanism: attraction in q̃² (RV) vs q̃¹ (t-SNE)
+
+**Refines the 2026-06-26 entry** ("the objective dominates, not the kernels") down to the
+gradient — and fixes an over-claim in the article plan (the Prop. 5 corollary said the RV
+attraction was *exactly* t-SNE's; it is not).
+
+**The identity (verified by autograd against the real kernel code,
+`scripts/tests/test_attraction_power.py`).** With the *same* Student-t output
+`q̃_ij = (1 + ‖y_i − y_j‖²)⁻¹` on both sides:
+
+| force | RV-cosine framework | t-SNE |
+|---|---|---|
+| attraction (PULL) | `4 Σ_j (K̃_X)_kj · q̃_kj² · (y_j − y_k)` | `4 Σ_j p_kj · q̃_kj¹ · (y_j − y_k)` |
+| repulsion (PUSH) | `(4λ/Z) Σ_j q̃_kj² · (y_k − y_j)`  (added −λ log Z mode) | `(4/Z) Σ_j q̃_kj² · (y_k − y_j)` |
+
+So **the repulsions are identical (both q̃²); the attractions differ by one power of q̃**.
+
+**Why.** Same output kernel, different objective. t-SNE's KL carries a `log q̃` that
+linearises the output dependence → attraction weight ∝ q̃¹. The RV's bilinear `⟨K_X, K_Y⟩`
+has no log → the readout derivative `κ' = −q̃²` survives → attraction ∝ q̃². The 2026-06-26
+slogan ("the objective dominates the kernel") is now literal: the difference is exactly one
+power of the output affinity, visible in the gradient.
+
+**Consequences.**
+- The framework's attraction is **strictly more local** than t-SNE's (far pairs crushed by
+  the square) → tighter, less-spread embeddings at fixed input affinity; part of why spread
+  needs the softening γ / hollow-RV (cf. the lambda note above).
+- Clean structural statement: the framework is **symmetric in q̃²** (PULL and PUSH both come
+  from the same chain rule through the bounded Student-t readout), whereas **t-SNE is
+  asymmetric** (q̃¹ attraction, q̃² repulsion). The framework is the *RV-cosine cousin* of
+  t-SNE, not t-SNE.
+- This is the gradient-level cause of "approximates t-SNE without reproducing it": even with
+  t-SNE's own input affinity as `K_X` and t-SNE's own Student-t output, the PULL is a
+  different (more peaked) force.
+
+**Plan impact.** Prop. 5 corollary rewritten (attraction q̃², not "exactly t-SNE"); Prop.
+7(b) was already correct ("repulsion exactly t-SNE", "attraction différente") — the two now
+agree.

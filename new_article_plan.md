@@ -230,11 +230,26 @@ plongée (Prop. 4 donne que $T$ en est l'espace tangent) : $\operatorname{grad}F
 $\langle\mathbf G,D\Phi D\Phi^{*}\mathbf G\rangle=\|D\Phi^{*}\mathbf G\|^2$. $\square$
 
 **Corollaire (force PULL explicite, lien Prop. 7).** Avec $\tilde{\mathbf K}_X=\mathbf Q^\top\mathbf K_X\mathbf Q$
-et le readout Student-$t$, le terme d'attraction du gradient paramétrique s'écrit
-$$\nabla_{\mathbf y_k}\langle\mathbf K_X,\mathbf K_Y\rangle=4\sum_j(\tilde K_X)_{kj}\,(1+d_{kj}^2)^{-2}\,(\mathbf y_j-\mathbf y_k),$$
-soit **exactement la force attractive de t-SNE** (poids affinité-d'entrée $\times\,q_{kj}^2$). Couplé à
-Prop. 7 (le PUSH $=-\lambda\nabla\log Z=$ répulsion t-SNE), on récupère la structure attraction–répulsion
-complète, *avec l'attraction propre au cadre* (alignement RV) au lieu de l'entropie croisée.
+et le readout Student-$t$ ($\tilde q_{kj}=(1+d_{kj}^2)^{-1}$), le terme d'attraction du gradient
+paramétrique s'écrit
+$$\nabla_{\mathbf y_k}\langle\mathbf K_X,\mathbf K_Y\rangle=4\sum_j(\tilde K_X)_{kj}\,\tilde q_{kj}^{\,2}\,(\mathbf y_j-\mathbf y_k),$$
+de **poids $=$ affinité d'entrée $\times$ affinité de sortie *au carré***. C'est une attraction
+*apparentée* à t-SNE mais **distincte** : la force attractive de t-SNE vaut
+$4\sum_j p_{kj}\,\tilde q_{kj}\,(\mathbf y_j-\mathbf y_k)$, de poids $p_{kj}\,\tilde q_{kj}^{\,1}$ — **une
+puissance de $\tilde q$ de moins**. Les deux partagent pourtant le *même* readout Student-$t$ : l'écart
+vient de l'**objectif**, pas du noyau. Le $\log$ de la KL linéarise la dépendance en sortie ($\tilde q^1$) ;
+la forme bilinéaire RV la conserve ($\tilde q^2$). L'attraction du cadre est donc **strictement plus
+locale** (les paires lointaines sont écrasées par le carré).
+
+**Asymétrie PULL / PUSH (identité vérifiée par autograd).** La seule répulsion disponible est le mode
+volume $-\lambda\log Z$ (Prop. 7(c)) ; son gradient $(4\lambda/Z)\sum_j\tilde q_{kj}^{\,2}(\mathbf y_k-\mathbf y_j)$
+est **exactement** la répulsion de t-SNE ($\tilde q^2$, Prop. 7(b)). Ainsi *l'attraction RV et le PUSH
+volumique sont tous deux en $\tilde q^2$* — issus du même chain-rule à travers le readout Student-$t$ borné
+$\kappa'=-\tilde q^2$ — là où t-SNE est **asymétrique** ($\tilde q^1$ en attraction, $\tilde q^2$ en
+répulsion). Le cadre n'est donc pas t-SNE mais son **cousin RV-cosinus** : même répulsion, même pondération
+par l'affinité d'entrée, attraction plus piquée. *C'est le mécanisme, au niveau du gradient, du constat
+empirique « le cadre approxime t-SNE sans le reproduire » (`approximations_finetune`, `experiments_notes.md`) :
+l'objectif (RV vs KL) domine le choix du noyau.*
 
 **Honnêteté (à écrire tel quel).** Le gradient paramétrique n'est **pas** identique au gradient
 riemannien : la carte $\mathbf Y$ n'est pas une isométrie, d'où le préconditionnement $\mathbf M_{\mathbf Y}$.
@@ -418,8 +433,9 @@ $Nd-\binom{d+1}{2}=2N-3$ pour $d=2$ ($97$ à $N=50$), confirmant la minceur de l
 
 1. **Rédiger Th. 1–2 + Prop. 3** — matériel prêt (Test A), pur travail d'écriture.
 2. ✅→📝 **Prop. 5 (gradient = gradient riemannien)** — énoncé + preuve faits (adjoint $D\Phi^*$,
-   mêmes points critiques, préconditionnement $\mathbf M_{\mathbf Y}$) ; corollaire force PULL = attraction
-   t-SNE. Reste : mise au propre + une phrase sur le préconditionnement. Rend le solveur directionnel inutile.
+   mêmes points critiques, préconditionnement $\mathbf M_{\mathbf Y}$) ; corollaire force PULL $=$ attraction
+   RV-cosinus en $\tilde q^2$ (cousine de t-SNE, *pas* identique : t-SNE en $\tilde q^1$), asymétrie PULL/PUSH
+   vérifiée. Reste : mise au propre + une phrase sur le préconditionnement. Rend le solveur directionnel inutile.
 3. ✅→📝 **Prop. 4** — énoncé + preuve faits (rang constant via Lemmes A/B, non-cône par bornitude) ;
    vérifié (Test D, multi-points). Reste : mise au propre rédactionnelle.
 4. **Finir Prop. 6** — algèbre faite (adjoint inclus) ; reste : lemme « $\mathbf M$ data-justifiée

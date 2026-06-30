@@ -18,8 +18,9 @@ because D^2(Y) -- hence K_Y -- is invariant under
 
 For d=2 this is the headline result  dim = 2n - 3.
 
-We sweep d = 1, 2, 3 to confirm the GENERAL formula, and print the singular-value
-gap around the predicted rank as the evidence (a clean cliff => well-defined rank).
+We sweep d = 1, 2, 3 AND n in {30, 50, 80} to confirm the GENERAL formula holds at
+several sample sizes (not a coincidence at n=50), and print the singular-value gap
+around the predicted rank as the evidence (a clean cliff => well-defined rank).
 """
 
 from __future__ import annotations
@@ -28,16 +29,16 @@ import sys
 from math import comb
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # repo root (for `src`)
 
 import numpy as np
 import torch
 
 from src.rv_kernels import centering_operator, default_weights
 
-N = 50                      # plan: N = 50 sample points
+NS = (30, 50, 80)          # sample sizes (rank must not be a coincidence at n=50)
 DS = (1, 2, 3)              # embedding dimensions to test
-N_SAMPLES = 5               # random base points Y0 per d (test genericity)
+N_SAMPLES = 5               # random base points Y0 per (n, d) (test genericity)
 SEED = 0
 torch.set_default_dtype(torch.float64)   # accurate singular values / rank
 
@@ -63,48 +64,51 @@ def numerical_rank(sv: np.ndarray, n_in: int) -> tuple[int, float]:
 
 
 def main() -> None:
-    torch.manual_seed(SEED)
-    w = default_weights(N, "cpu")
-    Q = centering_operator(w, "cpu")
-
-    print(f"Test D  -  intrinsic dimension of S_d^kappa  (Student-t), n = {N}")
-    print(f"  rank checked on {N_SAMPLES} random base points Y0 per d (genericity)\n")
-    print(f"  {'d':>2} {'n*d':>5} {'C(d+1,2)':>9} {'predicted':>10} "
-          f"{'ranks':>14} {'min gap(x)':>11}")
-    print("  " + "-" * 65)
+    print("Test D  -  intrinsic dimension of S_d^kappa  (Student-t)")
+    print(f"  rank checked on {N_SAMPLES} random base points Y0 per (n, d) (genericity)")
+    print(f"  sweeping n in {NS} to rule out a coincidence at any single n\n")
 
     all_ok = True
-    for d in DS:
-        f = k_map_factory(N, d, Q)
-        n_in = N * d
-        predicted = N * d - comb(d + 1, 2)
+    for N in NS:
+        w = default_weights(N, "cpu")
+        Q = centering_operator(w, "cpu")
 
-        ranks: list[int] = []
-        min_gap = float("inf")
-        for s in range(N_SAMPLES):
-            torch.manual_seed(SEED + s)
-            Y0 = torch.randn(n_in)
-            J = torch.autograd.functional.jacobian(f, Y0)      # (n*n, n*d)
-            sv = torch.linalg.svdvals(J).cpu().numpy()
+        print(f"  n = {N}   (ambient dim C(n,2) = {comb(N, 2)})")
+        print(f"    {'d':>2} {'n*d':>5} {'C(d+1,2)':>9} {'predicted':>10} "
+              f"{'ranks':>14} {'min gap(x)':>11}")
+        print("    " + "-" * 65)
 
-            rank, _ = numerical_rank(sv, n_in)
-            ranks.append(rank)
-            sv_last = sv[rank - 1] if rank >= 1 else float("nan")
-            sv_next = sv[rank] if rank < len(sv) else 0.0
-            gap = (sv_last / sv_next) if sv_next > 0 else float("inf")
-            min_gap = min(min_gap, gap)
+        for d in DS:
+            f = k_map_factory(N, d, Q)
+            n_in = N * d
+            predicted = N * d - comb(d + 1, 2)
 
-        consistent = len(set(ranks)) == 1
-        rank_str = str(ranks[0]) if consistent else "/".join(map(str, ranks))
-        ok = consistent and ranks[0] == predicted
-        all_ok = all_ok and ok
-        flag = "OK" if ok else "<-- MISMATCH"
-        print(f"  {d:>2} {n_in:>5} {comb(d + 1, 2):>9} {predicted:>10} "
-              f"{rank_str:>14} {min_gap:>11.2e}  {flag}")
+            ranks: list[int] = []
+            min_gap = float("inf")
+            for s in range(N_SAMPLES):
+                torch.manual_seed(SEED + s)
+                Y0 = torch.randn(n_in)
+                J = torch.autograd.functional.jacobian(f, Y0)      # (n*n, n*d)
+                sv = torch.linalg.svdvals(J).cpu().numpy()
 
-    print("\n  predicted = n*d - C(d+1,2)   (translation d + rotation d(d-1)/2)")
-    print("  same rank across all Y0 + large gap => well-defined GENERIC dimension")
-    print(f"  headline (d=2): dim = 2n - 3 = {2 * N - 3}")
+                rank, _ = numerical_rank(sv, n_in)
+                ranks.append(rank)
+                sv_last = sv[rank - 1] if rank >= 1 else float("nan")
+                sv_next = sv[rank] if rank < len(sv) else 0.0
+                gap = (sv_last / sv_next) if sv_next > 0 else float("inf")
+                min_gap = min(min_gap, gap)
+
+            consistent = len(set(ranks)) == 1
+            rank_str = str(ranks[0]) if consistent else "/".join(map(str, ranks))
+            ok = consistent and ranks[0] == predicted
+            all_ok = all_ok and ok
+            flag = "OK" if ok else "<-- MISMATCH"
+            print(f"    {d:>2} {n_in:>5} {comb(d + 1, 2):>9} {predicted:>10} "
+                  f"{rank_str:>14} {min_gap:>11.2e}  {flag}")
+        print(f"    headline (d=2): dim = 2n - 3 = {2 * N - 3}\n")
+
+    print("  predicted = n*d - C(d+1,2)   (translation d + rotation d(d-1)/2)")
+    print("  same rank across all Y0 and all n + large gap => well-defined GENERIC dimension")
     print(f"\n  ALL GENERIC: {all_ok}")
 
 

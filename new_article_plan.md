@@ -78,11 +78,20 @@ fondamentale que celle des solveurs. Le solveur paramétrique standard est *re-c
 1. **Introduction** `[réorienter]` — public stat : analyse multivariée (Escoufier, diagramme de
    dualité) ∪ manifold learning. Les 4 contributions de §1, formulées comme théorèmes.
 2. **L'espace $\mathcal K_n$** `[polir]` — $\mathbf Q=\bm\Pi^{1/2}\mathbf H$, double-centrage,
-   dualité MDS ; RV = cosinus ; cône PSD $\mathcal K_n^+$, projection de Higham. **Positionnement
-   (attribué, ~3 phrases, pas un résultat) :** lu avec $\mathbf K_X$ comme opérateur de lag, l'objectif
-   RV *linéaire* coïncide avec la maximisation d'autocorrélation de Moran / Moran Eigenvector Maps /
-   MULTISPATI — connu (Bavaud ; Dray et al.), cité comme **antérieur**. Sert seulement à parler la
-   langue JMVA et à interpréter $\mathbf K_X$ ; aucune revendication sur le linéaire.
+   dualité MDS ; RV = cosinus ; cône PSD $\mathcal K_n^+$, projection de Higham. **Désamorcer CKA d'emblée
+   (~1 phrase) :** le RV $=$ cosinus de Frobenius de noyaux *centrés* $=$ **CKA** (Cortes 2012) ; on l'écrit
+   tôt pour couper le réflexe « ce n'est que CKA » — la nouveauté n'est pas le cosinus (connu) mais la
+   *géométrie de l'ensemble atteignable* (cône vs variété, plafond $\mathrm{RV}_{\max}$, métrique de degré).
+   **Positionnement
+   (attribué, ~3 phrases, pas un résultat) :** le numérateur RV *linéaire* $\langle\mathbf K_X,\mathbf K_Y\rangle$,
+   lu avec $\mathbf K_X$ comme noyau spatial / de lag, **est exactement** l'indice de Moran multivarié
+   généralisé de **Bavaud (2024)** — défini précisément comme produit de Frobenius d'un *feature kernel*
+   et d'un *spatial kernel*. Sa diagonalisation se *rattache* aux **Moran Eigenvector Maps** (Dray et al.
+   2006) et à **MULTISPATI** (Dray et al. 2008), avec un **bémol d'attribution honnête** : MULTISPATI
+   n'optimise pas l'autocorrélation pure mais un *compromis variance × Moran* (d'où ses valeurs propres
+   possiblement négatives) — on écrira donc « apparenté à MEM/MULTISPATI », et « coïncide avec » réservé au
+   seul cadre de Bavaud (produit de noyaux). Tout ceci cité comme **antérieur** ; sert à parler la langue
+   JMVA et à interpréter $\mathbf K_X$ ; aucune revendication sur le linéaire.
 3. **Réduction linéaire = projection sur un cône** `[étendre]` — Th. 1, Th. 2, Prop. 3 ; corollaire
    d'unification spectrale (PCA/MDS/Isomap/KPCA/LLE/LE).
 4. **Au-delà du cône : la variété** `[nouveau]` — Prop. 4 (dim $2n-3$) ; I.2 comme **proposition**
@@ -146,9 +155,10 @@ est l'image d'une application non linéaire : variété courbe, **non convexe, p
 + groupe euclidien) $=nd-\binom{d+1}{2}$ exactement (Prop. 4(ii)–(iii)), soit **$2n-3$ pour $d=2$** — nappe mince
 dans $\mathcal{K}_n$ ($\sim n^2/2$).
 **Dimension vérifiée numériquement (Test D)** : le rang du jacobien $\mathbf{Y}\mapsto\mathbf{K}_Y$
-vaut exactement $nd-\binom{d+1}{2}$ pour $d=1,2,3$ ($49,97,144$ à $n=50$), avec une falaise
-spectrale nette ($\sim10^{14}$) — confirmé sur plusieurs points $\mathbf Y_0$ aléatoires (rang
-constant ⇒ générique).
+vaut exactement $nd-\binom{d+1}{2}$ pour $d=1,2,3$ **et $n\in\{30,50,80\}$** (p.ex. $49,97,144$ à
+$n=50$ ; $79,157,234$ à $n=80$), avec une falaise spectrale nette ($\sim10^{13}\!-\!10^{14}$) — confirmé
+sur plusieurs points $\mathbf Y_0$ aléatoires (rang constant à travers $n$ et $\mathbf Y_0$ ⇒ générique,
+pas une coïncidence à $n=50$).
 **Énoncé formel.** Soit $\kappa\in C^1([0,\infty))$ avec $\kappa'(t)\neq0$ pour tout $t$ (Student-$t$ :
 $\kappa(t)=(1+t)^{-1}$, $\kappa'=-(1+t)^{-2}$). Soit $\Phi:\mathbb R^{n\times d}\to\mathcal K_n$,
 $\Phi(\mathbf Y)=\mathbf Q\,\kappa(\mathbf D^2(\mathbf Y))\,\mathbf Q^\top$ avec
@@ -259,8 +269,13 @@ par l'affinité d'entrée, attraction plus piquée. *C'est le mécanisme, au niv
 empirique « le cadre approxime t-SNE sans le reproduire » (`approximations_finetune`, `experiments_notes.md`) :
 l'objectif (RV vs KL) domine le choix du noyau.*
 
-**Honnêteté (à écrire tel quel).** Le gradient paramétrique n'est **pas** identique au gradient
-riemannien : la carte $\mathbf Y$ n'est pas une isométrie, d'où le préconditionnement $\mathbf M_{\mathbf Y}$.
+**Honnêteté (à écrire tel quel).** L'équivalence (iii) $\nabla_{\mathbf Y}f=0\iff\operatorname{grad}F=0$
+ne vaut que sur l'ouvert $\mathcal U$ (points engendrant affinement $\mathbb R^d$), où $T=\mathrm{Im}\,D\Phi$
+est bien l'espace tangent (Prop. 4). Hors de $\mathcal U$ — configurations **effondrées** (points coïncidents,
+rang affine $<d$) — $D\Phi$ chute de rang : ce sont des points critiques de **bord** où la carte dégénère,
+*exclus* de l'énoncé (ils n'ont pas vocation à être des optima utiles). De plus, le gradient paramétrique
+n'est **pas** identique au gradient riemannien : la carte $\mathbf Y$ n'est pas une isométrie, d'où le
+préconditionnement $\mathbf M_{\mathbf Y}$.
 Ce n'est pas un défaut — c'est la distinction standard « gradient riemannien dans une carte » vs « dans la
 variété plongée ». La revendication défendable est : *même variété, même espace tangent, mêmes points
 critiques, même caractère de remontée* ; le solveur autograd est donc l'implémentation canonique (et
@@ -329,12 +344,16 @@ $\sum_i r_i^2/f_i=\sum_i\rho_i^2$ — on retrouve la forme ci-dessus.
 
 **Le mécanisme du tether (vérifié, Test G).** Décomposer le dénominateur :
 $\|\mathbf{K}_Y\|^2=\|\mathbf o_Y\|^2+\|\mathbf d_Y\|^2$ avec $\|\mathbf d_Y\|^2=\sum_i r_i^2$.
-Numériquement (MNIST n=500), $\sum_i r_i^2$ est un **plancher quasi constant** ($\approx0.0018$
+Conditions du run (à reporter en légende, déterministe) : **MNIST n=500, perplexité=30, $\gamma=0.5$
+(softening §5.3.2), seed=0**. $\sum_i r_i^2$ est un **plancher quasi constant** ($0.0018\to0.0020$
 de full-RV à t-SNE) tandis que $\|\mathbf o_Y\|^2$ **s'effondre** quand l'embedding s'étale
 (affinités Student-$t\to0$). Le RV plein normalisant par ce plancher, l'étalement est pénalisé
 dès qu'il fait chuter $\|\mathbf o_Y\|$ : d'où un spread plafonné (7.3) et une fraction d'énergie
 diagonale $\|\mathbf d_Y\|^2/\|\mathbf{K}_Y\|^2$ verrouillée (0.14). Le hollow-RV retire le plancher
-$\Rightarrow$ spread libéré (12.5) et fraction diagonale qui rejoint le régime t-SNE (0.36 vs 0.58).
+$\Rightarrow$ spread libéré (12.5) et fraction diagonale qui rejoint le régime t-SNE (0.36 vs 0.58 ;
+t-SNE sklearn : spread 19.5). *Le spread hollow $=12.5$ est relevé **à $\gamma=0.5$** ; il croît avec
+$\gamma$ (le sweep $\gamma:0.25\to1.0$ de `experiments_notes.md`, à $n=2000$, monte jusqu'à $\sim26$) —
+ne pas conflater les deux réglages : la figure (b) fixe $\gamma=0.5,n=500$.*
 *La correction $\sum_i r_i^2$ de $\mathbf M$ agit donc comme une normalisation-plancher
 spread-insensible (un « global tether »), pas comme une cible que l'optimiseur gonflerait.*
 
@@ -383,10 +402,12 @@ le cosinus de forme évacue par construction.
 **Emboîtement (le diptyque centrage).** Prop. 7 complète l'anatomie du centrage : Lemme A de Prop. 4
 (inoffensif sur le creux), Prop. 6 (diagonale redondante *dans* $\mathcal K_n$), Prop. 7 (mode volume
 jeté *hors* $\mathcal K_n$). Et il s'articule avec Prop. 6 : RV plein $\Rightarrow$ l'attraction sature
-et le PUSH volume effondre (Test C) ; hollow-RV $\Rightarrow$ tether levé, le PUSH volume sépare
+et le PUSH volume effondre ; hollow-RV $\Rightarrow$ tether levé, le PUSH volume sépare
 proprement. Enfin il referme la dichotomie : la **bornitude** de $\mathcal S_d^\kappa$ (Prop. 4(iv)) rend
 la contre-force *nécessaire* (queue lourde, affinités saturantes), là où le cône linéaire (non borné)
-n'en a pas besoin.
+n'en a pas besoin. *(Cette interaction RV-plein-sature / hollow-sépare est corroborée — au niveau
+discussion, §8 — par le prototype primal-dual Test C : sous RV plein le PUSH volume sature, sous hollow-RV
+il étale proprement ; l'évidence de figure reste le Test G.)*
 
 **Corollaire (taxonomie de la famille PUSH).** Pour situer le cadre (discussion art. §6). **L'axe qui décide**
 de l'existence d'une répulsion est le *domaine* : sur $\mathbf K_Y$ **centré**, la composante
@@ -419,8 +440,9 @@ noyau de sortie qui sépare t-SNE de UMAP (tous deux à queue rationnelle), mais
 (global vs par-paire) — cohérent avec l'asymétrie d'attraction $\tilde q^2/\tilde q^1$ (corollaire Prop. 5).
 
 **Réserves (à écrire).** C'est le **PUSH**, pas le PULL ; succès pratique conditionné à Prop. 6 ;
-$\log Z$ non borné (réglage de $\lambda$) ; optimisation locale. Appui empirique : Test C (volume réel),
-Test F/G (comportement avec hollow-RV). **Corrobore (c) :** une tentative de PUSH spectral *intra*-$\mathcal K_n$
+$\log Z$ non borné (réglage de $\lambda$) ; optimisation locale. Appui empirique de figure : Test F/G
+(comportement avec hollow-RV) ; corroboration au niveau discussion (§8) : Test C (PUSH volume réel,
+dual auto). **Corrobore (c) :** une tentative de PUSH spectral *intra*-$\mathcal K_n$
 (pseudo-log-det de $\mathbf K_Y$, pour répulser sans le mode volume) échoue — elle maximise l'entropie
 spectrale, égalise les valeurs propres et **combat** le PULL (spec\_ratio $\mathbf K_Y$ : $4.6\!\times\!10^{10}\to15$ ;
 ARI $0.37\to0.16$). Confirme qu'aucune répulsion ne vient de $\mathcal K_n$.
@@ -429,11 +451,21 @@ ARI $0.37\to0.16$). Confirme qu'aucune répulsion ne vient de $\mathcal K_n$.
 
 ## 5. Illustrations (3 figures max — validations de théorèmes)
 
-- (a) **Recouvrement spectral exact** : le RV gradient-linéaire atteint le plafond Prop. 3
-  (Test A). 1 table (Procrustes, RV) + courbe/plafond.
-- (b) **Géométrie diagonale / hollow** : full-RV (compact, `frac_diag` 0.14) → hollow-RV (étalé,
-  0.36) → t-SNE (0.58), avec spread et `frac_diag` qui co-varient (Tests F+G). *Meilleure figure :
-  elle illustre Prop. 6, la pièce signature.*
+- (a) **Recouvrement spectral exact + vitrine d'unification** : (i) le RV gradient-linéaire atteint le
+  plafond Prop. 3 (Test A) ; (ii) **table d'unification** (données prêtes : `spectral_run.py` →
+  `results/indices/spectral/`) — pour **6 méthodes** (PCA, KPCA-RBF, Isomap, LLE, Diffusion Maps,
+  Laplacian Eigenmaps) × 3 jeux, l'optimum RV en **forme close** (une seule eigendécomposition de
+  $\mathbf K_X$) atteint $\mathrm{RV}_{\max}(d)$ *et* coïncide avec l'implémentation-librairie de
+  référence (Procrustes framework↔référence $\sim10^{-13}\!-\!10^{-9}$ pour PCA/KPCA/LLE ;
+  $\sim10^{-3}$ pour Isomap/Diffusion ; **exception honnête : Laplacian Eigenmaps jusqu'à
+  $\sim10^{-1}$** — readout *orthonormal*, axes équilibrés définis au signe/à la rotation près). C'est
+  le corollaire d'unification de Th. 2 *montré*, pas seulement énoncé : ces méthodes spectrales **sont**
+  la projection de Frobenius rang-$d$ sur le cône, chacune pour son propre $\mathbf K_X$.
+- (b) **Géométrie diagonale / hollow** : full-RV (compact, `frac_diag` 0.14, spread 7.3) → hollow-RV
+  (étalé, 0.36, spread 12.5) → t-SNE (0.58, spread 19.5), avec spread et `frac_diag` qui co-varient
+  (Tests F+G). **Légende à figer : MNIST n=500, perplexité=30, $\gamma=0.5$, seed=0** (chiffres
+  reproductibles à ce $\gamma$ ; cf. note tether Prop. 6). *Meilleure figure : elle illustre Prop. 6,
+  la pièce signature.*
 - (c) *optionnel* : **dimension de la variété** $=2n-3$ ($d=2$) (Test D, rang du jacobien).
 
 Datasets : Swiss-roll (variété connue) + MNIST réduit ou single-cell. Tout le reste (grilles de
@@ -446,16 +478,18 @@ scatterplots, multi-datasets, comparaisons librairies, dial supervisé) → anne
 | Test | Objectif | Statut / rôle |
 |------|----------|---------------|
 | **A** | Plafond linéaire $\to\mathrm{RV}_{\max}(d)$ (Prop. 3) | ✅ → **figure (a)** — coïncidence exacte (0.4294) |
-| **D** | Dimension intrinsèque, rang jacobien $=2n-3$ ($d=2$) (Prop. 4) | ✅ → **figure (c) optionnelle** — $49,97,144$ ($n=50$), falaise $\sim10^{14}$ |
+| **D** | Dimension intrinsèque, rang jacobien $=2n-3$ ($d=2$) (Prop. 4) | ✅ → **figure (c) optionnelle** — $nd-\binom{d+1}2$ à $n\in\{30,50,80\}$, falaise $\sim10^{13\text{–}14}$ |
 | **F** | Hollow-RV vs RV plein (Prop. 6) | ✅ → **figure (b)** — hollow-RV pur ARI 0.40, étalement libéré |
 | **G** | Mécanisme métrique (Prop. 6) : $\sum_i r_i^2$ = plancher | ✅ → **figure (b)** (`test_diag_energy.py`, `tests_log2.md`) — `frac_diag` 0.14→0.36→0.58 suit le spread |
 | **B** | Solveur directionnel | 🔻 **DEMOTE** → §8 (remarque conceptuelle, pas figure) |
-| **C, E** | Primal-dual / negative sampling | 🔻 **DISCUSSION** seulement → §8 |
+| **C** | Primal-dual : PUSH volume réel, dual auto (Prop. 7b/c) | 🔻 **DISCUSSION → §8** — *corroboration* (pas figure) : PUSH monotone (spread $7.6\to19$, $\lambda\to0.18$, ARI 0.42) ; charge « figure » portée par Test G |
+| **E** | Negative sampling | 🔻 **DISCUSSION** seulement → §8 |
 
-**Test D — détail.** Sur $N=50$, jacobien de $\mathbf{Y}\mapsto\mathbf{K}_Y$ via autograd, aplati en
-$\binom{N}{2}\times(Nd)$, rang numérique (seuil sur valeurs singulières). Attendu
-$Nd-\binom{d+1}{2}=2N-3$ pour $d=2$ ($97$ à $N=50$), confirmant la minceur de la variété
-($\sim N^2/2=1225$). Détails empiriques complets : `tests_log.md`, `tests_log2.md`.
+**Test D — détail.** Pour $N\in\{30,50,80\}$, jacobien de $\mathbf{Y}\mapsto\mathbf{K}_Y$ via autograd,
+aplati en $\binom{N}{2}\times(Nd)$, rang numérique (seuil sur valeurs singulières). Attendu
+$Nd-\binom{d+1}{2}=2N-3$ pour $d=2$ ($57,97,157$), confirmant la minceur de la variété
+($\binom N2\sim N^2/2$ ambiant). Rang identique sur les trois $N$ ⇒ formule générale, pas
+coïncidence à $N=50$. Détails empiriques complets : `tests_log.md`, `tests_log2.md`.
 
 ---
 
@@ -559,8 +593,12 @@ Sugiyama (2007, LFDA), Cortes (2012, CKA), Fouss (2005, commute-time), Bavaud (2
 - **Laplacien de graphe (attribution Prop. 6 : « diagonale $=$ degré » est standard)** : Chung —
   *Spectral Graph Theory* (1997) ; von Luxburg — *A Tutorial on Spectral Clustering* (2007).
 - **EDM (remarque solveur directionnel)** : Dattorro ; Krislock & Wolkowicz — *Euclidean Distance Matrices*.
-- **Autocorrélation spatiale (positionnement, antérieur)** : Moran (1950) ; Bavaud (autocorrélation
-  multivariée) ; Dray, Legendre & Peres-Neto (2006, *Moran Eigenvector Maps*) ; Dray, Saïd & Débias
-  (2008, *MULTISPATI*). *(Cités comme antérieur : équivalence linéaire RV/autocorrélation déjà connue.)*
+- **Autocorrélation spatiale (positionnement, antérieur)** : Moran (1950) ; **Bavaud (2024,
+  *Measuring and Testing Multivariate Spatial Autocorrelation… A Kernel Approach*, Geographical Analysis)**
+  — indice de Moran multivarié $=$ produit de Frobenius *feature kernel* $\times$ *spatial kernel* (= le
+  numérateur RV linéaire, l'équivalence exacte) ; Dray, Legendre & Peres-Neto (2006, *Moran Eigenvector
+  Maps*) ; Dray, Saïd & Débias (2008, *MULTISPATI* — maximise un *compromis variance × Moran*, pas
+  l'autocorrélation pure : « apparenté », pas « coïncide »). *(Antérieur : l'équivalence linéaire
+  RV $=$ Moran-kernel est de Bavaud ; MEM/MULTISPATI en sont les méthodes spectrales voisines.)*
 - **Statistique de forme — décomposition forme/taille (Prop. 7)** : Kendall (1984, shape space) ;
   Dryden & Mardia — *Statistical Shape Analysis* (2016). *(Lien forme=RV / taille=volume, signal JMVA.)*

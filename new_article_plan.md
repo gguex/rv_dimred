@@ -19,6 +19,29 @@ Statut : ✅ dérivé + vérifié · 🟡 à formaliser (matériel prêt) · �
 > **payoff prédictif** (le cadre *prédit* un fait vérifié), non « on reproduit / on bat t-SNE » — posture
 > contre-productive pour JMVA, qui invite une revue benchmark. Ce qui sort du corps est listé en §8.
 
+> **Consignes de rédaction (style & forme — pour l'article, pas pour ce plan).**
+> - **Ton.** Clair, pédagogique, phrases *simples*, dans la lignée de l'article précédent. On *explique*,
+>   on ne montre pas qu'on sait. Pas de jargon gratuit ; chaque terme technique est défini à sa première
+>   apparition.
+> - **Narration progressive.** D'abord **définir les objets** (l'espace $\mathcal K_n$, le centrage
+>   $\mathbf Q$, le cosinus RV) et **poser le but** (quels noyaux une sortie atteint, lequel maximise
+>   l'alignement) ; *ensuite seulement* dérouler les résultats, dans un ordre où chaque étape **motive** la
+>   suivante (cône simple → variété → diagonale → répulsion). Le lecteur doit toujours savoir *pourquoi* on
+>   introduit un objet **avant** de le manipuler ; jamais un résultat avant que sa question soit posée.
+> - **Mise en page aérée.** Chaque résultat (Théorème/Proposition) **mis en évidence** (énoncé isolé /
+>   encadré) ; les preuves dans des blocs **clairement identifiables** (« *Preuve.* … $\square$ »),
+>   séparables du fil — un lecteur qui les saute garde le récit. Espacer, éviter les pavés.
+> - **Maths pédagogiques.** Chaque développement **précédé d'une intuition** (ce qu'on va montrer, et
+>   pourquoi c'est « moralement » vrai) et **suivi d'une phrase « ce que ça veut dire »**. Préférer l'idée
+>   géométrique à la manipulation opaque ; nommer les quantités (résidu, degré, plancher…).
+>
+> *Distinction plan ↔ article.* Ce plan parle « stratégie referee » (payoff, dividende, nouveauté à
+> défendre) : **cette voix ne doit pas fuiter dans la prose de l'article**, qui reste neutre et
+> pédagogique. De même, « mener par les deux théorèmes porteurs » signifie les **annoncer** comme
+> contributions-phares dans l'introduction (informellement) $+$ donner la feuille de route — *pas* les
+> énoncer ni les prouver avant d'avoir défini les objets : **le corps reste strictement progressif**
+> ($\mathcal K_n$ → cône → variété → diagonale → répulsion).
+
 ---
 
 ## 0. La narration (le fil)
@@ -98,8 +121,10 @@ gradient riemannien, Prop. 5), pas remplacé.
 ## 3. Structure de l'article (~25–30 p.)
 
 1. **Introduction** `[réorienter]` — public stat : analyse multivariée (Escoufier, diagramme de
-   dualité) ∪ manifold learning. Mener par les **deux théorèmes porteurs** de §1 (Prop. 4 ; Prop. 6 +
-   Lemme 6.1) ; unification spectrale en dividende, lien t-SNE en payoff prédictif.
+   dualité) ∪ manifold learning. **Annoncer** (informellement, *sans* énoncer ni démontrer) les **deux
+   théorèmes porteurs** de §1 (Prop. 4 ; Prop. 6 + Lemme 6.1) comme contributions-phares, + la feuille de
+   route ; unification spectrale en dividende, lien t-SNE en payoff prédictif. *Les énoncés complets
+   viennent dans leurs sections* (corps progressif) — l'intro promet, elle ne livre pas.
 2. **L'espace $\mathcal K_n$** `[polir]` — $\mathbf Q=\bm\Pi^{1/2}\mathbf H$, double-centrage,
    dualité MDS ; RV = cosinus ; cône PSD $\mathcal K_n^+$, projection de Higham. **Désamorcer CKA d'emblée
    (~1 phrase) :** le RV $=$ cosinus de Frobenius de noyaux *centrés* $=$ **CKA** (Cortes 2012) ; on l'écrit

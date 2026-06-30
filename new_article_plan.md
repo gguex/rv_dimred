@@ -10,11 +10,14 @@ Statut : ✅ dérivé + vérifié · 🟡 à formaliser (matériel prêt) · �
 > **Convention de numérotation.** « §N » réfère à une section du *présent plan* ; les sections de
 > l'*article* (structure en §3) sont citées « art. §N ».
 
-> **Décision de cadrage (ce plan).** Pièces signature = **Prop. 6** (la diagonale = métrique de degré,
-> *le* hook) et **Prop. 7** (forme/taille, aveuglement au volume — second pilier). On *ne* met *pas* au
-> premier plan « on reproduit / on bat t-SNE » : c'est contre-productif
-> pour JMVA et ça invite une revue de type benchmark. Ce qui sort du corps de l'article est listé en
-> §8 (pour mémoire, avec raisons).
+> **Décision de cadrage (ce plan).** L'article **mène par deux théorèmes porteurs** — **Prop. 4**
+> (géométrie de la variété atteignable, dim $nd-\binom{d+1}2$) et **Prop. 6 + Lemme 6.1** (la diagonale
+> $=$ métrique de degré $\mathbf M$, justifiée ssi readout linéaire) — *invisibles hors du formalisme*
+> $\mathcal K_n$. L'**unification des méthodes spectrales** (Eckart–Young, kernel-view : PCA/MDS/Isomap/…)
+> est le **tissu conjonctif / dividende**, *pas* la revendication de nouveauté (sinon « beaucoup est
+> connu » nous coule). **Prop. 7** $+$ l'asymétrie d'attraction t-SNE ($\tilde q^2/\tilde q^1$) sont le
+> **payoff prédictif** (le cadre *prédit* un fait vérifié), non « on reproduit / on bat t-SNE » — posture
+> contre-productive pour JMVA, qui invite une revue benchmark. Ce qui sort du corps est listé en §8.
 
 ---
 
@@ -29,34 +32,52 @@ Statut : ✅ dérivé + vérifié · 🟡 à formaliser (matériel prêt) · �
 Arc en trois temps :
 1. **Le cadre** — un objet ($\mathcal K_n$, cosinus RV), une question : *quels noyaux $\mathbf K_Y$
    une sortie peut produire, et lequel maximise l'alignement avec $\mathbf K_X$ ?*
-2. **La dichotomie géométrique** — la nature de l'ensemble atteignable (**cône** vs **variété**)
-   *est* l'explication du zoo des méthodes. Le cœur.
-3. **La clé algébrique** — la diagonale du noyau est le curseur entre les deux régimes (Prop. 6).
-   Le **hook neuf** qui distingue le papier d'un énième « kernel view of DR ».
+2. **La dichotomie géométrique** — la nature de l'ensemble atteignable (**cône** vs **variété**, Prop. 4)
+   *est* l'explication du zoo des méthodes. Premier théorème porteur.
+3. **La clé algébrique** — la diagonale du noyau est le curseur entre les deux régimes (Prop. 6 +
+   Lemme 6.1). Second théorème porteur, *le* hook qui distingue le papier d'un énième « kernel view of DR ».
+
+Ces deux temps sont la **nouveauté** ; les méthodes spectrales classiques (PCA/MDS/Isomap/…) s'y
+**ré-engendrent comme dividende** (cône $+$ Eckart–Young), et le lien t-SNE est le **payoff prédictif** —
+ni l'un ni l'autre n'est revendiqué comme la contribution. *Le formalisme n'éclaire pas en renommant : il
+éclaire en faisant tomber deux résultats que les pièces séparées ne donnaient pas.*
 
 ---
 
-## 1. Les quatre contributions à vendre (et l'argument de nouveauté)
+## 1. La nouveauté : deux théorèmes que le formalisme *fait tomber* (et le reste qu'il ré-engendre)
 
-**Risque dominant pour JMVA : la nouveauté.** La « vue noyau » de la réduction de dimension existe
-déjà (Ham 2004 ; CKA/Cortes 2012 ; Bengio). L'intro doit répondre frontalement à *« qu'y a-t-il de
-neuf au-delà du kernel view ? »* par les quatre contributions, *toutes* absentes de la littérature
-kernel-view :
+**Risque dominant pour JMVA : la nouveauté.** La « vue noyau » de la réduction de dimension existe déjà
+(Ham 2004 ; CKA/Cortes 2012 ; Bengio), et RV $=$ cosinus de Frobenius de noyaux centrés $=$ CKA. **La
+valeur du cadre n'est donc *pas* de renommer des méthodes connues** — c'est que deux résultats neufs,
+*invisibles sans* $\mathcal K_n$, en tombent, et que les méthodes spectrales classiques s'y ré-engendrent
+au passage. L'intro doit **mener par ces deux théorèmes**, pas par l'unification (qui, présentée comme
+claim, n'appelle que « tout ça est connu »).
 
-1. **Caractérisation exacte de l'ensemble atteignable** : cône PSD de rang $\le d$ (linéaire,
-   Th. 1) vs **variété de dimension $nd-\binom{d+1}{2}$** (soit $2n-3$ pour $d=2$ ; non linéaire,
-   Prop. 4). Pas « c'est un noyau » : *quels*
-   noyaux, et de quelle forme géométrique.
-2. **Plafond d'alignement en forme close** $\mathrm{RV}_{\max}(d)$ (Prop. 3) — analogue Frobenius de
-   la variance expliquée, quantité neuve et interprétable.
-3. **La diagonale comme métrique de degré** (Prop. 6) — *non pas* « diagonale $=$ degré » (la relation
-   standard du Laplacien $\mathbf K=\mathbf D_W-\mathbf W$), mais : full-RV vs hollow-RV $=$ une seule
-   métrique de degré $\mathbf M=\mathbf I+\mathcal D^*\mathcal D$ sur les affinités de paires, **justifiée
-   (Eckart–Young) ssi le readout est linéaire** — le curseur algébrique exact MDS ↔ neighbor-embedding.
-   *Caractérisation neuve à notre connaissance.*
-4. **Aveuglement au volume et origine de la répulsion** (Prop. 7) — $\mathbf Q\mathbf 1=0\Rightarrow$
-   la RV ignore le volume $Z$ ; la répulsion t-SNE *est* le gradient de ce mode jeté. Lecture
-   **forme/taille** (statistique de forme) — transforme le caveat d'échelle en théorème, très JMVA.
+**Les deux théorèmes porteurs** (la nouveauté défendable, absente de la littérature kernel-view) :
+
+- **A — Géométrie de l'ensemble atteignable non linéaire (Prop. 4).** Pour un readout à queue lourde, les
+  noyaux atteignables forment une **variété courbe, bornée, de dimension exacte $nd-\binom{d+1}{2}$**
+  ($=2n-3$ pour $d=2$) — *pas* un cône. Énoncé + preuve (théorème du rang constant, rigidité
+  infinitésimale), dimension vérifiée à $n\in\{30,50,80\}$. Ce résultat n'a **aucun sens** hors du
+  formalisme $\mathcal K_n$ : c'est lui qui *fait* la question « quels noyaux une sortie peut produire ».
+- **B — La diagonale comme métrique de degré (Prop. 6 + Lemme 6.1).** Full-RV vs hollow-RV $=$ une seule
+  métrique $\mathbf M=\mathbf I+\mathcal D^*\mathcal D$ sur les affinités de paires, **data-justifiée ssi le
+  readout est linéaire** (prouvé, Lemme 6.1). *Non pas* « diagonale $=$ degré » (Laplacien standard,
+  Chung/von Luxburg) mais le **curseur algébrique exact MDS ↔ neighbor-embedding**. Caractérisation neuve
+  à notre connaissance.
+
+**Le payoff prédictif** (la preuve que le cadre a des *dents* — détaillé §6, art. §6) : **Prop. 7** —
+$\mathbf Q\mathbf 1=0\Rightarrow$ la RV ignore le volume $Z$, et la répulsion t-SNE *est* le gradient du
+mode jeté (lecture **forme/taille**, statistique de forme). Le cadre **prédit** — et l'on **vérifie**
+(autograd) — l'asymétrie d'attraction $\tilde q^2/\tilde q^1$ vs t-SNE : un fait non trivial qu'aucun
+cadre antérieur ne produit. *Présenté comme prédiction du formalisme, pas comme « notre rapport à t-SNE ».*
+
+**Le dividende d'unification** (tissu conjonctif, *non* revendiqué comme neuf) : côté linéaire l'atteignable
+est le **cône PSD de rang $\le d$** (Th. 1), maximiser le cosinus $=$ Eckart–Young (Th. 2, forme close), et
+**PCA, MDS, Isomap, KPCA, LLE, Laplacian Eigenmaps en sont des instances** (seul $\mathbf K_X$ change ;
+vitrine §5(a)). Le **plafond $\mathrm{RV}_{\max}(d)$** (Prop. 3, analogue Frobenius de la variance
+expliquée) en est le sous-produit interprétable. Ces faits sont largement classiques : on les présente
+comme ce que le cadre *ré-engendre*, **pas** comme la contribution.
 
 ---
 
@@ -67,16 +88,18 @@ kernel-view :
 - **Plan 2 — le solveur :** gradient / optimisation riemannienne. Au Plan 2, l'unification MM de
   t-SNE/UMAP existe déjà (Yang et al.) → on n'y va pas en force (cf. §8).
 
-Conséquence : notre unification est au **Plan 1** (même problème, même $\mathcal K_n$), donc plus
-fondamentale que celle des solveurs. Le solveur paramétrique standard est *re-caractérisé*
-(gradient = gradient riemannien, Prop. 5), pas remplacé.
+Conséquence : le **dividende d'unification** que le cadre produit vit au **Plan 1** (même problème, même
+$\mathcal K_n$) — niveau plus fondamental que l'unification *de solveurs* (Yang et al., Plan 2), avec
+laquelle il ne faut pas le confondre. Le solveur paramétrique standard est *re-caractérisé* (gradient $=$
+gradient riemannien, Prop. 5), pas remplacé.
 
 ---
 
 ## 3. Structure de l'article (~25–30 p.)
 
 1. **Introduction** `[réorienter]` — public stat : analyse multivariée (Escoufier, diagramme de
-   dualité) ∪ manifold learning. Les 4 contributions de §1, formulées comme théorèmes.
+   dualité) ∪ manifold learning. Mener par les **deux théorèmes porteurs** de §1 (Prop. 4 ; Prop. 6 +
+   Lemme 6.1) ; unification spectrale en dividende, lien t-SNE en payoff prédictif.
 2. **L'espace $\mathcal K_n$** `[polir]` — $\mathbf Q=\bm\Pi^{1/2}\mathbf H$, double-centrage,
    dualité MDS ; RV = cosinus ; cône PSD $\mathcal K_n^+$, projection de Higham. **Désamorcer CKA d'emblée
    (~1 phrase) :** le RV $=$ cosinus de Frobenius de noyaux *centrés* $=$ **CKA** (Cortes 2012) ; on l'écrit
@@ -94,14 +117,17 @@ fondamentale que celle des solveurs. Le solveur paramétrique standard est *re-c
    JMVA et à interpréter $\mathbf K_X$ ; aucune revendication sur le linéaire.
 3. **Réduction linéaire = projection sur un cône** `[étendre]` — Th. 1, Th. 2, Prop. 3 ; corollaire
    d'unification spectrale (PCA/MDS/Isomap/KPCA/LLE/LE).
-4. **Au-delà du cône : la variété** `[nouveau]` — Prop. 4 (dim $2n-3$) ; I.2 comme **proposition**
+4. **Au-delà du cône : la variété** `[nouveau — théorème porteur]` — Prop. 4 (dim $2n-3$) ; **Prop. 5**
    (gradient = projection tangente), *la* justification du solveur paramétrique.
 5. **La diagonale comme métrique de degré** `[nouveau — section signature]` — Prop. 6 ; referme la
    dichotomie art. §3↔§4 (diagonale = signal sur le cône, artefact sur la variété).
-6. **Attraction–répulsion : forme et taille** `[nouveau — résultat, pas simple discussion]` —
-   Prop. 7 : $\mathcal K_n$ aveugle au volume, la répulsion comme gradient du mode jeté, lecture
-   forme/taille. Relié à Prop. 6 (le hollow lève le tether, le volume sépare) et à la dichotomie
-   cône/variété. Lien MM / Yang et al. mentionné en *programme*.
+6. **Attraction–répulsion : forme et taille** `[nouveau — payoff prédictif, pas simple discussion]` —
+   Prop. 7 : $\mathcal K_n$ aveugle au volume, la répulsion **dérivée** comme gradient du mode jeté
+   (pas postulée), lecture forme/taille ; et la **prédiction vérifiée** (Prop. 5 cor.) de l'asymétrie
+   d'attraction $\tilde q^2/\tilde q^1$ vs t-SNE — le cadre prédit un fait au niveau du gradient, confirmé
+   par autograd, qu'aucune vue antérieure (Yang et al. ; Böhm et al.) ne produit. Relié à Prop. 6 (le
+   hollow lève le tether, le volume sépare) et à la dichotomie cône/variété. Lien MM / Yang et al. en
+   *programme* (et démarqué : notre identité de gradient n'y est pas).
 7. **Illustrations** `[~2–3 pages]` — voir §5.
 8. **Conclusion** `[bref]` — objectifs composites ; **perspective ouverte** (seul morceau Moran neuf) :
    les neighbor embeddings comme *autocorrélation spatiale non-linéaire à taille contrôlée* (extension
@@ -143,11 +169,12 @@ et en un coup.
 $$\mathrm{RV}_{\max}(d)=\sqrt{\frac{\sum_{j=1}^{d}(\lambda_j^+)^2}{\sum_i\lambda_i^2}},
 \qquad \lambda_j^+=\max(\lambda_j,0).$$
 Analogue de la « variance expliquée » de la PCA, mais en métrique de Frobenius (carrés
-de valeurs propres, car RV = cosinus de Hilbert–Schmidt). Quantité interprétable, neuve.
+de valeurs propres, car RV = cosinus de Hilbert–Schmidt). Quantité interprétable — *sous-produit du
+dividende d'unification* (§1), **non** revendiquée comme contribution centrale.
 **Validé numériquement (Test A)** : le gradient à sortie linéaire atteint exactement ce
 plafond (sur MNIST réduit : $\mathrm{RV}_{\max}(2)=0.4294$, atteint au chiffre près).
 
-### ✅ Proposition 4 — Variété (sortie non linéaire) `[dérivée + vérifiée]`
+### ✅ Proposition 4 — Variété (sortie non linéaire) `[THÉORÈME PORTEUR · dérivée + vérifiée]`
 Avec un readout non linéaire $\kappa_y$, l'ensemble atteignable
 $\mathcal{S}_d^\kappa=\{\mathbf{Q}\,\kappa(\mathbf{D}^2(\mathbf{Y}))\,\mathbf{Q}^\top:\mathbf{Y}\in\mathbb{R}^{n\times d}\}$
 est l'image d'une application non linéaire : variété courbe, **non convexe, plus un cône**
@@ -247,7 +274,11 @@ plongée (Prop. 4 donne que $T$ en est l'espace tangent) : $\operatorname{grad}F
 (iii) $D\Phi^{*}\mathbf G=0\iff\mathbf G\perp\mathrm{Im}\,D\Phi=T\iff P_T\mathbf G=0$ ; et
 $\langle\mathbf G,D\Phi D\Phi^{*}\mathbf G\rangle=\|D\Phi^{*}\mathbf G\|^2$. $\square$
 
-**Corollaire (force PULL explicite, lien Prop. 7).** Avec $\tilde{\mathbf K}_X=\mathbf Q^\top\mathbf K_X\mathbf Q$
+**Corollaire (prédiction du cadre, vérifiée — la force PULL explicite). `[payoff prédictif]`**
+*Le formalisme $\mathcal K_n$ ne se contente pas de re-décrire t-SNE : il **prédit la forme exacte** de
+l'attraction au niveau du gradient — une identité non triviale qu'aucune vue antérieure (MM de Yang et al. ;
+spectre attraction-répulsion de Böhm et al.) ne produit — et on la **vérifie par autograd contre le vrai
+code noyau** (`test_attraction_power.py`, machine-précision).* Avec $\tilde{\mathbf K}_X=\mathbf Q^\top\mathbf K_X\mathbf Q$
 et le readout Student-$t$ ($\tilde q_{kj}=(1+d_{kj}^2)^{-1}$), le terme d'attraction du gradient
 paramétrique s'écrit
 $$\nabla_{\mathbf y_k}\langle\mathbf K_X,\mathbf K_Y\rangle=4\sum_j(\tilde K_X)_{kj}\,\tilde q_{kj}^{\,2}\,(\mathbf y_j-\mathbf y_k),$$
@@ -265,9 +296,14 @@ est **exactement** la répulsion de t-SNE ($\tilde q^2$, Prop. 7(b)). Ainsi *l'a
 volumique sont tous deux en $\tilde q^2$* — issus du même chain-rule à travers le readout Student-$t$ borné
 $\kappa'=-\tilde q^2$ — là où t-SNE est **asymétrique** ($\tilde q^1$ en attraction, $\tilde q^2$ en
 répulsion). Le cadre n'est donc pas t-SNE mais son **cousin RV-cosinus** : même répulsion, même pondération
-par l'affinité d'entrée, attraction plus piquée. *C'est le mécanisme, au niveau du gradient, du constat
-empirique « le cadre approxime t-SNE sans le reproduire » (`approximations_finetune`, `experiments_notes.md`) :
-l'objectif (RV vs KL) domine le choix du noyau.*
+par l'affinité d'entrée, attraction plus piquée. **Le « cousin, pas identique » est une force, pas un
+aveu** : le formalisme dit *exactement où* (l'attraction) et *pourquoi* (le $\log$ de la KL vs la forme
+bilinéaire RV) la divergence se produit — à *une puissance de $\tilde q$ près*, mesurée. Surtout, il
+**dérive** les deux forces d'un seul chain-rule à travers le readout borné ($\kappa'=-\tilde q^2$) et
+**dérive la répulsion comme le mode volume jeté par le centrage** (Prop. 7) — là où t-SNE la *postule* via
+sa normalisation. *C'est le mécanisme, au niveau du gradient, du constat empirique « le cadre approxime
+t-SNE sans le reproduire » (`approximations_finetune`, `experiments_notes.md`) : l'objectif (RV vs KL)
+domine le choix du noyau — prédiction du cadre, confirmée, pas analogie a posteriori.*
 
 **Honnêteté (à écrire tel quel).** L'équivalence (iii) $\nabla_{\mathbf Y}f=0\iff\operatorname{grad}F=0$
 ne vaut que sur l'ouvert $\mathcal U$ (points engendrant affinement $\mathbb R^d$), où $T=\mathrm{Im}\,D\Phi$
@@ -281,7 +317,7 @@ variété plongée ». La revendication défendable est : *même variété, mêm
 critiques, même caractère de remontée* ; le solveur autograd est donc l'implémentation canonique (et
 préconditionnée) de l'optimisation riemannienne, pas un hack.
 
-### ✅ Proposition 6 — La diagonale comme métrique de degré ; full-RV vs hollow-RV `[SIGNATURE]`
+### ✅ Proposition 6 — La diagonale comme métrique de degré ; full-RV vs hollow-RV `[THÉORÈME PORTEUR — SIGNATURE]`
 **Coordonnées libres de $\mathcal{K}_n$.** Pour $\mathbf{K}\in\mathcal{K}_n$, écrire
 $\mathbf{K}=\mathrm{diag}(\mathbf d)+\mathbf o$ ($\mathbf d\in\mathbb R^n$ diagonale,
 $\mathbf o\in\mathrm{Hollow}(n)$). La contrainte de centrage $\mathbf{K}\sqrt{\mathbf f}=0$ est
@@ -342,6 +378,45 @@ $\sum_i r_i^2/f_i=\sum_i\rho_i^2$ — on retrouve la forme ci-dessus.
   $\mathbf{K}_Y$ est alors un *artefact de centrage* ; aucun théorème de projection ne rend
   $\mathbf M$ bénigne sur la variété courbe.
 
+**Lemme 6.1 (M et le readout — le « ssi » formel). `[dérivé]`** Soit
+$\mathbf K_Y=\mathbf Q\,\rho(\mathbf Y)\,\mathbf Q^\top$ ($\rho$ le readout sur le Gram brut), décomposé
+$\mathbf K_Y=\mathrm{diag}(\mathbf d_Y)+\mathbf o_Y$ dans $\mathcal K_n$ avec l'identité ci-dessus
+$\langle\mathbf K_X,\mathbf K_Y\rangle=\langle\mathbf o_X,\mathbf o_Y\rangle_{\mathbf M}$,
+$\|\mathbf K_Y\|^2=\|\mathbf o_Y\|^2+\|\mathbf d_Y\|^2$ ($\mathbf d_Y=\mathcal D\mathbf o_Y$).
+
+*Définition (data-justification).* $\mathbf M$ est **data-justifiée** pour $\rho$ si maximiser le
+full-RV sur l'ensemble atteignable **est** la projection orthogonale (de Frobenius $=$ de $\mathbf M$-norme,
+par l'identité Prop. 6) de $\mathbf K_X$ sur cet ensemble, donnée en **forme close** par troncature
+spectrale (Eckart–Young). *(« Maximiser dans la métrique $\mathbf M$ $=$ projeter sur les données,
+globalement et exactement. »)*
+
+*Énoncé.* $\mathbf M$ est data-justifiée $\iff$ la diagonale du Gram **brut** $\mathrm{diag}\,\rho(\mathbf Y)$
+est **non constante** en $\mathbf Y$ — ce qui sépare exactement les deux régimes : readout **linéaire**
+($\rho=\mathbf Y\mathbf Y^\top$, $\mathrm{diag}=\|y_i\|^2$ : justifiée) vs **distance-based**
+($\rho=\kappa(\mathbf D^2)$, $\mathrm{diag}=\kappa(0)\mathbf 1$ constante : non justifiée).
+
+*Preuve.* **(⇐) linéaire.** L'atteignable est le **cône** $\mathcal S_d$ (Th. 1). Sur un cône,
+$\arg\max\langle\hat{\mathbf K}_X,\mathbf K\rangle/\|\mathbf K\|$ est la direction de la projection
+orthogonale de $\hat{\mathbf K}_X$ (cosinus invariant d'échelle) ; cette projection de Frobenius dans
+$\mathcal K_n$ est, en coordonnées hollow, la projection en $\mathbf M$-norme (identité Prop. 6).
+Eckart–Young–Mirsky (version PSD) la donne en forme close ($\mathbf K_Y^\star=\sum_{j\le d}\max(\lambda_j,0)u_ju_j^\top$,
+optimum global, Th. 2) ⇒ $\mathbf M$ est la métrique d'une projection exacte ⇒ justifiée ; et
+$\|\mathbf d_Y\|^2=\sum_i r_i^2/f_i$ encode le vrai degré radial $\|y_i\|^2$ que la troncature recouvre.
+**(⇒) distance-based ⇒ non justifiée** (contraposée). $\mathrm{diag}\,\rho=\kappa(0)\mathbf 1$ gelée.
+*(structure)* $\mathcal S_d^\kappa$ est **bornée, non-cône** (Prop. 4(iv)) ; le maximiseur du cosinus y
+vérifie la stationnarité contrainte $\mathbf K_X-\beta\mathbf K_Y^\star\perp T_{\mathbf K_Y^\star}\mathcal S_d^\kappa$
+(résidu normal au tangent, Prop. 5) — **pas** une projection sur un ensemble conique, **sans** forme close
+par troncature (optima locaux). $\mathbf M$ n'est donc la métrique d'aucune projection exacte. *(mécanisme)*
+diagonale gelée ⇒ $\mathbf d_Y=\mathcal D\mathbf o_Y$ n'offre aucun levier de sortie indépendant de
+$\mathbf o_Y$ ; $\|\mathbf d_Y\|^2$ devient un **plancher** déterministe (Test G) que l'optimiseur ne peut
+arbitrer — $\mathbf M$ pénalise une énergie de degré que le readout n'expose pas comme signal libre. $\square$
+
+*Portée (honnêteté).* Le « ssi » est exact **au niveau du critère** (diagonale brute constante ou non) ;
+au niveau des readouts il oppose les **deux régimes du papier** (linéaire / distance-based), non une
+trichotomie universelle (un readout exotique à diagonale variable mais non linéaire est un cas-limite
+hors-scope, à mentionner d'une phrase). Toute la force tient à la *définition* de data-justification :
+c'est là, et non sur la preuve, que se situe la charge argumentative.
+
 **Le mécanisme du tether (vérifié, Test G).** Décomposer le dénominateur :
 $\|\mathbf{K}_Y\|^2=\|\mathbf o_Y\|^2+\|\mathbf d_Y\|^2$ avec $\|\mathbf d_Y\|^2=\sum_i r_i^2$.
 Conditions du run (à reporter en légende, déterministe) : **MNIST n=500, perplexité=30, $\gamma=0.5$
@@ -365,7 +440,7 @@ du readout est constante ($\kappa(0)$) et n'agit qu'en plancher de normalisation
 l'étalement. Le hollow-RV est le cosinus fidèle à l'information — purement hors-diagonale — que le
 readout non linéaire encode réellement. **Vérifié : Test F (esthétique) + Test G (mécanisme).**
 
-### ✅ Proposition 7 — Aveuglement au volume et origine de la répulsion (ex-I.3) `[SIGNATURE]`
+### ✅ Proposition 7 — Aveuglement au volume et origine de la répulsion (ex-I.3) `[PAYOFF PRÉDICTIF]`
 Transforme le caveat d'invariance d'échelle en *résultat* : **pourquoi** la RV ne sépare pas autant que
 t-SNE, et **d'où** vient la répulsion. Posons le volume $Z(\mathbf Y)=\mathbf 1^\top\mathbf G_Y\mathbf 1=\sum_{ij}(1+d_{ij}^2)^{-1}$.
 
@@ -502,8 +577,9 @@ coïncidence à $N=50$. Détails empiriques complets : `tests_log.md`, `tests_lo
    vérifiée. Reste : mise au propre + une phrase sur le préconditionnement. Rend le solveur directionnel inutile.
 3. ✅→📝 **Prop. 4** — énoncé + preuve faits (rang constant via Lemmes A/B, non-cône par bornitude) ;
    vérifié (Test D, multi-points). Reste : mise au propre rédactionnelle.
-4. **Finir Prop. 6** — algèbre faite (adjoint inclus) ; reste : lemme « $\mathbf M$ data-justifiée
-   ⟺ readout linéaire » + régularité $\mathbf M\succ0$. Rédiger la section signature art. §5.
+4. ✅→📝 **Prop. 6** — algèbre faite (adjoint inclus) ; lemme « $\mathbf M$ data-justifiée ⟺ readout
+   linéaire » **dérivé (Lemme 6.1)** + régularité $\mathbf M\succeq\mathbf I\succ0$. Reste : mise au propre
+   de la section signature art. §5 (et trancher la *définition* de data-justification avec un relecteur).
 5. ✅→📝 **Prop. 7 (volume → répulsion)** — énoncé + preuve faits ($\mathbf Q\mathbf 1=0$, gradient
    $-\log Z=$ répulsion t-SNE, forme/taille). Reste : mise au propre + intégration à l'art. §6.
 6. **Positionnement Moran** — ~3 phrases en art. §2 (attribué : Bavaud, MEM, MULTISPATI) + 1 perspective
@@ -562,15 +638,21 @@ scripts) ; il n'entre simplement pas comme résultat principal.
 ## 9. Positionnement / avertissements
 
 - L'unification MM de t-SNE/UMAP **existe déjà** (Yang et al.) — ne jamais présenter comme « nous
-  découvrons que t-SNE est un MM ».
-- **Nouveauté à défendre frontalement vs Ham (2004) / CKA (Cortes 2012)** : ce n'est pas « la vue
-  noyau », c'est la *caractérisation géométrique de l'ensemble atteignable* + le *plafond* + la
-  *métrique de degré* (§1). **Et vs le Laplacien de graphe** (Chung ; von Luxburg) : la nouveauté de
-  Prop. 6 n'est *pas* « diagonale $=$ degré » (standard) mais la métrique $\mathbf M=\mathbf I+\mathcal D^*\mathcal D$,
-  justifiée ssi readout linéaire, comme curseur MDS ↔ neighbor-embedding.
+  découvrons que t-SNE est un MM ». **Mais** notre résultat n'est *pas* l'unification MM : c'est
+  l'**identité de gradient** attraction $\tilde q^2$ (RV) vs $\tilde q^1$ (t-SNE) $+$ répulsion $=$ mode
+  volume jeté, *vérifiée*, qui n'apparaît ni chez Yang et al. ni chez Böhm et al. — à présenter comme
+  **payoff prédictif du formalisme** (prédiction confirmée), pas comme un rapport empirique à t-SNE.
+- **Nouveauté à défendre frontalement vs Ham (2004) / CKA (Cortes 2012)** : ce n'est *pas* « la vue
+  noyau » (RV $=$ CKA centré, concédé d'emblée), ce sont les **deux théorèmes porteurs** — la
+  *géométrie de la variété atteignable* (Prop. 4) et la *métrique de degré* (Prop. 6 + Lemme 6.1) —
+  *invisibles sans* $\mathcal K_n$ ; l'unification spectrale et le plafond $\mathrm{RV}_{\max}$ sont le
+  **dividende**, pas la revendication. **Et vs le Laplacien de graphe** (Chung ; von Luxburg) : la
+  nouveauté de Prop. 6 n'est *pas* « diagonale $=$ degré » (standard) mais la métrique
+  $\mathbf M=\mathbf I+\mathcal D^*\mathcal D$, justifiée ssi readout linéaire, comme curseur MDS ↔
+  neighbor-embedding.
 - Honnêteté assumée sur (i) la non-convexité intrinsèque de la variété (localité), (ii) la RV cosinus
   invariante d'échelle ⇒ pas de fonction de partition ⇒ séparation inter-clusters un peu moindre que
-  t-SNE (caveat I.3). *Les relecteurs stat récompensent l'honnêteté* — contrairement aux venues ML.
+  t-SNE (cf. Prop. 7). *Les relecteurs stat récompensent l'honnêteté* — contrairement aux venues ML.
 
 ---
 

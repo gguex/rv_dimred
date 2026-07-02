@@ -695,6 +695,18 @@ def _truncated_eig(K_X: torch.Tensor, q: int) -> tuple[torch.Tensor, torch.Tenso
     return lam.to(K_X.device), U.to(K_X.device)
 
 
+def rv_ceiling(K_X: torch.Tensor, q: int = 2) -> float:
+    """Alignment ceiling RV_max(q) of Prop. 1 (the Frobenius 'explained variance'):
+    RV_max(q) = sqrt( sum_{j<=q} (lambda_j^+)^2 / ||K_X||_F^2 ), computed from the
+    top-q eigenvalues of K_X (clipped at 0) and the full Frobenius norm — no full
+    eigendecomposition needed. No output kernel with a linear readout can exceed it,
+    and the clipped truncation of Theorem 2 attains it exactly."""
+    lam, _ = _truncated_eig(K_X, q)
+    num = (lam.clamp_min(0.0) ** 2).sum()
+    den = (K_X * K_X).sum()
+    return float(torch.sqrt(num / (den + 1e-12)))
+
+
 def spectral_embed_linear(
     K_X: torch.Tensor,
     q: int = 2,

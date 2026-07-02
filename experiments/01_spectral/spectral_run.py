@@ -1,6 +1,6 @@
 """
-spectral_run.py  —  §5.3.1  compute & save spectral embeddings (closed-form solver)
-===================================================================================
+spectral_run.py  —  art. §7.1  compute & save spectral embeddings (closed-form solver)
+=======================================================================================
 
 For every (dataset × spectral method) this computes two embeddings:
   * reference  — the named library implementation,
@@ -13,37 +13,54 @@ For every (dataset × spectral method) this computes two embeddings:
 
 No gradient ascent, no initialisation — the eigh gives the global RV optimum.
 
-It only *saves coordinates* to results/coordinates/spectral/ plus the final RV of
-each run in run_meta.csv. Indices and figures are built from these coordinates by
-the two companion scripts: spectral_indices.py and spectral_figures.py.
+It only *saves coordinates* to results/01_spectral/coordinates/, plus, per run, the
+final RV, the alignment ceiling RV_max(q) of Prop. 1 (computed from the spectrum of
+K_X) and their ratio in run_meta.csv — for the linear readout, rv_final = rv_max by
+Theorem 2, which the ratio column verifies. Indices are built from these coordinates
+by the companion script spectral_indices.py; the Test A gradient-ascent check lives
+in ceiling_check.py; scatter figures are the showcase's job (showcase/).
 """
 
+# ruff: noqa: E402, I001  (imports follow the sys.path bootstrap)
 from __future__ import annotations
 
 import csv
+import sys
 import time
+from pathlib import Path
 
 import numpy as np
 
-from src.benchmark_common import (
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from src.benchmark_common import (  # noqa: E402
     Q,
     SEED,
     SPECTRAL_METHODS,
-    coord_path,
-    coords_dir,
+    exp_coord_path,
+    exp_coords_dir,
+    exp_meta_path,
     get_device,
-    meta_path,
     to_tensor,
 )
-from src.datasets import load_all
-from src.rv_kernels import (
+from src.datasets import load_all  # noqa: E402
+from src.rv_kernels import (  # noqa: E402
     default_weights,
+    rv_ceiling,
     spectral_embed_linear,
     spectral_embed_orthonormal,
 )
 
-FAMILY = "spectral"
-META_FIELDS = ["dataset", "method_key", "method", "readout", "rv_final"]
+EXP = "01_spectral"
+META_FIELDS = [
+    "dataset",
+    "method_key",
+    "method",
+    "readout",
+    "rv_final",
+    "rv_max",
+    "rv_ratio",
+]
 
 # readout name (SpectralMethod.readout) -> closed-form spectral solver
 READOUTS = {
@@ -68,13 +85,14 @@ def main() -> None:
         for m in SPECTRAL_METHODS:
             t0 = time.time()
             Y_ref = np.asarray(m.reference(ds.X, ds), dtype=np.float32)
-            np.save(coord_path(FAMILY, ds.name, m.key, "reference"), Y_ref)
+            np.save(exp_coord_path(EXP, ds.name, m.key, "reference"), Y_ref)
 
             K_in = m.input_kernel(X_t, ds, device, w)
+            rv_max = rv_ceiling(K_in, q=Q)  # alignment ceiling (Prop. 1)
 
             Y, rv = READOUTS[m.readout](K_in, q=Q, weights=w, device=device)
             np.save(
-                coord_path(FAMILY, ds.name, m.key, "framework"),
+                exp_coord_path(EXP, ds.name, m.key, "framework"),
                 Y.cpu().numpy().astype(np.float32),
             )
             meta_rows.append(
@@ -84,18 +102,21 @@ def main() -> None:
                     "method": m.name,
                     "readout": m.readout,
                     "rv_final": rv,
+                    "rv_max": rv_max,
+                    "rv_ratio": rv / rv_max if rv_max > 0 else float("nan"),
                 }
             )
             print(
                 f"  {m.name:<22} readout={m.readout:<11} rv={rv:.4f}  "
+                f"rv_max={rv_max:.4f}  ratio={rv / rv_max:.4f}  "
                 f"({time.time() - t0:.1f}s)"
             )
 
-    with meta_path(FAMILY).open("w", newline="") as f:
+    with exp_meta_path(EXP).open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=META_FIELDS)
         writer.writeheader()
         writer.writerows(meta_rows)
-    print(f"\nSaved coordinates + run_meta.csv → {coords_dir(FAMILY)}")
+    print(f"\nSaved coordinates + run_meta.csv → {exp_coords_dir(EXP)}")
 
 
 if __name__ == "__main__":

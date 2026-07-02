@@ -1,0 +1,824 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{bm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{url}
+\usepackage{natbib}
+\usepackage[autostyle=false, style=english]{csquotes}
+\MakeOuterQuote{"}
+
+
+\title{The Kernel Inner Product Space: A Unified Framework for Dimensionality Reduction}
+\author{Guillaume Guex \texttt{gguex@unil.ch} \\
+	Department of Language and Information Sciences \\ 
+	University of Lausanne}
+
+
+\begin{document}
+	
+	\maketitle
+	
+	\begin{abstract}
+		Dimensionality reduction algorithms are traditionally categorized into distinct families: spectral methods (e.g., PCA, Isomap) rooted in linear algebra, and neighbor embedding methods (e.g., t-SNE, UMAP) driven by non-convex probabilistic divergences. This paper proposes a unified theoretical framework that bridges these paradigms by recasting dimensionality reduction as a \textit{Kernel Alignment problem} within an \textit{Inner Product Space}. We demonstrate that maximizing the RV coefficient - a multivariate generalization of the Pearson correlation closely linked to the Hilbert-Schmidt Independence Criterion (HSIC) - serves as a universal objective function capable of recovering a vast landscape of existing methods. By factorizing the reduction task into two independent choices - a \textit{Target or Input Kernel} encoding the input topology (e.g., Geodesic, Adaptive Gaussian, Fuzzy Topological) and a \textit{Model or Output Kernel} dictating the output geometry (e.g., Linear, Student-t) - we can unify several dimensionality reduction techniques. This modularity not only reproduces classical algorithms as special cases but also enables the construction of a novel family of hybrid embeddings, demonstrating that the continuous mixing of kernels allows for smooth transitions between unsupervised and supervised dimensionality reduction, effectively unifying the algebraic rigor of multivariate analysis with the flexibility of modern manifold learning.
+	\end{abstract}
+	
+	%----------------------------------------------------------------------------
+	%----------------------------------------------------------------------------
+	%----------------------------------------------------------------------------
+	
+	\section{Introduction}
+	\label{section:introduction}
+	
+	The geometry of high-dimensional data is the central protagonist of modern data analysis. Whether the objective is the visualization, the compression or the extraction of data, the fundamental challenge remains invariant: to map observations from a high-dimensional space to a low-dimensional manifold while preserving the intrinsic structure of the original data. Over the past century, this challenge has prompted the development of a vast and diverse ecosystem of dimensionality reduction techniques, ranging from the linear Principal Component Analysis (PCA) \citep{pearson_principal_1901} to the non-linear flexibility of manifold learning Isomap \citep{tenenbaum_global_2000}, the probabilistic nature of t-Distributed Stochastic Neighbor Embedding (t-SNE) \citep{maaten_visualizing_2008}, and the more recent Uniform Manifold Approximation and Projection for Dimension Reduction (UMAP) \citep{mcinnes_umap_2020}.
+	
+	However, this methodological diversity has come at the cost of theoretical fragmentation. Algorithms are frequently categorized by their specific objective functions (variance maximization, geodesic distance preservation, or divergence minimization) obscuring the deep algebraic unity that binds them. Spectral methods like PCA and Isomap are often contrasted with iterative methods like t-SNE, as if they belonged to distinct mathematical lineages. The former utilize eigendecomposition to find global optima within rigid Euclidean constraints, while the latter employ gradient descent to optimize non-convex objectives within flexible metric spaces.
+	
+	In this paper, we propose a unified framework that bridges these divides by recasting dimensionality reduction as an optimization problem within a \emph{Kernel Inner Product Space}. We postulate that the reduction of dimensionality is best understood not as a projection or a probabilistic modeling task, but as a geometric \emph{alignment problem between two kernels}: a \emph{target or input kernel} $\mathbf{K}_X$, which encodes the geometry, topology, or supervision priors of the high-dimensional data, and a \emph{model or output kernel} $\mathbf{K}_Y$, which is induced by the low-dimensional configuration we seek to learn.
+	
+	Our framework is grounded in the foundational insights of the "French School" of data analysis (Analyse des Données), specifically the operator-theoretic perspective of \citet{robert_unifying_1976}. In their article, they introduced the \emph{RV coefficient}, a multivariate generalization of the Pearson correlation coefficient, as a universal metric to quantify the similarity between two configuration matrices. While originally conceived for linear multivariate analysis, we demonstrate that when lifted into the modern context of a Kernel Inner Product Space, the RV coefficient becomes a powerful, differentiable objective function capable of unifying linear and non-linear dimensionality reduction techniques. \\
+	
+	This shift in perspective, from minimizing distortion to maximizing geometric alignment, yields three primary contributions:
+	
+	\begin{enumerate}
+		\item \textbf{Unification of Linear and Non-Linear Paradigms}: We formally demonstrate that classical spectral methods such as PCA, Isomap, LLE and Laplacian Eigenmaps are special cases of our framework, in which the input kernel encodes a specific geometry (Euclidean, geodesic, local-linear or graph-Laplacian) and the output kernel is a simple dot product. In this view, Isomap is simply RV maximization with a geodesic target.
+		\item \textbf{Generalized Output Geometries}: Unlike Kernel PCA \citep{scholkopf_nonlinear_1998}, which is traditionally bound to Euclidean subspaces, our gradient-based optimization of the RV coefficient allows for the imposition of arbitrary non-Euclidean constraints on the output embedding. We show that by selecting a heavy-tailed kernel (e.g., Student-t) for the output kernel $\mathbf{K}_Y$, we can reproduce the cluster-separating mechanism of t-SNE within a rigorous algebraic structure. We stress that this reinterprets the geometry underlying t-SNE as a "Kernel Alignment" problem: the alignment objective itself remains distinct from t-SNE's Kullback--Leibler divergence (see Section \ref{subsec:tested_approx}).
+		\item \textbf{Continuous Geometric Supervision}: The vector space structure of the kernel space $\mathcal{K}_n$ allows for the algebraic combination of priors. We introduce a mixed-kernel strategy in which a single dial interpolates \emph{both} the input and the output kernel between an unsupervised neighbor embedding (t-SNE) and a label-derived, class-supervised embedding. This yields a continuum of supervised dimensionality reductions that sharpen class structure while preserving local neighborhoods, and which we show generalize to held-out points.
+	\end{enumerate}	
+	
+	This article is organized as follows: Section \ref{section:related_works} reviews related works; Section \ref{section:kernel_space} defines the Kernel Space $\mathcal{K}_n$, establishing its geometry through the definition of the Frobenius inner product between kernels; Section \ref{section:rv_maximization} formulates dimensionality reduction as an RV maximization problem and derives the gradient, revealing the link between the choice of kernel and the mechanic behind the output configuration; Section \ref{section:case_studies} validates the framework through case studies, showing that it recovers classical spectral methods exactly, approximates neighbor embeddings (t-SNE, UMAP), and yields a novel supervised interpolation between unsupervised and class-supervised embeddings; Finally, Section \ref{section:conclusion} concludes this article.
+	
+	%----------------------------------------------------------------------------
+	%----------------------------------------------------------------------------
+	%----------------------------------------------------------------------------
+	
+	\section{Related Works}
+	\label{section:related_works}
+	
+	\paragraph{The Origins of Matrix Alignment:} The theoretical roots of our framework lie in the RV coefficient, introduced by \citet{robert_unifying_1976} to measure the similarity between two squared symmetric matrices. They demonstrated that many multivariate methods - including Principal Component Analysis, Canonical Correlation Analysis, and Multivariate Regression - could be unified as the maximization of the RV coefficient under specific constraints. This coefficient, also referred to as the Duality Diagram \citep{holmes_multivariate_2008}, emphasized the geometric analysis of data and was recently used to define a formal hypothesis testing framework for partial covariance between datasets \citep{bavaud_nonparametric_2026}. Our work takes this rigorous operator formalism, extending it beyond linear subspace learning to the domain of non-linear manifolds. 
+	
+	\paragraph{Kernel Methods and Independence Criteria:} In the machine learning community, the concept of aligning matrices emerged independently of the French statistical tradition. \citet{cristianini_kerneltarget_2001} proposed Kernel Alignment as a measure of similarity between kernel matrices for model selection, a metric mathematically equivalent to the uncentered RV coefficient. \citet{gretton_measuring_2005} also introduced the Hilbert-Schmidt Independence Criterion (HSIC) to measure statistical dependence between random variables. It has been established that the normalized (empirical) HSIC is identical to the RV coefficient \citep{sejdinovic_equivalence_2013}. While HSIC is primarily employed for independence testing and feature selection, recent variants like Centered Kernel Alignment (CKA) are used to analyze neural network representations \citep{kornblith_similarity_2019}. Our work leverages this metric as a direct objective function for embedding, transforming it from a diagnostic tool into a generative one.
+	
+	\paragraph{Unified Frameworks for Dimensionality Reduction:} The desire to unify dimensionality reduction algorithms has driven significant research. \citet{ham_kernel_2004} and \citet{scholkopf_nonlinear_1998} demonstrated that Isomap, LLE, and Laplacian Eigenmaps could be reinterpreted as instances of Kernel PCA given appropriate kernel constructions. \citet{yan_graph_2007} proposed the Graph Embedding framework, which unifies spectral methods (PCA, LDA, LPP) by defining an intrinsic graph that models the data geometry and a penalty graph that models noise. \citet{cunningham_linear_2015} provided a unified optimization view for linear dimensionality reduction over matrix manifolds. However, these frameworks typically assume an underlying spectral solution (eigendecomposition), which inherently implies a Euclidean metric in the output embedding space. Our framework diverges by treating the output kernel as a flexible hyperparameter. By optimizing alignment via gradient descent, we can utilize kernels that do not admit a spectral representations (such as the Student-t kernel), thereby integrating probabilistic methods like t-SNE into the same algebraic fold as PCA.
+	
+	\paragraph{Alignment-Based and Supervised Embeddings:} Using a alignment criterion as the objective of an embedding (rather than as a diagnostic) is not without precedent, and situating our framework against this literature sharpens its contribution. Maximizing the Hilbert--Schmidt Independence Criterion between a data kernel and a target kernel underlies Supervised PCA \citep{barshan_supervised_2011} and the Kernel Dimensionality Reduction of \citet{fukumizu_dimensionality_2004}; Colored Maximum Variance Unfolding \citep{song_colored_2007} likewise injects side information through a label kernel. Because the normalized HSIC equals the RV coefficient, the supervised limit of our mixed target ($\beta=1$) coincides with these HSIC-based supervised projections. The additive, manifold-preserving form of our supervised interpolation is moreover closely related to Local Fisher Discriminant Analysis \citep{sugiyama_dimensionality_2007} and to Semi-Supervised Dimensionality Reduction \citep{zhang_semisupervised_2007}, which both trade off between-class separation against the preservation of local neighborhood structure. Finally, the design of the alignment objective itself connects to Centered Kernel Alignment and the kernel-learning algorithms of \citet{cortes_algorithms_2012}. Our contribution is therefore less the alignment criterion \emph{per se} than the systematic factorization of the embedding into an input and an output kernel, and the use of a heavy-tailed output kernel to bring neighbor-embedding geometries into the same algebraic fold.
+	
+	\paragraph{Graph Kernels and Spatial Analysis:} Our construction of target kernels draws heavily on spectral graph theory and spatial statistics. The use of geodesic distances connects directly to Isomap \citep{tenenbaum_global_2000}, while diffusion-based kernels relate to Diffusion Maps \citep{coifman_diffusion_2006} and the Commute Time Kernels investigated by \citet{fouss_novel_2005}, which capture the global connectivity of a graph more robustly than shortest paths. Furthermore, our framework's explicit handling of relative weights of observation ($\mathbf{f} = (f_i)$) ensures compatibility with the Weighted Spatial Autocorrelation indices developed in \citet{bavaud_measuring_2024} and \citet{loup_spatial_2025}. In this light, dimensionality reduction can be viewed as an "inverse spatial analysis": finding the spatial configuration ($\mathbf{K}_Y$) that maximizes autocorrelation with the feature set ($\mathbf{K}_X$).
+	
+	%----------------------------------------------------------------------------
+	%----------------------------------------------------------------------------
+	%----------------------------------------------------------------------------
+	
+	\section{The Kernel Inner Product Space}
+	\label{section:kernel_space}
+	
+	This section lays the groundwork for our unified framework. By mapping data configurations to kernels, we can define a rigorous inner product space. This shift of perspective allows us to recast dimensionality reduction not merely as a spectral decomposition problem, but as an alignment problem within this space. This perspective offers quantities of approaches for multivariate analysis between datasets, as shown in \citet{robert_unifying_1976} and \citet{bavaud_measuring_2024}.
+	
+	%----------------------------------------------------------------------------
+	
+	\subsection{Data Representation with Kernels}
+	
+	Let us consider a data matrix $\mathbf{X} \in \mathbb{R}^{n \times p}$ describing $n$ individuals measured on $p$ variables. In the general framework of multivariate analysis, observations may differ in importance and can typically represent aggregated objects of different weights. Let $\mathbf{f} = (f_i)$ be a vector of \emph{relative weights} such that $\sum_{i=1}^n f_i = 1, \; f_i \geq 0$, and let $\bm{\Pi} := \textbf{Diag}(\mathbf{f})$ be the associated diagonal matrix. The \emph{centering matrix} $\mathbf{H}$ is defined as $\mathbf{H} := \mathbf{I}_n - \mathbf{1}_n \mathbf{f}^\top$, where $\mathbf{I}_n$ is the identity matrix of dimension $n$ and $\mathbf{1}_n$ is the vector of ones of length $n$. This operator allows us to obtain the \emph{centered data matrix} $\mathbf{X}^c := \mathbf{H}\mathbf{X}$, where the weighted mean of every variable is zero. \\
+	
+	While $\mathbf{X}^c$ captures the coordinates, the intrinsic geometry of the point cloud is described by the matrix of pairwise squared Euclidean distances $\mathbf{D}$, where $D_{ij} = ||\mathbf{x}_i - \mathbf{x}_j||^2$ or equivalently with the matrix of \emph{weighted inner products}, or \textbf{Kernel matrix} $\mathbf{K}$ \citep{bavaud_measuring_2024}. The latter can be derived from the coordinates or the Euclidean distances:
+	\begin{gather} 
+		\mathbf{K} := \mathbf{Q} \mathbf{G} \mathbf{Q}^\top = -\frac{1}{2} \mathbf{Q} \mathbf{D} \mathbf{Q}^\top \notag \\
+		\mathbf{G} := \mathbf{X}\mathbf{X}^\top \qquad \mathbf{Q} := \bm{\Pi}^{\frac{1}{2}} \mathbf{H}  \label{std_kernel}
+	\end{gather}
+	where $\mathbf{G} = (g_{ij})$ is the \emph{Gram matrix} of inner products between individuals, i.e. $g_{ij} = \mathbf{x}_i^\top\mathbf{x}_j$, and $\mathbf{Q}$ is an operator which centers and weights these inner products. Crucially, when the weights $\mathbf{f}$ are non-uniform, neither $\mathbf{H}$ nor $\mathbf{Q}$ are symmetric matrices. This asymmetry necessitates careful tracking of the transpose operators in subsequent gradient derivations.\\
+	
+	It is important to note that any matrix $\mathbf{K}$ constructed in this manner satisfies the \emph{weighted centering condition}:
+	\begin{align} 
+		\mathbf{K} \sqrt{\mathbf{f}} = \mathbf{0}
+	\end{align}
+	
+	The mapping $\mathbf{X} \mapsto \mathbf{K}$ is bijective up to an isometry (rotation or reflection). Since $\mathbf{K}$ encodes only relative distances and angles, the absolute orientation of the coordinate system is irrelevant. Given any valid kernel matrix $\mathbf{K}$, one can recover a coordinate representation $\tilde{\mathbf{X}}$ that generates this specific geometry via classical \emph{Multidimensional Scaling (MDS)}. By computing the eigendecomposition $\mathbf{K} = \mathbf{U} \bm{\Lambda} \mathbf{U}^\top$, the coordinates in the principal axes are given by:
+	\begin{equation}
+		\tilde{\mathbf{X}} = \bm{\Pi}^{-\frac{1}{2}} \mathbf{U} \bm{\Lambda}^{\frac{1}{2}}
+	\end{equation}
+	This duality bridges the gap between the \emph{coordinate space} and the \emph{kernel space}, the structure defined in the next section.
+	
+	%----------------------------------------------------------------------------
+	
+	\subsection{The Kernel inner product Space}
+	
+	We define the \textbf{Kernel Space} $\mathcal{K}_n$ as the set of all symmetric matrices $\mathbf{K} \in \mathbb{R}^{n \times n}$ that satisfy the weighted centering condition $\mathbf{K} \sqrt{\mathbf{f}} = \mathbf{0}$. It is easily verifiable that this set forms a \emph{vector space}, closed under linear combinations $a \mathbf{K}_1 + b \mathbf{K}_2, \; \forall a, b \in \mathbb{R}$. \\
+	
+	To measure the similarity between two configurations, we endow $\mathcal{K}_n$ with the \emph{Frobenius inner product}:
+	\begin{equation}
+		\langle \mathbf{K}_1, \mathbf{K}_2 \rangle := \text{Tr}(\mathbf{K}_1 \mathbf{K}_2)
+	\end{equation}
+	This inner product induces the \emph{Frobenius norm}:
+	\begin{equation}
+		\|\mathbf{K}\| := \sqrt{\text{Tr}(\mathbf{K}^2)}
+	\end{equation}
+	which result in $\mathcal{K}_n$ being a \textbf{Inner Product Space}. \\
+	
+	The relationship between two kernels is captured by the \emph{cosine of the angle} between them in this space. This quantity is the \textbf{RV coefficient} \citep{robert_unifying_1976}\footnote{In fact,  \citep{robert_unifying_1976} define it is the dual space of variables, not individuals.} as defined below:
+	\begin{equation} \label{rv_coeff}
+		\text{RV}(\mathbf{K}_1, \mathbf{K}_2) := \frac{\langle \mathbf{K}_1, \mathbf{K}_2 \rangle}{\| \mathbf{K}_1 \| \| \mathbf{K}_2 \|} = \frac{\text{Tr}(\mathbf{K}_1 \mathbf{K}_2)}{\sqrt{\text{Tr}(\mathbf{K}_1^2)\text{Tr}(\mathbf{K}_2^2)}}
+	\end{equation}
+	Maximizing this coefficient amounts to maximizing the structural alignment between two point clouds, normalized by their respective norms.
+	With this definition, two kernels are \emph{orthogonal} if $\langle \mathbf{K}_1, \mathbf{K}_2 \rangle = 0$. The \emph{orthogonal projection} of $\mathbf{K}_1$ on $\mathbf{K}_2$ is:
+	\begin{align}
+		\text{proj}_{\mathbf{K}_2} (\mathbf{K}_1) := \frac{\langle \mathbf{K}_1, \mathbf{K}_2 \rangle}{\| \mathbf{K}_2 \|^2} \mathbf{K}_2 = \frac{\text{Tr}(\mathbf{K}_1 \mathbf{K}_2)}{\text{Tr}(\mathbf{K}_2^2)} \mathbf{K}_2
+	\end{align}
+	
+	We can also identify a special element in this space: the \textbf{Neutral Kernel} $\mathbf{K}_0$, defined as the projection of the identity matrix into $\mathcal{K}_n$:
+	\begin{equation}
+		\mathbf{K}_0 = \mathbf{I}_n - \sqrt{\mathbf{f}}\sqrt{\mathbf{f}}^\top
+	\end{equation}
+	Geometrically, $\mathbf{K}_0$ represents a simplex (regular when the weights are uniform) where all distinct observations are distant with $d_{ij} = \tfrac{1}{f_i} +  \tfrac{1}{f_j}$, embodying a state of "structural neutrality". It acts as the identity element for the product of kernels, obeying $\mathbf{K} \mathbf{K}_0 = \mathbf{K}_0 \mathbf{K} = \mathbf{K}$ for all $\mathbf{K} \in \mathcal{K}_n$. \\
+	
+	Within this vector space, a critical geometric distinction must be made. While $\mathcal{K}_n$ contains all centered symmetric matrices, only those that are \textbf{positive semi-definite} (PSD) correspond to a Euclidean configurations. These valid kernels form a \emph{convex cone} $\mathcal{K}_n^+ \subset \mathcal{K}_n$.  In practical applications, one may encounter a matrix $\mathbf{K} \in \mathcal{K}_n$ that lies outside this cone. The closest valid kernel $\mathbf{K}^* \in \mathcal{K}_n^+$ to $\mathbf{K}$, in the sense of the Frobenius norm, is obtained by spectral projection \citep{higham_computing_1988}. If $\mathbf{K} = \mathbf{U} \bm{\Lambda} \mathbf{U}^\top$ is the eigendecomposition of the matrix, the projection is given by clipping the negative eigenvalues:
+	\begin{equation} \label{eq:psd_projection}
+		\mathbf{K}^* = \mathbf{U} \bm{\Lambda}^* \mathbf{U}^\top
+	\end{equation}
+	where $\bm{\Lambda}^*$ is equal to $\bm{\Lambda}$ but with negative components set to zero. \\
+	
+	Finally, it is instructive to consider the action of a kernel $\mathbf{K} = (k_{ij})$ as a linear operator on single variable vector $\mathbf{y} \in \mathbb{R}^n$. If $k_{ij}$ is interpreted as an attraction-repulsion coefficient between $i$ and $j$, then:
+	\begin{equation}
+		\tilde{y}_i = (\mathbf{K}\mathbf{y})_i = \sum_j k_{ij} y_j
+	\end{equation}
+	is the weighted consensus of the neighbors of $i$ as defined by the kernel. It ressembles a lag operator (with potential negative values) of $\mathbf{y}$ according to the structure of the underlying dataset of $\mathbf{K}$.
+	
+	%----------------------------------------------------------------------------
+	%----------------------------------------------------------------------------
+	%----------------------------------------------------------------------------
+	
+	\section{Dimensionality Reduction via RV Maximization}
+	\label{section:rv_maximization}
+	
+	Having defined the structure of the Kernel Space, we now formulate dimensionality reduction as a optimization problem in this space. The core idea is to find a low-dimensional configuration that maximizes the alignment with the high-dimensional data, quantified by the RV coefficient.
+	
+	%----------------------------------------------------------------------------
+	
+	\subsection{Problem Formulation and linear solutions}
+	
+	Let $\mathbf{K}_X \in \mathcal{K}_n$ be the fixed target kernel derived from the high-dimensional data or any prior information. We seek a configuration $\mathbf{Y} \in \mathbb{R}^{n \times q}$ in a lower-dimensional space (where $q < p$) such that the structural similarity between the target geometry and the geometry induced by $\mathbf{Y}$ is maximized. \\
+	
+	Let $\mathbf{K}_Y$ denote the kernel derived from $\mathbf{Y}$. The dimensionality reduction task is formally defined as the maximization of the following objective function:
+	\begin{equation} \label{eq:optimization_problem}
+		\max_{\mathbf{Y}} \quad \text{RV}(\mathbf{K}_X, \mathbf{K}_Y) = \frac{\text{Tr}(\mathbf{K}_X \mathbf{K}_Y)}{\sqrt{\text{Tr}(\mathbf{K}_X^2)\text{Tr}(\mathbf{K}_Y^2)}}
+	\end{equation}
+	
+	In the standard setting, both $\mathbf{K}_X$ and $\mathbf{K}_Y$ kernels are supposed to be based on the weighted and centered Gram matrix of the coordinates, as defined by equation (\ref{std_kernel}): 
+	\begin{align}
+		\mathbf{K}_X &= \mathbf{Q} \mathbf{G}_X \mathbf{Q}^\top \quad \text{where} \quad \mathbf{G}_X = \mathbf{X}\mathbf{X}^\top \\
+		\mathbf{K}_Y &= \mathbf{Q} \mathbf{G}_Y \mathbf{Q}^\top \quad \text{where} \quad \mathbf{G}_Y = \mathbf{Y}\mathbf{Y}^\top
+	\end{align}
+	
+	Under this standard Euclidean assumption, the optimal solution corresponds to the (weighted) \textbf{Principal Component Analysis (PCA)} \citep{robert_unifying_1976}. \\
+	
+	Furthermore, \textbf{Linear Discriminant Analysis (LDA)} can be reframed as an RV coefficient maximization problem \citep{robert_unifying_1976}. If we have $m$ classes defined by the $n \times m$ indicator matrix $\mathbf{Z} = (z_{ig})$ ($z_{ig} = 1$ iff $i \in g$, $z_{ig} = 0$ otherwise), and by defining the \emph{inter-class kernel} :
+	\begin{gather}
+		\mathbf{K}_\text{Z} := \mathbf{P}_Z \mathbf{K}_X \mathbf{P}^\top_Z \qquad
+		\mathbf{P}_Z := \mathbf{Z}(\mathbf{Z}^\top \bm{\Pi} \mathbf{Z})^{-1} \mathbf{Z}^\top \bm{\Pi}
+	\end{gather}
+	which correspond to the configuration where every point has been relocated to the centroid of its group. The classical LDA problem is then equivalent to finding the solution to the following constrained problem:
+	\begin{equation}
+		\begin{aligned}
+			& \underset{\mathbf{A} \in \mathbb{R}^{p \times q}}{\text{maximize}}
+			& & \text{RV}(\mathbf{K}_{Z}, \mathbf{K}_Y) \\
+			& \text{subject to} & & \mathbf{K}_Y = \mathbf{Q} \mathbf{Y}\mathbf{Y}^\top \mathbf{Q}^\top \\
+			& & & \mathbf{Y} = \mathbf{X} \mathbf{A}, \; \mathbf{A}^\top \mathbf{A} = \mathbf{I}_q
+		\end{aligned}
+	\end{equation}
+	The constraint $\mathbf{Y} = \mathbf{X}\mathbf{A}$ ensures that the internal structure of the classes is preserved (preventing collapse onto centroids), while the objective function rotates the space to maximize class separation. \\
+	
+	Formalizing $\mathcal{K}_n$ as a vector space permits the construction of novel target configurations via linear combinations of existing kernels, yielding a flexible approach to Discriminant Analysis. Rather than restricting the optimization solely to the inter-class kernel $\mathbf{K}_Z$ (which, without constraints, would enforce a collapse of intra-class inertia) we can define a mixed target:
+	\begin{equation}
+		\mathbf{K}_\text{target} = (1 - \beta)\,\mathbf{K}_X + \beta\,\mathbf{K}_Z
+	\end{equation}
+	This formulation introduces a continuous tuning parameter $\beta \in [0, 1]$ that balances the preservation of the intrinsic data topology ($\beta=0$) against the discriminative force separating the class centroids ($\beta=1$). It acts as a geometric regularizer, offering a smooth transition between unsupervised PCA and a soft LDA, where class separation is maximized without removing local neighborhood structures. With a linear output kernel this requires no change on the output side and yields a genuine soft LDA. When the unsupervised endpoint instead carries a geometry-specific output kernel, such as the heavy-tailed Student-t of t-SNE, the same dial can be applied to the output kernel in parallel (Student-t $\to$ linear). We adopt this output interpolation in the case studies (Section~\ref{subsec:tested_supervised}) precisely to avoid the instability of the heavy-tailed output near the supervised endpoint, where it cannot truly collapse the classes. This defines a continuous \emph{supervised dimensionality reduction}.\\
+	
+	While these linear approaches are already rich, they are constrained by the linearity of the inner products used to construct the kernels. To capture more complex topologies, such as manifolds or non-linear cluster separations, we must generalize the definition of the underlying Gram matrices.
+	
+	
+	%----------------------------------------------------------------------------
+	
+	\subsection{Generalized RV dimensionality reduction}
+	
+	While the linear solutions presented above admit elegant, closed-form spectral decompositions, they strictly assume a Euclidean geometry for the input ($\mathbf{G}_X =\mathbf{X} \mathbf{X}^\top$) and output ($\mathbf{G}_Y =\mathbf{Y} \mathbf{Y}^\top$) space. Modifying only the input space with a non-linear kernel function allows the framework to capture complex data topologies while retaining an exact analytical solution. This property is successfully exploited by methods like Kernel PCA, Isomap, LLE, Diffusion Maps and Laplacian Eigenmaps. However, to reproduce the dynamics of modern neighbor embeddings, such as utilizing heavy-tailed distributions to mitigate the crowding problem, we must also abandon the rigid requirement of a linear output kernel. This breaks the spectral guarantee, shifting the dimensionality reduction task from an eigenvalue problem to a continuous, gradient-based optimization of the RV coefficient. \\
+	
+	\noindent Recall that a valid kernel is obtained by double-centering a raw Gram matrix $\mathbf{G}_X$:
+	\begin{equation}
+		\mathbf{K}_X = \mathbf{Q} \mathbf{G}_X \mathbf{Q}^\top
+	\end{equation}
+	Our generalized approach consists of replacing the Gram matrix with \emph{kernelized Gram matrix} $\mathbf{G}_X^\kappa$ defined by:
+	\begin{equation}
+		[\mathbf{G}_X^\kappa]_{ij} = \kappa(\mathbf{x}_i, \mathbf{x}_j)
+	\end{equation}
+	where $\kappa(\mathbf{x}_i, \mathbf{x}_j)$ is a kernel function, as used in Support Vector Machine (SVM) methods. This leads to two distinct categories of non-linear dimensionality reduction:
+	
+	\subsubsection*{1. The Non-Linear Target (Kernel PCA)}
+	A first extension is to replace the input geometry with a non-linear kernel function $\kappa_x$, while keeping the output Euclidean ($\mathbf{G}_Y = \mathbf{Y}\mathbf{Y}^\top$).
+	\begin{equation}
+		[\mathbf{G}^{\kappa_x}_X]_{ij} = \kappa_x(\mathbf{x}_i, \mathbf{x}_j)
+	\end{equation}
+	Here, $\mathbf{G}^{\kappa_x}_X$ captures complex topological features of the data (e.g., via a Radial Basis Function or a Graph Laplacian). The optimization seeks a linear configuration $\mathbf{Y}$ that best preserves this non-linear geometry. This formulation corresponds to \emph{Kernel PCA} (or Classical MDS on non-Euclidean distances), where the solution is simply given by applying MDS to the new kernel $\mathbf{K}_X$.
+	
+	\subsubsection*{2. The Non-Linear Embedding (General Case)}
+	The most significant generalization of our framework is the ability to also modify the \emph{output} kernel. Instead of restricting the low-dimensional configuration to a rigid Euclidean metric, we enforce a specific geometric structure on $\mathbf{Y}$ via a model kernel function $\kappa_y$:
+	\begin{equation}
+		[\mathbf{G}^{\kappa_y}_Y]_{ij} = \kappa_y(\mathbf{y}_i, \mathbf{y}_j)
+	\end{equation}
+	In this scenario, the problem becomes finding a configuration $\mathbf{Y}$ whose induced geometry (through the lens of $\kappa_y$) aligns best with the intrinsic geometry of the data. \\
+	
+	This formulation covers modern embedding techniques. For instance, setting $\kappa_y$ to a heavy-tailed kernel (like the Student-t distribution) allows the model to reproduce the behavior of t-SNE within a global spectral objective. Altogether, the optimization problem becomes:
+	\begin{equation}
+		\max_{\mathbf{Y}} \quad \text{RV}\left( \mathbf{Q} \mathbf{G}^{\kappa_x}_X \mathbf{Q}^\top, \mathbf{Q} \mathbf{G}^{\kappa_y}_Y \mathbf{Q}^\top \right)
+	\end{equation}
+	Unlike the standard cases (PCA, LDA, KPCA), this general form does not admit a closed-form eigenvector solution. It requires a dedicated gradient-based optimization scheme, which we derive in the following section.
+	
+	%----------------------------------------------------------------------------
+	
+	\subsection{Derivation of the Gradient}
+	\label{subsec:gradient}
+	
+	To maximize the RV coefficient, we compute $\frac{\partial \text{RV}}{\partial \mathbf{Y}}$, the $n \times q$ gradient matrix of the objective function regarding coordinates in the embedding space, via the chain rule: 
+	\begin{equation}
+		\frac{\partial \text{RV}}{\partial \mathbf{Y}} = \underbrace{\frac{\partial \text{RV}}{\partial \mathbf{K}_Y} \cdot \frac{\partial \mathbf{K}_Y}{\partial \mathbf{G}^{\kappa_y}_Y}}_{\text{Structural gradient}} \cdot \underbrace{\frac{\partial \mathbf{G}^{\kappa_y}_Y}{\partial \mathbf{Y}}}_{\text{Parametric gradient}}
+	\end{equation}
+	In this formula, $\frac{\partial \text{RV}}{\partial \mathbf{K}_Y}$ is $n \times n$ matrix, while $\frac{\partial \mathbf{K}_Y}{\partial \mathbf{G}^{\kappa_y}_Y}$ and $\frac{\partial \mathbf{G}^{\kappa_y}_Y}{\partial \mathbf{Y}}$ are tensors with dimensions $n \times n \times n \times n$ and $n \times n \times n \times q$ respectively (the symbol "$\cdot$" denotes here tensor contraction). We structure this derivation in two levels: first, the \emph{structural gradient} defined in the space of kernels, and second, the \emph{parametric gradient} which brings back the gradient to the coordinate level.
+	
+	\subsubsection{Structural Gradient}
+	
+	The derivative of the configuration $\mathbf{Y}$ depends first on how the RV coefficient changes with respect to the kernel matrix $\mathbf{K}_Y$, and how that kernel matrix changes with respect to the raw similarities $\mathbf{G}_Y$. \\
+	
+	Using the quotient rule on the definition of the RV coefficient (Eq. \ref{rv_coeff}), the partial derivative with respect to the kernel $\mathbf{K}_Y$ is:
+	\begin{align}
+		\frac{\partial \text{RV}}{\partial \mathbf{K}_Y} &= \frac{\mathbf{K}_X}{\sqrt{\text{Tr}(\mathbf{K}^2_X)\text{Tr}(\mathbf{K}^2_Y)}} - \frac{\text{Tr}(\mathbf{K}_X \mathbf{K}_Y) \mathbf{K}_Y}{\sqrt{\text{Tr}(\mathbf{K}^2_X)\text{Tr}(\mathbf{K}^2_Y)} \text{Tr}(\mathbf{K}^2_Y)} \notag \\
+		&= \frac{1}{||\mathbf{K}_X|| \cdot ||\mathbf{K}_Y||} \left( \mathbf{K}_X - \frac{\langle \mathbf{K}_X, \mathbf{K}_Y \rangle}{||\mathbf{K}_Y||^2} \mathbf{K}_Y \right) \label{eq:structural_residual}
+	\end{align}
+	
+	\paragraph{Geometric Interpretation:}
+	The term in parentheses has a interpretable geometric meaning. Let $\beta = \frac{\langle \mathbf{K}_X, \mathbf{K}_Y \rangle}{||\mathbf{K}_Y||^2}$ be the scalar projection coefficient of the target onto the model. The gradient is proportional to:
+	\begin{equation}
+		\mathbf{R} = \mathbf{K}_X - \beta \mathbf{K}_Y
+	\end{equation}
+	This matrix $\mathbf{R}$ is the \emph{residual of the projection} of $\mathbf{K}_X$ onto the hyperplane spanned by $\mathbf{K}_Y$. Intuitively, the gradient pushes the model kernel to cover the "unexplained" geometric structure of the target. It aligns the model with the component of the target that is currently orthogonal to it. \\
+	
+	The derivation of the gradient with respect to the Gram matrix $\mathbf{G}_Y^{\kappa_y}$ follows from the properties of the total differential and the duality of the Frobenius inner product. Let $\text{RV}$ be a scalar function of the kernel $\mathbf{K}_Y$. The total differential $d\text{RV}$ is defined as:
+	\begin{equation}
+		d\text{RV} = \left\langle \frac{\partial \text{RV}}{\partial \mathbf{K}_Y}, d\mathbf{K}_Y \right\rangle = \text{Tr}\left( \left( \frac{\partial \text{RV}}{\partial \mathbf{K}_Y} \right)^\top d\mathbf{K}_Y \right)
+		\label{eq:dRV}
+	\end{equation}
+	Because $\mathbf{K}_Y$ and its gradient are symmetric matrices, the trace inner product satisfies $\langle \mathbf{A}, \mathbf{B} \rangle = \text{Tr}(\mathbf{A}\mathbf{B})$. From the linear mapping $\mathbf{K}_Y = \mathbf{Q} \mathbf{G}^{\kappa_y}_Y \mathbf{Q}^\top$, we obtain the differential:
+	\begin{equation}
+		d\mathbf{K}_Y = \mathbf{Q} (d\mathbf{G}^{\kappa_y}_Y) \mathbf{Q}^\top
+	\end{equation}
+	Substituting this into (\ref{eq:dRV}) and applying the cyclic property of the trace operator, $\text{Tr}(\mathbf{ABC}) = \text{Tr}(\mathbf{CAB})$, yields:
+	\begin{align}
+		d\text{RV} &= \text{Tr}\left( \frac{\partial \text{RV}}{\partial \mathbf{K}_Y} \mathbf{Q} \, d\mathbf{G}^{\kappa_y}_Y \mathbf{Q}^\top \right) \notag \\
+		&= \text{Tr}\left( \mathbf{Q}^\top \frac{\partial \text{RV}}{\partial \mathbf{K}_Y} \mathbf{Q} \, d\mathbf{G}^{\kappa_y}_Y \right)
+	\end{align}
+	By the principle of identification in matrix calculus, the gradient $\mathbf{M}$ is the term in the trace inner product that is dual to $d\mathbf{G}^{\kappa_y}_Y$:
+	\begin{equation}
+		\mathbf{M} := \frac{\partial \text{RV}}{\partial \mathbf{G}^{\kappa_y}_Y} = \mathbf{Q}^\top \left( \frac{\partial \text{RV}}{\partial \mathbf{K}_Y} \right) \mathbf{Q}
+	\end{equation}
+	Expanding this with the derivative of the RV coefficient with respect to $\mathbf{K}_Y$, we arrive at the gradient:
+	\begin{equation} \label{eq:gram_gradient_full}
+		\mathbf{M} = \frac{1}{\|\mathbf{K}_X\| \cdot \|\mathbf{K}_Y\|} \mathbf{Q}^\top \left( \mathbf{K}_X - \frac{\langle \mathbf{K}_X, \mathbf{K}_Y \rangle}{\|\mathbf{K}_Y\|^2} \mathbf{K}_Y \right) \mathbf{Q}
+	\end{equation}
+	We call $\mathbf{M} = (m_{ij})$ the \emph{structural gradient}. it is the adjoint transformation of the kernel-space residual into the uncentered similarity space, providing the necessary pairwise attraction-repulsion weights for the parametric update.
+	
+	\subsubsection{Parametric Gradient}
+	
+	The final step is to compute how the coordinates $\mathbf{Y}$ must move to satisfy the structural requirement $\mathbf{M}$. This depends on the specific kernel function used to define similarity. We restrict ourselves to the two most common cases here.
+	
+	\paragraph{Case A: Dot-Product Kernels}
+	If the Gram matrix is defined by a function of the inner product, $(\mathbf{G}^{\kappa_y}_{Y})_{ij} = \kappa_y(\mathbf{y}_i^\top \mathbf{y}_j)$ (e.g., the Linear kernel), the chain rule involves the derivative of the kernel function $\kappa_y'$:
+	\begin{equation}
+		\frac{\partial \text{RV}}{\partial \mathbf{Y}} = 2 \left( \mathbf{M} \circ \kappa_y'(\mathbf{Y}\mathbf{Y}^\top) \right) \mathbf{Y}
+	\end{equation}
+	where $\circ$ denotes the Hadamard (element-wise) product. The standard Weighted PCA corresponds to the linear identity kernel $\kappa(x)=x$. Since $\kappa'(x)=1$, the gradient simplifies to $2\mathbf{M}\mathbf{Y}$, recovering the classical spectral update rule where the coordinates align with the eigenvectors of the structural gradient.
+	
+	\paragraph{Case B: Distance-Based Kernels}
+	If the kernel function is based on Euclidean distances, $(\mathbf{G}^{\kappa_y}_{Y})_{ij} = \kappa_y(||\mathbf{y}_i - \mathbf{y}_j||^2)$ (e.g., RBF, Student-t), the derivative takes the form of a force-directed layout. For a single point $\mathbf{y}_i$:
+	\begin{equation}
+		\frac{\partial \text{RV}}{\partial \mathbf{y}_i} = 4 \sum_{j=1}^n \underbrace{m_{ij}}_{\text{Push-Pull}} \cdot \underbrace{\kappa'_y(||\mathbf{y}_i - \mathbf{y}_j||^2)}_{\text{Stiffness}} \cdot (\mathbf{y}_i - \mathbf{y}_j)
+	\end{equation}
+	Here, the term $m_{ij}$ determines whether points $i$ and $j$ should attract or repel based on the residual error, while $\kappa_y'$ modulates this force based on their current proximity.
+	
+	%----------------------------------------------------------------------------
+	
+	\subsection{The Algorithm}
+	
+	The structural and parametric gradients derived above yield the following iterative optimization scheme (Algorithm \ref{alg:rv_optim}).
+	
+	\begin{algorithm}[h]
+		\caption{RV dimensionality reduction \\
+			\textbf{Inputs:} The target $\mathbf{K}_X$, the weights $\mathbf{f}$, dimension $q$, the output kernel function $\kappa_y(\mathbf{y}_i, \mathbf{y}_j)$, the learning rate $\eta$, the convergence threshold $\epsilon$. \\
+			\textbf{Outputs:} The $n \times q$ matrix of centered coordinates $\mathbf{Y}$, the final RV coefficient.}
+		\label{alg:rv_optim}
+		\begin{algorithmic}[1]
+			\STATE Compute $\mathbf{Q} \leftarrow \textbf{Diag}^{1/2}(\mathbf{f}) (\mathbf{I}_n - \mathbf{1}_n \mathbf{f}^\top)$.
+			\STATE Compute $ \| \mathbf{K}_X \| \leftarrow \sqrt{\text{Tr}(\mathbf{K}_X^2)}$
+			\STATE Set the initial $\mathbf{Y}^{(0)}$ (randomly or with PCA).
+			\STATE Set $\text{RV} \leftarrow 0$.
+			\REPEAT
+			\STATE Set $\text{RV}^\text{old} \leftarrow \text{RV}$.
+			\STATE Compute the output kernel $\mathbf{K}_Y \leftarrow \mathbf{Q} \cdot  \kappa_y(\mathbf{Y}) \cdot \mathbf{Q}^\top$.
+			\STATE Compute $ \| \mathbf{K}_Y \| \leftarrow \sqrt{\text{Tr}(\mathbf{K}_Y^2)}$.
+			\STATE Compute $\text{RV} \leftarrow \frac{\text{Tr}(\mathbf{K}_X \mathbf{K}_Y)}{\| \mathbf{K}_X \| \| \mathbf{K}_Y \|}$.
+			\STATE Compute $\mathbf{M} \leftarrow \frac{1}{||\mathbf{K}_X|| \cdot ||\mathbf{K}_Y||} \mathbf{Q}^\top \left( \mathbf{K}_X - \text{RV} \frac{||\mathbf{K}_X||}{||\mathbf{K}_Y||} \mathbf{K}_Y \right) \mathbf{Q}$.
+			\IF{the output kernel is based on dot-Product $\kappa_y(\mathbf{y}_i\mathbf{y}^\top_j)$}
+			\STATE $\bm{\Delta} \leftarrow 2 \left( \mathbf{M} \circ \kappa_y'(\mathbf{Y}\mathbf{Y}^\top) \right) \mathbf{Y}$
+			\ELSIF{the output kernel is based on distances $ \kappa_y(||\mathbf{y}_i - \mathbf{y}_j||^2)$}
+			\STATE $\bm{\Delta}_i \leftarrow 4 \sum_j m_{ij} \kappa_y'(||\mathbf{y}_i - \mathbf{y}_j||^2) (\mathbf{y}_i - \mathbf{y}_j)$
+			\ENDIF
+			\STATE $\mathbf{Y}^{(t+1)} \leftarrow \mathbf{Y}^{(t)} + \eta \bm{\Delta}$
+			\UNTIL{$|\text{RV} - \text{RV}^\text{old} | < \epsilon$}
+			\RETURN $\mathbf{Y},\; \text{RV}$
+		\end{algorithmic}
+	\end{algorithm}
+	
+	The computational complexity of the proposed algorithm involves element-wise operations and matrix products on $n \times n$ kernels, scaling with $\mathcal{O}(n^2)$ per iteration. While scaling this exact $\mathcal{O}(n^2)$ dense formulation to massive datasets would require approximation techniques (e.g., Barnes-Hut or Nyström methods), our current focus is theoretical unification. To ensure scalability and efficiency within the current scope, we implemented the framework using the \textit{PyTorch} library, leveraging GPU acceleration for massive parallelization of tensor operations. A significant advantage of this modern implementation is the utilization of \textit{automatic differentiation} (Autograd). By defining the RV coefficient purely as a forward-pass objective function, we delegate the backward pass to the computational graph engine. This allows us to avoid the explicit manual construction of the gradient matrices derived in Section \ref{subsec:gradient}, ensuring both numerical precision and implementation simplicity.
+	
+	%----------------------------------------------------------------------------
+	%----------------------------------------------------------------------------
+	%---------------------------------------------------------------------------- 
+	
+	\section{Case studies}
+	\label{section:case_studies}
+	
+	Having laid out the framework, we now put it to the empirical test, with two
+	complementary goals in mind. The first is to demonstrate that a single objective,
+	the maximization of the RV coefficient, recovers a broad catalogue of
+	dimensionality-reduction algorithms once the input and output kernels are chosen
+	appropriately, from the exact spectral methods (Section~\ref{subsec:tested_spectral})
+	to faithful approximations of neighbor embeddings
+	(Section~\ref{subsec:tested_approx}). The second is to exploit the vector-space
+	structure of $\mathcal{K}_n$ to construct a method with \emph{no} library
+	counterpart: a single dial that continuously turns an unsupervised t-SNE into a
+	supervised embedding (Section~\ref{subsec:tested_supervised}), whose ability to
+	generalize we then probe with a held-out protocol. All experiments are carried out
+	on three datasets of contrasting nature (Section~\ref{subsec:datasets}) and assessed
+	with two families of indices (Section~\ref{subsec:indices}), before the results are
+	gathered in Section~\ref{subsec:results}. The Python code reproducing every figure
+	and table is available on the article's GitHub
+	page.\footnote{\url{https://github.com/gguex/rv_dimred}}
+	
+	%------------------------------------------------------------------------------
+	\subsection{Tested methods}
+	\label{subsec:tested_methods}
+	
+	Every method is specified entirely by a pair $(\mathbf{K}_X,\mathbf{K}_Y)$, and we
+	organise them into three families, giving each input kernel a short name. For
+	conciseness we usually report the raw Gram matrices $\mathbf{G}_X$ and
+	$\mathbf{G}_Y$ alone, since the corresponding kernels follow from double-centering
+	and weighting, $\mathbf{K} = \mathbf{Q}\mathbf{G}\mathbf{Q}^\top$, as in
+	equation~(\ref{std_kernel}).
+	
+	\subsubsection{Spectral methods}
+	\label{subsec:tested_spectral}
+	
+	This first family gathers the methods that admit an exact spectral solution: under
+	a \emph{linear output kernel} $\mathbf{G}^\text{lin}_Y = \mathbf{Y}\mathbf{Y}^\top$,
+	maximizing $\mathrm{RV}(\mathbf{K}_X,\mathbf{K}_Y)$ amounts to reading off the
+	leading eigenvectors of $\mathbf{K}_X$. We consider six such input kernels.
+	
+	\begin{itemize}
+		\item \textbf{PCA}: This is the simplest method to achieve, with a linear input kernel:
+		\begin{equation}
+			\mathbf{G}^\text{lin}_X = \mathbf{X}\mathbf{X}^\top
+		\end{equation}
+		
+		\item \textbf{Kernel PCA (RBF)}: We use here the RBF input kernel $\mathbf{G}^\text{rbf}_X$ to illustrate all kernel PCA methods:
+		\begin{equation}
+			[\mathbf{G}^\text{rbf}_X]_{ij}=\exp(-\gamma\|\mathbf{x}_i-\mathbf{x}_j\|^2)
+		\end{equation}
+		where $\gamma>0$ is the kernel bandwidth.
+		
+		\item \textbf{Isomap}: The geodesic input kernel captures the intrinsic manifold structure through the matrix $\mathbf{D}_\text{geo}$ of symmetrised shortest-path distances on the $k$-nearest-neighbor graph:
+		\begin{equation}
+			\mathbf{G}^\text{geo}_X = -\tfrac{1}{2}\,\mathbf{D}^2_\text{geo}
+		\end{equation}
+		
+		\item \textbf{LLE}: The local-linear-embedding input kernel encodes the local reconstruction geometry. From the sparse weights $\mathbf{W}$ that optimally reconstruct each point from its $k$ neighbors, we form the alignment matrix $\bm{\Phi}=(\mathbf{I}-\mathbf{W})^\top(\mathbf{I}-\mathbf{W})$ and take its Moore--Penrose pseudo-inverse:
+		\begin{equation}
+			\mathbf{G}^\text{lle}_X = \bm{\Phi}^{+}
+		\end{equation}
+		The dominant eigenvectors of $\bm{\Phi}^{+}$ coincide with the bottom (smallest non-zero) eigenvectors of $\bm{\Phi}$, which define the standard LLE embedding.		
+		\item \textbf{Diffusion Maps}: The diffusion kernel is the heat kernel of the symmetric normalized Laplacian
+		$\mathbf{L}_\text{sym}$ built from the $k$-nearest-neighbor affinity matrix
+		$\mathbf{W}$, evaluated at diffusion time $t$:
+		\begin{equation}
+			\mathbf{G}^\text{diff}_X = \exp(-t\,\mathbf{L}_\text{sym}),
+			\qquad
+			\mathbf{L}_\text{sym}=\mathbf{I}-\mathbf{D}^{-1/2}\mathbf{W}\mathbf{D}^{-1/2}
+		\end{equation}
+		where $\mathbf{D}=\textbf{Diag}(\mathbf{W}\mathbf{1}_n)$ is the diagonal degree
+		matrix, whose entries $D_{ii}=\sum_j W_{ij}$ collect the total affinity of each
+		point. The time $t$ sets the diffusion scale: larger $t$ lets the random walk
+		explore more of the manifold, sharpening the global structure.
+		
+		\item \textbf{Laplacian Eigenmaps}: The Laplacian kernel is the pseudo-inverse (commute-time) of the normalized Laplacian $\mathbf{L}_\text{sym}$ built from a binary $k$-nearest-neighbor connectivity graph; its top eigenvectors are the bottom eigenvectors of $\mathbf{L}_\text{sym}$:
+		\begin{equation}
+			\mathbf{G}^\text{lap}_X = \mathbf{L}_\text{sym}^{+}
+		\end{equation}
+		
+	\end{itemize}
+	
+	\paragraph{Pitfalls and refinements.} With the linear output kernel, the recovered configuration is the set of eigenvectors of $\mathbf{K}_X$ scaled by $\sqrt{\lambda_i}$ along axis $i$. For the well-conditioned spectra (PCA, Kernel PCA, Isomap, Diffusion Maps) the leading eigenvalues are comparable and well separated, so this readout matches the reference almost exactly. The pseudo-inverse kernels of LLE and Laplacian Eigenmaps behave differently: their relevant (bottom) spectrum is strongly imbalanced ($\lambda_3/\lambda_2$ can reach several tens), so the $\sqrt{\lambda}$ scaling stretches the axes anisotropically, a distortion that a single global similarity transform cannot absorb while the reference eigenvectors stay unit-norm. The solution is to replace the linear output by the \textbf{projector output kernel}, which fixes only the embedding subspace:
+	$$
+	\mathbf{K}^\text{proj}_Y = \tilde{\mathbf{Y}}(\tilde{\mathbf{Y}}^\top\tilde{\mathbf{Y}})^{-1}\tilde{\mathbf{Y}}^\top,
+	\qquad \tilde{\mathbf{Y}} = \mathbf{Q}\mathbf{Y}
+	$$
+	It has rank $q$ with all non-zero eigenvalues equal to $1$, so the RV objective depends only on $\mathrm{span}(\mathbf{Y})$ and the axes are balanced by construction. We therefore use the linear output for PCA, Kernel PCA, Isomap and Diffusion Maps, and the projector output for LLE and Laplacian Eigenmaps. \\
+	
+	A final caveat is algorithmic: although these input kernels admit an exact spectral solution, our implementation reaches the embedding by the same gradient ascent (Algorithm~\ref{alg:rv_optim}) used for the non-spectral cases, rather than by a dedicated eigensolver. Convergence to the exact leading subspace is therefore not guaranteed, and on harder inputs, the Swiss roll in particular, some methods settle on a configuration that differs from the reference eigendecomposition (Section~\ref{subsec:results_spectral}).
+	
+	\subsubsection{Approximations of neighbor embeddings}
+	\label{subsec:tested_approx}
+	
+	The second family reproduces the \emph{geometry} of t-SNE and UMAP, though not
+	their exact output. Each method is again specified by its input and output Gram
+	matrices.
+	
+	\begin{itemize}
+		\item \textbf{t-SNE}: The input is the adaptive-Gaussian kernel, the symmetrised joint affinity $\mathbf{P}$ built from per-point Gaussian conditionals $p_{j\mid i}$ whose bandwidth $\sigma_i$ is tuned so that the perplexity of $p_{\cdot\mid i}$ reaches a target value:
+		\begin{equation}
+			\begin{gathered}
+				\mathbf{G}^\text{ag}_X = \mathbf{P}, \qquad [\mathbf{P}]_{ij} = \tfrac{1}{2n}\left(p_{j\mid i}+p_{i\mid j}\right), \\[2pt]
+				p_{j\mid i} = \frac{\exp\left(-\|\mathbf{x}_i-\mathbf{x}_j\|^2 / 2\sigma_i^2\right)}{\sum_{l\neq i}\exp\!\left(-\|\mathbf{x}_i-\mathbf{x}_l\|^2 / 2\sigma_i^2\right)}, \qquad p_{i\mid i}=0
+			\end{gathered}
+		\end{equation}
+		The output is the heavy-tailed Student-t kernel with $\nu$ degrees of freedom, which mitigates the crowding problem:
+		\begin{equation}
+			[\mathbf{G}^\text{stu}_Y]_{ij} = \bigl(1+\|\mathbf{y}_i-\mathbf{y}_j\|^2 / \nu\bigr)^{-(\nu+1)/2}
+		\end{equation}
+		
+		\item \textbf{UMAP}: The input is the fuzzy-topological kernel. From the directed local weights $w_{ij}$ on the $k$-nearest-neighbor graph, where $d_{ij}=\|\mathbf{x}_i-\mathbf{x}_j\|$, $\rho_i$ is the distance from $i$ to its nearest neighbor and $\sigma_i$ is set so that $\sum_j w_{ij}=\log_2 k$, the symmetric fuzzy-set union yields $\mathbf{G}^\text{ft}_X$:
+		\begin{equation}
+			w_{ij} = \exp\left(-\max(d_{ij}-\rho_i,\,0) / \sigma_i\right), \qquad
+			\mathbf{G}^\text{ft}_X = \mathbf{W}+\mathbf{W}^\top-\mathbf{W}\circ\mathbf{W}^\top
+		\end{equation}
+		where $\mathbf{W}=(w_{ij})$ is zero outside the $k$ neighbors of $i$ and $\circ$ is the Hadamard product. The output is the UMAP rational kernel, a smooth surrogate of the Student-t whose shape parameters $(a,b)$ are fit to the \texttt{min\_dist} convention:
+		\begin{equation}
+			[\mathbf{G}^\text{umap}_Y]_{ij} = \bigl(1+a\,\|\mathbf{y}_i-\mathbf{y}_j\|^{2b}\bigr)^{-1}
+		\end{equation}
+	\end{itemize}
+	
+	\paragraph{Pitfalls and refinements.} These methods are labeled \emph{approximations} because they differ from the originals in two ways. First, the objective: we maximize kernel alignment (RV) rather than minimizing the Kullback--Leibler divergence (t-SNE) or the fuzzy binary cross-entropy (UMAP). Second, the optimizer: we run plain gradient ascent on the RV coefficient, without the specialised schedules (early exaggeration, negative sampling) of the reference libraries. A consequence of the first difference is that the \emph{scale-invariant} RV cosine tends to match the few very large entries of the raw affinity matrix at the expense of the intra/inter-cluster contrast, producing diffuse embeddings. We correct this with a \emph{softening} of the input affinity before centering,
+	$$
+	\mathbf{G}_X \;\longleftarrow\; \bigl(\mathbf{G}_X / \max \mathbf{G}_X\bigr)^{\gamma}
+	$$
+	a square-root (Bhattacharyya/Hellinger) transform with exponent $\gamma\in(0,1]$ that sharpens the affinity contrast; since RV is scale-invariant, the normalization by $\max\mathbf{G}_X$ is immaterial and $\gamma$ is the only effective parameter. All hyperparameter values used in the experiments are listed at the start of Section~\ref{subsec:results_approx}.
+	
+	\subsubsection{Supervised interpolation}
+	\label{subsec:tested_supervised}
+	
+	Because $\mathcal{K}_n$ is a vector space, its elements can be combined at will. We
+	exploit this to build a single dial $\beta\in[0,1]$ that interpolates, \emph{on the
+		input and on the output at once}, between an unsupervised t-SNE and a fully
+	class-supervised embedding:
+	\begin{align}
+		\mathbf{K}_X(\beta) &= (1-\beta)\,\mathbf{K}_{\mathrm{ag}} + \beta\,\mathbf{K}_Z, \\
+		\mathbf{K}_Y(\beta) &= (1-\beta)\,\mathbf{K}^{\mathrm{stu}}_Y + \beta\,\mathbf{K}^{\mathrm{lin}}_Y,
+	\end{align}
+	Here $\mathbf{K}_Z$ is the inter-class kernel of
+	Section~\ref{section:rv_maximization}, and each component is rescaled to unit
+	Frobenius norm before mixing, so that neither term dominates the convex
+	combination. At $\beta=0$ we recover t-SNE (adaptive-Gaussian input, Student-t
+	output), whereas at $\beta=1$ the input becomes the class-centroid kernel
+	$\mathbf{K}_Z$ and the output becomes linear. We stress that this $\beta=1$
+	endpoint is \emph{not} LDA: because $\mathbf{K}_Z$ relocates every point onto its
+	class centroid, its unconstrained alignment collapses each class to a single point.
+	The regime of interest is therefore the interior of the dial, where class structure
+	is injected while local neighborhoods are still preserved. Interpolating the output
+	in step (Student-t $\to$ linear) lets the supervised end rely on a clean linear
+	readout, sidestepping the heavy-tailed kernel's inability to genuinely collapse the
+	classes. More than a single method, this construction illustrates the flexibility of
+	the framework: the same recipe would readily accommodate other forms of supervision,
+	such as regression targets or partial labels, a direction we leave to future work.
+	
+	%------------------------------------------------------------------------------
+	\subsection{Experimental design}
+	\label{subsec:experimental_design}
+	
+	\subsubsection{Setup}
+	\label{subsec:common}
+	
+	Throughout, observations carry uniform weights $f_i = 1/n$ and the target dimension is $q=2$. Whenever the objective admits no closed form, we maximize the RV coefficient by gradient ascent (Algorithm~\ref{alg:rv_optim}), running the Adam optimizer for $500$ iterations at a learning rate of $0.1$; the procedure is implemented in PyTorch with automatic differentiation and initialised from a shared leading-PCA projection of the data.
+	
+	\subsubsection{Datasets}
+	\label{subsec:datasets}
+	
+	Our experiments span three datasets, each probing a different regime - well-separated
+	clusters, a smooth manifold, and biological structure:
+	\begin{itemize}
+		\item \textbf{MNIST}: a stratified subset of $n=2000$ handwritten digits
+		($200$ per class), kept in their raw $784$-dimensional pixel space with
+		intensities rescaled to $[0,1]$ and labeled by digit.
+		\item \textbf{Single-cell}: the \texttt{scanpy} PBMC3k reference of $n=2638$
+		peripheral blood mononuclear cells, log-normalized and reduced to its first
+		$50$ principal components, labeled by cell type.
+		\item \textbf{Swiss roll}: $n=2000$ points sampled from the classical,
+		noise-free $3$-D Swiss-roll manifold, whose ground truth is the
+		\emph{continuous} roll angle - so there are no discrete classes, and hence no ARI.
+	\end{itemize}
+	
+	\subsubsection{Similarity and quality indices}
+	\label{subsec:indices}
+	
+	We assess each embedding $\mathbf{Y}$ along two axes: two \emph{similarity} indices,
+	which compare it to a reference embedding $\mathbf{Y}_{\mathrm{ref}}$, and two
+	\emph{quality} indices, which are intrinsic to $\mathbf{Y}$. All neighborhood-based
+	indices use $k=15$.
+	
+	\paragraph{Procrustes disparity (similarity, lower is better).} After standardizing
+	both configurations (centering and unit Frobenius norm) and aligning them by the
+	optimal rotation/reflection $\mathbf{R}\in O(q)$, the disparity is the residual
+	sum of squares
+	\begin{equation}
+		\mathrm{Proc}(\mathbf{Y},\mathbf{Y}_{\mathrm{ref}})
+		= \min_{\mathbf{R}\in O(q)} \bigl\|\hat{\mathbf{Y}} - \hat{\mathbf{Y}}_{\mathrm{ref}}\mathbf{R}\bigr\|_F^2,
+	\end{equation}
+	where $\hat{\cdot}$ denotes the standardized configuration. It captures
+	\emph{global} geometric agreement up to similarity transforms; $0$ means
+	identical.
+	
+	\paragraph{$k$NN overlap (similarity, higher is better).} The mean fraction of shared
+	$k$ nearest neighbors between the two embeddings,
+	\begin{equation}
+		\mathrm{kNN}(\mathbf{Y},\mathbf{Y}_{\mathrm{ref}})
+		= \frac{1}{n}\sum_{i=1}^n \frac{|\mathcal{N}_k^{\mathbf{Y}}(i)\cap\mathcal{N}_k^{\mathbf{Y}_{\mathrm{ref}}}(i)|}{k},
+	\end{equation}
+	where $\mathcal{N}_k^{\mathbf{Y}}(i)$ denotes the set of the $k$ nearest neighbors of point $i$ in the embedding $\mathbf{Y}$ (and likewise $\mathcal{N}_k^{\mathbf{Y}_{\mathrm{ref}}}(i)$ in the reference). It is a \emph{local} agreement score insensitive to global deformation. We use $k=15$.
+	
+	\paragraph{Trustworthiness (quality, higher is better).} The standard Venna--Kaski
+	index penalizing points that intrude into a neighborhood in the embedding
+	without being neighbors in the high-dimensional space:
+	\begin{equation}
+		T(k) = 1 - \frac{2}{nk(2n-3k-1)}\sum_{i=1}^n\sum_{j\in U_k(i)}\bigl(r(i,j)-k\bigr),
+	\end{equation}
+	where $U_k(i)$ are the embedding neighbors of $i$ that are not among its true
+	neighbors and $r(i,j)$ is the rank of $j$ among the true neighbors of $i$. It
+	measures how faithfully \emph{local} structure is preserved, independently of any
+	reference embedding or label.
+	
+	\paragraph{Adjusted Rand Index (quality, higher is better; labeled data only).} We
+	cluster the $2$-D embedding with $k$-means (number of clusters $=$ number of
+	classes) and compute the ARI between this clustering and the ground-truth
+	labels. It quantifies how well the embedding \emph{separates the classes}; it is
+	omitted for the (unlabeled) Swiss roll.
+	
+	%------------------------------------------------------------------------------
+	%------------------------------------------------------------------------------
+	\subsection{Results}
+	\label{subsec:results}
+	
+	\subsubsection{Spectral methods}
+	\label{subsec:results_spectral}
+	
+	Table~\ref{tab:spectral} reports the four indices for the six spectral methods,
+	each with its recommended output kernel. All graph-based kernels (Isomap, LLE,
+	Diffusion Maps, Laplacian Eigenmaps) use $k=15$ nearest neighbors, the diffusion
+	time is $t=10$, and the RBF bandwidth follows the median heuristic
+	$\gamma=1/\operatorname{median}_{i\neq j}\|\mathbf{x}_i-\mathbf{x}_j\|^2$. The
+	reference is the corresponding \texttt{scikit-learn} implementation, run with the
+	\emph{same} hyperparameters for a fair comparison.
+	
+	\begin{table}[h]
+		\centering
+		% --- (a) labeled datasets: full four indices ---
+		\resizebox{\columnwidth}{!}{%
+			\begin{tabular}{ll cccc cccc}
+				\toprule
+				& & \multicolumn{4}{c}{\textbf{MNIST}} & \multicolumn{4}{c}{\textbf{Single-cell}} \\
+				\cmidrule(lr){3-6}\cmidrule(lr){7-10}
+				\textbf{Method} & \textbf{out.} & Proc$\downarrow$ & kNN$\uparrow$ & Trust$\uparrow$ & ARI$\uparrow$ & Proc$\downarrow$ & kNN$\uparrow$ & Trust$\uparrow$ & ARI$\uparrow$ \\
+				\midrule
+				PCA                 & lin.  & 0.000 & 0.998 & 0.741 & 0.231 & 0.000 & 0.999 & 0.825 & 0.550 \\
+				Kernel PCA (RBF)    & lin.  & 0.000 & 1.000 & 0.730 & 0.209 & 0.000 & 1.000 & 0.774 & 0.429 \\
+				Isomap              & lin.  & 0.004 & 0.642 & 0.766 & 0.267 & 0.006 & 0.484 & 0.828 & 0.570 \\
+				LLE                 & proj. & 0.000 & 1.000 & 0.748 & 0.262 & 0.066 & 0.109 & 0.774 & 0.624 \\
+				Diffusion Maps      & lin.  & 0.001 & 0.851 & 0.775 & 0.288 & 0.035 & 0.523 & 0.769 & 0.447 \\
+				Laplacian Eigenmaps & proj. & 0.021 & 0.343 & 0.786 & 0.277 & 0.097 & 0.092 & 0.803 & 0.478 \\
+				\bottomrule
+			\end{tabular}%
+		}
+		
+		\vspace{6pt}
+		% --- (b) Swiss roll: no ARI (continuous ground truth) ---
+		\begin{tabular}{ll ccc}
+			\toprule
+			& & \multicolumn{3}{c}{\textbf{Swiss roll}} \\
+			\cmidrule(lr){3-5}
+			\textbf{Method} & \textbf{out.} & Proc$\downarrow$ & kNN$\uparrow$ & Trust$\uparrow$ \\
+			\midrule
+			PCA                 & lin.  & 0.000 & 1.000 & 0.959 \\
+			Kernel PCA (RBF)    & lin.  & 0.000 & 1.000 & 0.873 \\
+			Isomap              & lin.  & 0.027 & 0.678 & 0.996 \\
+			LLE                 & proj. & 0.667 & 0.263 & 0.957 \\
+			Diffusion Maps      & lin.  & 0.000 & 0.977 & 0.879 \\
+			Laplacian Eigenmaps & proj. & 0.003 & 0.439 & 0.875 \\
+			\bottomrule
+		\end{tabular}
+		\caption{Spectral methods: agreement with the \texttt{scikit-learn} reference
+			(Procrustes, $k$NN overlap) and intrinsic quality (trustworthiness, ARI), per
+			dataset. Output kernel: ``lin.'' = linear, ``proj.'' = projector. ARI is
+			omitted for the unlabeled Swiss roll (continuous ground truth). Procrustes
+			values below $10^{-3}$ are shown as $0.000$.}
+		\label{tab:spectral}
+	\end{table}
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.32\textwidth]{fig/fig_5.3.1_mnist_isomap_linear}
+		\includegraphics[width=0.32\textwidth]{fig/fig_5.3.1_singlecell_laplacian_projector}
+		\includegraphics[width=0.32\textwidth]{fig/fig_5.3.1_swissroll_lle_projector}\\[2pt]
+		\includegraphics[width=0.32\textwidth]{fig/fig_5.3.1_mnist_isomap_reference}
+		\includegraphics[width=0.32\textwidth]{fig/fig_5.3.1_singlecell_laplacian_reference}
+		\includegraphics[width=0.32\textwidth]{fig/fig_5.3.1_swissroll_lle_reference}
+		\caption{Spectral recovery for the 3 datasets (top: RV framework; bottom: reference), for
+			Isomap/MNIST, Laplacian Eigenmaps/Single-cell and LLE/Swiss roll. Most other results are almost indistinguishable from reference.}
+		\label{fig:spectral}
+	\end{figure}
+	
+	Across the board the global recovery is faithful (Table~\ref{tab:spectral}): PCA
+	and Kernel PCA are reproduced to numerical precision (Procrustes $\approx 0$, $k$NN
+	overlap $\approx 1$) on every dataset, and the graph-based methods agree almost as
+	well in Procrustes terms, the sole exception being LLE on the Swiss roll. The $k$NN
+	overlap varies more from method to method, but - as we discuss below - a low
+	\emph{local} overlap does not signal a recovery failure. Rather than dwell on the
+	effortless matches, Figure~\ref{fig:spectral} deliberately presents the three
+	\emph{least} favorable combinations, to confirm that the agreement holds even in
+	these harder cases.
+	
+	Isomap on MNIST (left) has only a moderate $k$NN overlap ($0.642$), yet a
+	negligible Procrustes residual ($0.004$): the two panels are visually identical,
+	the modest overlap merely reflecting the many near-tied neighbors of a dense
+	pixel cloud rather than any structural disagreement. Laplacian Eigenmaps on
+	single-cell (middle) carries the lowest $k$NN overlap of the whole table
+	($0.092$); this is expected rather than worrying, since the embedding is dominated
+	by a handful of global eigenvectors, so a fixed-$k$ \emph{local} overlap is
+	naturally small while the global layout (Procrustes $0.097$) still matches the
+	reference. LLE on the Swiss roll (right) is the only genuinely difficult case
+	(Procrustes $0.667$): on a smooth $2$-D sheet the bottom spectrum of the alignment
+	matrix $\bm{\Phi}$ is nearly degenerate, so the embedding is ill-determined and
+	the reference implementation is itself unstable; our gradient ascent - rather
+	than a dedicated eigensolver (Section~\ref{subsec:tested_spectral}) - then
+	settles on a slightly different representative of this fragile target. Even here
+	the broad shape of the two panels remains comparable.
+	
+	Finally, the framework's trustworthiness (Table~\ref{tab:spectral}) closely
+	matches, and occasionally exceeds, that of the reference implementation in
+	every case, confirming that the recovered embeddings are equivalent in
+	neighborhood quality, not merely similar in form.
+	
+	\subsubsection{Approximations}
+	\label{subsec:results_approx}
+	
+	Table~\ref{tab:approx} reports the same indices for the t-SNE and UMAP
+	approximations, together with the per-dataset neighborhood hyperparameter and
+	the final RV. The fixed hyperparameters are the softening exponent $\gamma=0.5$,
+	the Student-t degrees of freedom $\nu=1$, and the UMAP output shape
+	$(a,b)=(1.929,\,0.7915)$ (matching \texttt{min\_dist}$=0.1$). The neighborhood
+	hyperparameters - perplexity for t-SNE and $k=n_\text{neighbors}$ for UMAP -
+	were \emph{optimized per dataset} to best match the reference, with the chosen
+	values listed in the table. Each reference (\texttt{scikit-learn} t-SNE,
+	\texttt{umap-learn} UMAP) is then run with the \emph{same} hyperparameter as the
+	framework, for a fair comparison; the Procrustes and $k$NN columns thus measure
+	how close the alignment optimum is to the genuine neighbor embedding.
+	
+	\begin{table}[h]
+		\centering
+		\resizebox{\columnwidth}{!}{%
+			\begin{tabular}{ll c cc cc c}
+				\toprule
+				\textbf{Dataset} & \textbf{Method} & \textbf{hyperp.} & Proc$\downarrow$ & kNN$\uparrow$ & Trust$\uparrow$ (fw/ref) & ARI$\uparrow$ (fw/ref) & RV \\
+				\midrule
+				MNIST       & t-SNE & perp.\ $30$  & 0.255 & 0.585 & 0.955 / 0.952 & 0.416 / 0.527 & 0.671 \\
+				MNIST       & UMAP  & $k=50$       & 0.296 & 0.447 & 0.954 / 0.935 & 0.392 / 0.500 & 0.622 \\
+				Single-cell & t-SNE & perp.\ $100$ & 0.183 & 0.289 & 0.895 / 0.883 & 0.432 / 0.499 & 0.592 \\
+				Single-cell & UMAP  & $k=100$      & 0.467 & 0.153 & 0.896 / 0.860 & 0.464 / 0.514 & 0.470 \\
+				Swiss roll  & t-SNE & perp.\ $30$  & 0.765 & 0.887 & 1.000 / 1.000 & - & 0.890 \\
+				Swiss roll  & UMAP  & $k=15$       & 0.373 & 0.809 & 0.999 / 0.999 & - & 0.789 \\
+				\bottomrule
+			\end{tabular}%
+		}
+		\caption{Neighbor-embedding approximations: agreement with the reference
+			(\texttt{scikit-learn} t-SNE, \texttt{umap-learn} UMAP) run at the \emph{same}
+			hyperparameter, and intrinsic quality of the framework (fw) versus the
+			reference (ref). ARI omitted for the Swiss roll.}
+		\label{tab:approx}
+	\end{table}
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=0.40\textwidth]{fig/fig_5.3.2_mnist_tsne_framework}
+		\includegraphics[width=0.40\textwidth]{fig/fig_5.3.2_mnist_umap_framework}\\[2pt]
+		\includegraphics[width=0.40\textwidth]{fig/fig_5.3.2_mnist_tsne_reference}
+		\includegraphics[width=0.40\textwidth]{fig/fig_5.3.2_mnist_umap_reference}
+		\caption{Approximations (top: RV framework; bottom: reference): t-SNE and
+			UMAP on MNIST, at matched hyperparameters.}
+		\label{fig:approx}
+	\end{figure}
+	
+	The framework reproduces the \emph{behavior} of both methods: trustworthiness
+	matches or slightly exceeds the reference on every dataset (e.g.\ UMAP on
+	single-cell, $0.896$ vs $0.860$), confirming that the heavy-tailed output kernel
+	recovers the crowding-mitigation mechanism. The agreement is naturally imperfect
+	- Procrustes residuals are sizeable and the ARI of the framework sits below the
+	reference (e.g.\ t-SNE/MNIST, $0.416$ vs $0.527$) - which is the expected
+	signature of the change of objective: the scale-invariant RV cosine lacks the
+	global normalization (partition function) that powers t-SNE's inter-cluster
+	repulsion, so classes are visually less tightly grouped even after softening.
+	The approximations thus capture the geometry of neighbor embeddings while
+	remaining algebraically distinct from them.
+	
+	\subsubsection{Supervised interpolation}
+	\label{subsec:results_supervised}
+	
+	We sweep the supervision dial over $\beta\in\{0,0.25,0.5,0.75,1\}$; the
+	adaptive-Gaussian input uses perplexity $30$ and the out-of-sample projection
+	uses $k=15$ neighbors. As this method has no library counterpart, there is no
+	reference embedding to compare against.
+	
+	Figure~\ref{fig:supervised_evo} shows the embedding evolving along $\beta$ on
+	MNIST (all points): from the t-SNE layout at $\beta=0$, classes tighten and
+	separate, and at $\beta=1$ they collapse towards the ten class vertices. The
+	illustration is computed on the full data and is therefore optimiztic by
+	construction; to obtain an \emph{honest} measure of the supervision we adopt a
+	train/test protocol. The class kernel $\mathbf{K}_Z$ is built from \emph{training}
+	labels only ($70\%$ stratified split); the embedding is optimized on the training
+	set; and held-out test points are then placed out-of-sample, from their features
+	alone, at the Gaussian-weighted mean of their nearest training neighbors'
+	positions (no test label is ever used). ARI and trustworthiness are reported on
+	both the training set and the held-out test set
+	(Figure~\ref{fig:supervised_quality}).
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=\textwidth]{fig/fig_5.3.3_mnist_supervised_fulldata}
+		\caption{Supervised interpolation on MNIST (all data). From left to right,
+			$\beta\in\{0,0.25,0.5,0.75,1\}$: the unsupervised t-SNE ($\beta=0$) is
+			progressively turned into a class-supervised embedding; at $\beta=1$ each class
+			collapses towards a point. Points are colored by digit.}
+		\label{fig:supervised_evo}
+	\end{figure}
+	
+	\begin{figure}[h]
+		\centering
+		\includegraphics[width=\textwidth]{fig/fig_5.3.3_mnist_supervised_quality}
+		\includegraphics[width=\textwidth]{fig/fig_5.3.3_singlecell_supervised_quality}
+		\caption{Trustworthiness and ARI versus $\beta$ on MNIST (top) and Single-cell
+			(bottom), on the training set and on held-out test points. The supervised
+			structure generalizes: test ARI rises with $\beta$ on points whose labels were
+			never used, while test trustworthiness stays close to the t-SNE value through
+			$\beta=0.5$.}
+		\label{fig:supervised_quality}
+	\end{figure}
+	
+	The key observation is that the supervision \emph{generalizes}. On held-out
+	points, the test ARI rises from $0.36$ at $\beta=0$ to $0.49$ at $\beta=0.5$ and
+	$0.53$ at $\beta=0.75$ on MNIST, and far more sharply on single-cell, from
+	$0.50$ to $0.89$ at $\beta=0.5$ - all while the test trustworthiness stays
+	essentially at its t-SNE level through $\beta=0.5$ ($0.82$ on MNIST, $0.85$ on
+	single-cell). The train/test gap is itself informative: on the training set the
+	ARI approaches $1.0$ for large $\beta$ (the class collapse fits the training
+	labels almost perfectly), but the held-out ARI plateaus and the test
+	trustworthiness degrades, so the protocol correctly penalizes over-supervision
+	and identifies an intermediate $\beta\approx0.5$ as the honest operating point -
+	an embedding that sees the classes \emph{and} preserves local structure, on
+	unseen data. Unlike the approximations of Section~\ref{subsec:results_approx},
+	this method has no library counterpart: it is made possible precisely by treating
+	the embedding as an alignment problem in the vector space $\mathcal{K}_n$, where
+	data geometry and label information are simply two kernels to be combined.
+	
+	%----------------------------------------------------------------------------
+	%----------------------------------------------------------------------------
+	%---------------------------------------------------------------------------- 
+	
+	\section{Conclusion}
+	\label{section:conclusion}
+	
+	In this article, we have introduced a generalized framework for dimensionality reduction built on a single principle: the maximization of the RV coefficient within a Kernel Inner Product Space. By shifting the perspective from the minimization of a distortion metric (reconstruction error, KL-divergence) to the maximization of a global geometric alignment, the framework exposes the deep algebraic unity that connects algorithms usually presented as unrelated.
+	
+	Our central contribution is the factorization of the reduction task into two orthogonal choices: the \emph{input kernel} $\mathbf{K}_X$, which encodes the structure to be preserved, and the \emph{output kernel} $\mathbf{K}_Y$, which dictates how that structure is rendered. The case studies make this factorization concrete and quantitative:
+	
+	\begin{itemize}
+		\item Classical spectral methods (PCA, Kernel PCA, Isomap, LLE, Diffusion Maps and Laplacian Eigenmaps) are recovered almost exactly, each as a topological input read out by a linear output - or, for the ill-conditioned pseudo-inverse kernels, by a projector output.
+		\item Modern neighbor embeddings (t-SNE, UMAP) are reproduced up to their objective: a perplexity- or fuzzy-based input paired with a heavy-tailed output recovers their cluster-separating geometry, while a simple softening of the input affinity keeps the alignment optimum close to the reference.
+		\item Genuinely new methods follow from mixing kernels: a single dial that interpolates, on both the input and the output, from an unsupervised t-SNE to a class-supervised embedding, a construction with no library counterpart.
+	\end{itemize}
+	
+	This last construction deserves emphasis. Because $\mathcal{K}_n$ is a vector space, supervision enters as nothing more than an additional kernel placed alongside the data geometry; the resulting continuum sharpens class structure while preserving local neighborhoods and, when evaluated on held-out points through an out-of-sample protocol, it genuinely generalizes rather than merely memorizing the training labels.
+
+	A deliberate choice frames all of these results: throughout, we have optimized \emph{only} the RV coefficient. This was the very purpose of the article, namely to show how far a single alignment objective can carry the unification of the field. The choice also carries a visible cost. Being a scale-invariant cosine, the RV lacks the global normalization - the partition function - that powers the inter-cluster repulsion of t-SNE, so our neighbor-embedding approximations separate classes a little less sharply than their references. Nothing, however, prevents enriching the objective: adding a complementary term to the RV, with a repulsive, partition-function-like penalty as the natural candidate to close the gap with t-SNE, would yield more elaborate methods at the cost of the framework's present simplicity. We regard this composition of objectives as a promising avenue.
+	
+	Two practical limitations also point the way forward. The dense $\mathcal{O}(n^2)$ cost of evaluating the RV coefficient at each iteration currently confines the framework to moderate sample sizes; scaling it to large datasets will call for the usual approximations - Barnes-Hut summaries, Nyström landmarks, or stochastic mini-batches. And while our out-of-sample projection is non-parametric, learning an explicit parametric encoder, as in parametric t-SNE, would make the embedding inductive and cheaper to extend to new points. Together with the composite objectives discussed above, the optimization of the observation weights $\mathbf{f}$ to down-weight or automatically detect outliers, and the use of non-Euclidean output geometries such as hyperbolic space, these directions sketch a broad research program.
+
+	Ultimately, the framework suggests that the proliferation of dimensionality-reduction algorithms may reflect not a diversity of fundamental problems, but a \emph{diversity of kernels}. Standardizing the objective around the RV coefficient turns the design of a reduction method into the design of two kernels - a problem of geometric engineering rather than a choice among black-box tools. Seen in this light, dimensionality reduction becomes a form of \emph{inverse spatial analysis}: the search for the low-dimensional configuration whose geometry is maximally autocorrelated with the structure of the data.
+	
+	\bibliographystyle{apalike}
+	\bibliography{rv_dimred} 
+	
+\end{document}

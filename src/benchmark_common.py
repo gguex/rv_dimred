@@ -365,6 +365,30 @@ def fig_path(section: str, dataset: str, method: str, variant: str) -> Path:
     return d / f"fig_{prefix}{dataset}_{method}_{variant}.png"
 
 
+def exp_coords_dir(exp: str) -> Path:
+    """results/{exp}/coordinates/ — new per-experiment layout (experiments/{exp}/)."""
+    d = RESULTS_DIR / exp / "coordinates"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def exp_indices_dir(exp: str) -> Path:
+    """results/{exp}/indices/ — new per-experiment layout (experiments/{exp}/)."""
+    d = RESULTS_DIR / exp / "indices"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def exp_coord_path(exp: str, dataset: str, key: str, role: str) -> Path:
+    """results/{exp}/coordinates/{dataset}__{key}__{role}.npy."""
+    return exp_coords_dir(exp) / f"{dataset}__{key}__{role}.npy"
+
+
+def exp_meta_path(exp: str) -> Path:
+    """results/{exp}/coordinates/run_meta.csv."""
+    return exp_coords_dir(exp) / "run_meta.csv"
+
+
 def coords_dir(family: str) -> Path:
     """results/coordinates/{family}/ ('spectral' | 'approximations' | 'hybrids')."""
     d = COORDS_ROOT / family

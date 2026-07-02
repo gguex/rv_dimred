@@ -2,44 +2,57 @@
 spectral_indices.py  —  indices from saved spectral coordinates
 ===============================================================
 
-Reads the embeddings saved by spectral_run.py (results/coordinates/spectral/*.npy
-+ run_meta.csv) and computes, for each (dataset × method):
+Reads the embeddings saved by spectral_run.py (results/01_spectral/coordinates/)
+and computes, for each (dataset × method):
   * identity vs the reference: Procrustes disparity, kNN overlap,
   * quality: trustworthiness, ARI (labelled datasets only),
-  * rv_final (read from run_meta.csv).
+  * rv_final, rv_max (Prop. 1 ceiling), rv_ratio (read from run_meta.csv).
 
 Reference-only quality (trustworthiness, ARI) is logged once per method. Two files
-are written to results/indices/spectral/ on each run:
+are written to results/01_spectral/indices/ on each run:
   * spectral_indices_tidy.csv  — long/tidy form (one row per index value),
   * spectral_indices_table.csv — wide methods × indices table (framework variant).
 Variants in the tidy file: framework, reference.
 """
 
+# ruff: noqa: E402, I001  (imports follow the sys.path bootstrap)
 from __future__ import annotations
 
 import csv
+import sys
 
 import numpy as np
 
 from pathlib import Path
 
-from src import indices as ix
-from src.benchmark_common import (
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from src import indices as ix  # noqa: E402
+from src.benchmark_common import (  # noqa: E402
     SEED,
     SPECTRAL_METHODS,
     TRUST_K,
     IndexLog,
-    coord_path,
-    indices_dir,
-    meta_path,
+    exp_coord_path,
+    exp_indices_dir,
+    exp_meta_path,
 )
-from src.datasets import load_all
+from src.datasets import load_all  # noqa: E402
 
-FAMILY = "spectral"
+EXP = "01_spectral"
+FAMILY = "spectral"  # section tag kept in the tidy CSV rows
 VARIANT = "framework"  # the single framework embedding (readout set per method)
 
 # columns of the methods × indices table (spectral_indices_table.csv), in order
-TABLE_INDICES = ["rv_final", "procrustes", "knn_overlap", "trustworthiness", "ari"]
+TABLE_INDICES = [
+    "rv_final",
+    "rv_max",
+    "rv_ratio",
+    "procrustes",
+    "knn_overlap",
+    "trustworthiness",
+    "ari",
+]
 TABLE_DECIMALS = 4
 
 
@@ -74,11 +87,14 @@ def write_table(
     return path
 
 
-def load_rv_meta() -> dict[tuple[str, str], float]:
-    meta: dict[tuple[str, str], float] = {}
-    with meta_path(FAMILY).open() as f:
+def load_rv_meta() -> dict[tuple[str, str], dict[str, float]]:
+    """Per (dataset, method_key): rv_final, rv_max (Prop. 1 ceiling), rv_ratio."""
+    meta: dict[tuple[str, str], dict[str, float]] = {}
+    with exp_meta_path(EXP).open() as f:
         for r in csv.DictReader(f):
-            meta[(r["dataset"], r["method_key"])] = float(r["rv_final"])
+            meta[(r["dataset"], r["method_key"])] = {
+                k: float(r[k]) for k in ("rv_final", "rv_max", "rv_ratio")
+            }
     return meta
 
 
@@ -89,8 +105,8 @@ def main() -> None:
 
     for ds in datasets.values():
         for m in SPECTRAL_METHODS:
-            ref = np.load(coord_path(FAMILY, ds.name, m.key, "reference"))
-            fw = np.load(coord_path(FAMILY, ds.name, m.key, "framework"))
+            ref = np.load(exp_coord_path(EXP, ds.name, m.key, "reference"))
+            fw = np.load(exp_coord_path(EXP, ds.name, m.key, "framework"))
 
             log.add(
                 FAMILY,
@@ -128,14 +144,15 @@ def main() -> None:
                     ix.ari(fw, ds.labels),
                     variant=VARIANT,
                 )
-            log.add(
-                FAMILY,
-                ds.name,
-                m.name,
-                "rv_final",
-                meta[(ds.name, m.key)],
-                variant=VARIANT,
-            )
+            for idx_name, v in meta[(ds.name, m.key)].items():
+                log.add(
+                    FAMILY,
+                    ds.name,
+                    m.name,
+                    idx_name,
+                    v,
+                    variant=VARIANT,
+                )
 
             # reference quality (framework-independent), logged once
             log.add(
@@ -158,7 +175,7 @@ def main() -> None:
                 )
             print(f"  {ds.name:<11} {m.name}")
 
-    out_dir = indices_dir(FAMILY)
+    out_dir = exp_indices_dir(EXP)
     tidy = log.write(path=out_dir / "spectral_indices_tidy.csv", append=False)
     table = write_table(
         log.rows,

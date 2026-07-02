@@ -1,0 +1,5 @@
+check,quantity,max_abs_err,tol,pass
+(A) RV attraction == q^2,q^2,4.0657581468206416e-19,< tol,True
+(A) RV attraction != q^1,q^1,0.00010086914354026758,>> match,True
+(B) t-SNE grad == (p-q)q,(p-q)q,8.588854194047438e-09,< tol,True
+(C) -log Z repulsion == q^2,q^2,3.577867169202165e-18,< tol,True

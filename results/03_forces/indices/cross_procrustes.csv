@@ -1,0 +1,13 @@
+dataset,a,b,procrustes
+mnist,framework_tsne,framework_umap,0.12227083313334078
+mnist,framework_tsne,reference_tsne,0.25370330314439093
+mnist,framework_tsne,reference_umap,0.29324485524185473
+mnist,framework_umap,reference_tsne,0.278895748990305
+mnist,framework_umap,reference_umap,0.3224734345548551
+mnist,reference_tsne,reference_umap,0.15207754049580005
+singlecell,framework_tsne,framework_umap,0.19029875709619337
+singlecell,framework_tsne,reference_tsne,0.3615975216817352
+singlecell,framework_tsne,reference_umap,0.4693741665716078
+singlecell,framework_umap,reference_tsne,0.3673270376046373
+singlecell,framework_umap,reference_umap,0.46948062879483893
+singlecell,reference_tsne,reference_umap,0.21837388252508305

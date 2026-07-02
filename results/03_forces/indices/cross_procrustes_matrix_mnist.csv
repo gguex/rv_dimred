@@ -1,0 +1,5 @@
+,framework_tsne,framework_umap,reference_tsne,reference_umap
+framework_tsne,0.0,0.1223,0.2537,0.2932
+framework_umap,0.1223,0.0,0.2789,0.3225
+reference_tsne,0.2537,0.2789,0.0,0.1521
+reference_umap,0.2932,0.3225,0.1521,0.0

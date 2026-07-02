@@ -147,12 +147,14 @@ si bien que la restructuration du §2 est terminée quand la dernière expérien
   `results/{coordinates,indices}/spectral` supprimés (git rm), `results/figures/spectral` gardé
   jusqu'à E6. `.gitignore` était déjà correct. Helpers `exp_*` ajoutés à benchmark_common.
 
-**E2 — Dimension de la variété (7.2)** ✅ (option 🔶 n=120)
-- Relancer tel quel pour régénérer proprement les sorties dans la nouvelle arborescence ;
-  option : ajouter n=120.
-- *Rangement* : `experiments/02_manifold_dim/`, renommer le script, sortie `results/02_manifold_dim/` ;
-  déplacer `test_directional_solver.py`, `test_primal_dual*.py`, `test_probabilistic_rv*.py`
-  vers `archive/exploratory/`, `tests_log.md` vers `archive/notes/`.
+**E2 — Dimension de la variété (7.2)** ✅ (fait le 2026-07-02, avec n=120)
+- **rang(DΦ) = nq − C(q+1,2) exactement** pour tout q ∈ {1,2,3} × n ∈ {30,50,80,120}, sur 5 points
+  Y0 aléatoires (généricité) — falaise spectrale 10¹³–10¹⁴ (`min_gap`), rang parfaitement défini.
+  Headline q=2 : dim = 2n−3 (57/97/157/237). n=120 confirme que la formule n'est pas un accident.
+- *Rangement fait* : script → `experiments/02_manifold_dim/manifold_dim_run.py` (n=120 ajouté au
+  sweep, sortie CSV `results/02_manifold_dim/indices/manifold_dim.csv`, docstring recalée sur
+  art. §7.2 / Prop. 2, lint propre) ; `test_directional_solver.py`, `test_primal_dual*.py`,
+  `test_probabilistic_rv*.py` → `archive/exploratory/` ; `tests_log.md` → `archive/notes/`.
 
 **E3 — Forces + cross-Procrustes (7.3)** 🔁
 - (i) relancer `test_attraction_power.py` à n=2000 (identité machine-précision attendue inchangée).

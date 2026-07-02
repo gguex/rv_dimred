@@ -175,11 +175,20 @@ si bien que la restructuration du §2 est terminée quand la dernière expérien
   Table 4 vient du script ciblé) ; `test_log_volume*.py` → `archive/exploratory/` (démo objectif
   composite reviviscible depuis git si E6 la retient). Sorties → `results/03_forces/indices/`.
 
-**E4 — Tether (7.4)** 🔁 **prioritaire** (les chiffres de la légende n'existent pas encore à n=2000)
-- Refaire full-RV / hollow-RV / t-SNE à n=2000, perp 30, γ=0.5, seed 0 ; extraire spread,
-  frac_diag, et les courbes ‖K̊_Y‖² vs Σr²ᵢ le long de l'optimisation ; composer la Figure 1.
-- *Rangement* : `experiments/04_tether/` ; `results/figures/tests/` → archive ; miroir
-  `results/04_tether/`.
+**E4 — Tether (7.4)** ✅ (fait le 2026-07-02)
+- full-RV / hollow-RV / t-SNE à n=2000, perp 30, γ=0.5, seed 0. **La prédiction tient** :
+  le plancher de degré **Σr²ᵢ est quasi constant** (4.82 / 4.89 / 4.96 ·10⁻⁴ pour full/hollow/t-SNE ;
+  3.7·10⁻⁴ → 4.8·10⁻⁴ le long de l'optim), tandis que l'énergie structurelle **‖K̊_Y‖² s'effondre**
+  (2.84·10⁻² → 3.84·10⁻³ full ; → 1.96·10⁻³ hollow ; 0.60·10⁻³ t-SNE). Étalement croissant
+  12.9 / 16.4 / 35.5 ; frac_diag 0.11 / 0.20 / 0.45 ; ARI 0.42 / 0.40 / 0.53. Le full-RV est
+  *tethered* (spread bloqué, ‖K̊_Y‖² plus haut), le hollow libère vers t-SNE.
+- **Figure 1** produite (`tether_figure.{png,pdf}`) : triptyque (haut) + panneau d'énergie log (bas,
+  ‖K̊_Y‖² qui s'effondre vs Σr²ᵢ épinglé). Légende figée : MNIST n=2000, perp 30, γ=0.5, seed 0.
+- *Rangement fait* : `test_diag_energy.py` → `experiments/04_tether/tether_run.py` (n=2000, pipeline
+  canonique gaussian_affinity_base+soften_and_center, trajectoires + CSV) + nouveau `tether_figure.py` ;
+  sorties → `results/04_tether/{coordinates,indices}/` + figure à la racine de `results/04_tether/` ;
+  `results/figures/tests/` → `archive/exploratory/figures/`, `results/figures/old/` →
+  `archive/old_paper/figures/`. `scripts/tests/` est désormais vide (reste `scripts/` vide → purge à E6).
 
 **E5 — Dial supervisé (7.5)** 🔶 (protocole nouveau)
 - Implémenter le dial unique K_β (entrée seulement, sortie Student-t fixe), β ∈ {0,.25,.5,.75,1},
@@ -204,7 +213,9 @@ si bien que la restructuration du §2 est terminée quand la dernière expérien
 - §7.3 : les Procrustes croisés à hp=30 (n=2000) — MNIST fw_tsne~fw_umap 0.122, ~ref_tsne 0.254,
   fw_umap~ref_umap 0.323, ref_tsne~ref_umap 0.152 ; single-cell 0.190 / 0.362 / 0.470 / 0.218
   (remplacent les ex-0.124/0.184/0.294/0.362 à hp=15). Identités des forces : q² à ~10⁻¹⁸.
-- §7.4 : spread / frac_diag / plancher (ex-7.3/12.5/19.5, 0.14/0.36/0.58, 0.0018→0.0020 à n=500).
+- §7.4 : spread 12.9/16.4/35.5, frac_diag 0.11/0.20/0.45, plancher Σr²ᵢ 3.7·10⁻⁴→4.8·10⁻⁴ le long
+  de l'optim (≈constant à 4.9·10⁻⁴ entre configs), ‖K̊_Y‖² 2.84·10⁻²→3.84·10⁻³ (full) à n=2000
+  (remplacent ex-7.3/12.5/19.5, 0.14/0.36/0.58, 0.0018→0.0020 à n=500).
 - §7.5 : ARI/trust train-test du nouveau protocole (les valeurs de l'ancien papier — test ARI
   0.36→0.53 MNIST, 0.50→0.89 single-cell — correspondent à l'ancien dial double, ne pas réutiliser).
 - Vérifié : les sections théoriques (§4–§6) ne codent aucun chiffre en dur — seuls §7 et les

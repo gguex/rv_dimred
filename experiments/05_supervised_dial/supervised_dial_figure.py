@@ -4,10 +4,11 @@ supervised_dial_figure.py  —  art. §7.5  Figure 2: supervision generalizes
 
 From results/05_supervised_dial/indices/supervised_dial.csv, a 2x2 panel:
 rows = {ARI, trustworthiness}, columns = {mnist, singlecell}; each panel plots the
-train and test curves against the dial beta, with the honest operating point
-beta = 0.5 marked. The story: test ARI (held-out points, labels never used) rises
-with beta while test trustworthiness holds near its t-SNE level through the
-intermediate regime; beta = 1 overfits (train ARI -> 1, test structure gives).
+train and test curves against the double dial beta, with beta = 0.5 marked as a
+safe intermediate point. The story: test ARI (held-out points, labels never used)
+rises with beta -- supervision generalizes -- while test trustworthiness holds near
+its t-SNE level through the intermediate regime; beta = 1 overfits (train ARI -> 1),
+so the test curve peaks at an intermediate / near-full beta, not necessarily beta=1.
 
 Writes results/05_supervised_dial/supervised_dial_figure.{png,pdf}.
 """

@@ -1,25 +1,28 @@
 """
-supervised_dial_run.py  —  art. §7.5  the supervised dial (non-linear soft-LDA)
-===============================================================================
+supervised_dial_run.py  —  art. §7.5  the supervised dial (double kernel dial)
+==============================================================================
 
-The non-linear analogue of the soft-LDA dial of art. §2.10 (K_beta = (1-beta)K_X
-+ beta K_Z): here a single dial beta softens a *neighbor-embedding* target with
-class information, keeping the Student-t output fixed. Something the framework
-enables by blending kernels, with no library counterpart.
+A single dial beta interpolates an unsupervised t-SNE into a fully class-supervised
+embedding by moving the INPUT *and* the OUTPUT kernel together — something the RV
+framework enables by blending kernels, with no library counterpart:
 
-    K_in(beta) = (1 - beta) K_ag + beta K_Z        (each unit-Frobenius)
-    output     = Student-t (nu = 1), FIXED for all beta
+    K_in(beta)  = (1 - beta) K_ag  + beta K_Z         (each unit-Frobenius)
+    K_out(beta) = (1 - beta) StudentT(Y, nu=1) + beta linear(Y)   (each unit-Frob.)
+    objective   = HOLLOW RV  (both diagonals zeroed; art. §7.4)
 
     beta = 0  ->  t-SNE (unsupervised)
-    beta = 1  ->  pure class-centroid kernel (fully supervised; collapses each
-                  class to a point, so the useful regime is intermediate beta)
+    beta = 1  ->  linear <-> class-centroid kernel = cMDS on class centroids, which
+                  collapses each class to a point (fully supervised); the useful
+                  regime is intermediate beta.
 
-K_ag is the adaptive-Gaussian t-SNE affinity softened at gamma = SOFTENING; K_Z
-is the inter-class (label) kernel. Honest train/test protocol (labelled datasets
-only, mnist + singlecell): K_Z is built from TRAIN labels, the embedding is
-optimized on train, and TEST points are projected out-of-sample from their
-features alone (project_out_of_sample, no test labels), so the generalization of
-supervision can be measured on held-out points.
+Dialing the output toward linear is what makes supervision pay: only a linear output
+can realise the low-rank centroid structure of K_Z (a fixed Student-t output cannot).
+K_ag is the adaptive-Gaussian t-SNE affinity softened at gamma = SOFTENING; K_Z is the
+inter-class (label) kernel on the linear base. Honest train/test protocol (labelled
+datasets only, mnist + singlecell): K_Z is built from TRAIN labels, the embedding is
+optimized on train, and TEST points are projected out-of-sample from their features
+alone (project_out_of_sample, no test labels), so the generalization of supervision
+can be measured on held-out points.
 
 Saves train + projected-test coordinates to results/05_supervised_dial/coordinates/
 (+ run_meta.csv with beta and RV). Indices / figure built by the companion scripts.
@@ -50,6 +53,7 @@ from src.benchmark_common import (  # noqa: E402
     pca_init,
     project_out_of_sample,
     rv_embed,
+    supervised_output_kernel,
     supervised_split,
     to_tensor,
 )
@@ -82,6 +86,10 @@ def main() -> None:
         w = default_weights(len(X_tr), device)
         init = pca_init(X_tr)
 
+        base = gaussian_affinity_base(X_tr, PERPLEXITY)
+        k_gauss = normalize_kernel(soften_and_center(base, SOFTENING, w, device))
+        # K_Z on the linear base: the low-rank class-centroid kernel that a linear
+        # output can realise at beta = 1 (cf. the output dial below).
         k_class = normalize_kernel(
             compute_class_kernel_torch(
                 to_tensor(X_tr, device),
@@ -90,8 +98,6 @@ def main() -> None:
                 device=device,
             )
         )
-        base = gaussian_affinity_base(X_tr, PERPLEXITY)
-        k_gauss = normalize_kernel(soften_and_center(base, SOFTENING, w, device))
 
         # save the split labels so indices/figure re-derive metrics on the same points
         np.save(exp_coord_path(EXP, ds.name, "labels", "train"), y_tr)
@@ -101,7 +107,11 @@ def main() -> None:
         for beta in SUPERVISED_BETAS:
             key = f"dial_b{beta}"
             k_in = (1.0 - beta) * k_gauss + beta * k_class
-            Y_tr, rv = rv_embed(k_in, init, device, "student_t", 1.0, weights=w)
+            # output dials with the SAME beta (StudentT -> linear); hollow RV
+            Y_tr, rv = rv_embed(
+                k_in, init, device, supervised_output_kernel, beta,
+                weights=w, hollow=True,
+            )
             Y_te = project_out_of_sample(X_tr, Y_tr, X_te)
             np.save(exp_coord_path(EXP, ds.name, key, "train"), Y_tr.astype(np.float32))
             np.save(exp_coord_path(EXP, ds.name, key, "test"), Y_te)

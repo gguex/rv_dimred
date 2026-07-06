@@ -64,13 +64,20 @@ trustworthiness, spread, fraction diagonale. Footnote GitHub (galerie + reproduc
   → seule la légende/texte de §7 porte les valeurs. Ne pas conflater avec le sweep γ (vitrine).
 
 ### 7.5 Le dial supervisé : t-SNE ↔ classes — illustre §3.4 (mélange de cibles), « no library counterpart »
-- **Figure 2** : courbes train/test (ARI + trustworthiness) vs β sur MNIST et single-cell,
-  point d'opération honnête β≈0.5. Le strip de scatterplots d'évolution → vitrine.
-- 🔁 **À refaire avec le nouveau protocole** (cf. §5.3.3 réécrit) : dial *unique* sur l'entrée,
-  K_β = (1−β)·K_ag + β·K_Z (composantes normées Frobenius avant mélange), sortie Student-t fixe —
-  plus la double interpolation entrée+sortie de l'ancien papier. Protocole train/test inchangé
+- **Figure 2** : courbes train/test (ARI + trustworthiness) vs β sur MNIST et single-cell.
+  Le strip de scatterplots d'évolution → vitrine.
+- ✅ **DÉCISION (2026-07-06) : double dial** — un seul β déplace l'entrée ET la sortie ensemble :
+  `K_in(β) = (1−β)·K_ag + β·K_Z` (K_Z sur base **linéaire**) et
+  `K_out(β) = (1−β)·StudentT(ν=1) + β·linéaire(Y)` (composantes normées Frobenius avant mélange),
+  objectif **RV hollow** (§7.4). C'est le protocole de l'ancien papier, revalidé après un détour
+  raté par le « dial unique / sortie Student-t figée » qui cassait la généralisation (test single-cell
+  déclinait). Dialer la sortie vers le linéaire est *nécessaire* : seul un noyau de sortie linéaire
+  réalise la structure de centroïdes rang-(m−1) de K_Z ; une sortie Student-t figée ne le peut pas.
+  β=0 → t-SNE, β=1 → cMDS sur centroïdes (collapse des classes). Protocole train/test inchangé
   (70% stratifié, K_Z sur labels train uniquement, placement out-of-sample Gaussien, aucun label
-  test utilisé).
+  test utilisé). **Résultat** : test ARI monte de 0.35→0.54 (MNIST, pic β=0.75) et 0.50→0.92
+  (single-cell, β=1) sur points jamais étiquetés ; trustworthiness tenue ≈ t-SNE jusqu'au régime
+  intermédiaire ; β=1 sur-apprend (train ARI→1), donc le test récompense un β intermédiaire/quasi-plein.
 
 **Budget : Figures 1–2 ; Tables 2–4** (Table 1 = taxonomie PUSH, déjà en §6.2). Sous le plafond
 « 3 figures max » du plan.
@@ -190,12 +197,16 @@ si bien que la restructuration du §2 est terminée quand la dernière expérien
   `results/figures/tests/` → `archive/exploratory/figures/`, `results/figures/old/` →
   `archive/old_paper/figures/`. `scripts/tests/` est désormais vide (reste `scripts/` vide → purge à E6).
 
-**E5 — Dial supervisé (7.5)** 🔶 (protocole nouveau)
-- Implémenter le dial unique K_β (entrée seulement, sortie Student-t fixe), β ∈ {0,.25,.5,.75,1},
-  train/test 70/30, MNIST + single-cell à n=2000 ; produire la Figure 2 (courbes) et le strip
-  d'évolution (→ vitrine).
-- *Rangement* : `experiments/05_supervised_dial/` en adaptant `hybrids_*.py`, originaux archivés ;
-  `results/coordinates/old/` → archive.
+**E5 — Dial supervisé (7.5)** ✅ (double dial, décidé 2026-07-06)
+- Double dial (entrée K_in(β)=(1−β)K_ag+βK_Z, K_Z base linéaire ; sortie K_out(β)=(1−β)StudentT+β·linéaire),
+  objectif RV hollow, β ∈ {0,.25,.5,.75,1}, train/test 70/30, MNIST + single-cell à n=2000.
+  Scripts : `supervised_dial_run.py`, `supervised_dial_indices.py`, `supervised_dial_figure.py` (Figure 2),
+  `dial_scatter_figure.py` (grille d'évolution, `results/05_supervised_dial/dial_scatter.png`).
+- Résultat : test ARI 0.35→0.54 (MNIST) / 0.50→0.92 (single-cell) sur points jamais étiquetés ;
+  β=1 sur-apprend (train ARI→1). Le détour « dial unique / Student-t figé » a été testé et rejeté
+  (single-cell déclinait) — cf. §7.5.
+- *Rangement* : `experiments/05_supervised_dial/` (fait), originaux `hybrids_*.py` dans
+  `archive/old_paper/scripts/`, `results/coordinates/old/` → archive (fait).
 
 **E6 — Vitrine** 🔶 (après E1–E5, tout à n=2000)
 - Régénérer la galerie complète : scatter grids spectraux (6×3), side-by-side t-SNE/UMAP,
@@ -216,7 +227,8 @@ si bien que la restructuration du §2 est terminée quand la dernière expérien
 - §7.4 : spread 12.9/16.4/35.5, frac_diag 0.11/0.20/0.45, plancher Σr²ᵢ 3.7·10⁻⁴→4.8·10⁻⁴ le long
   de l'optim (≈constant à 4.9·10⁻⁴ entre configs), ‖K̊_Y‖² 2.84·10⁻²→3.84·10⁻³ (full) à n=2000
   (remplacent ex-7.3/12.5/19.5, 0.14/0.36/0.58, 0.0018→0.0020 à n=500).
-- §7.5 : ARI/trust train-test du nouveau protocole (les valeurs de l'ancien papier — test ARI
-  0.36→0.53 MNIST, 0.50→0.89 single-cell — correspondent à l'ancien dial double, ne pas réutiliser).
+- §7.5 : ARI/trust train-test du double dial (n=2000, 70/30) — test ARI 0.353→0.536 MNIST (pic β=0.75),
+  0.501→0.917 single-cell (β=1) ; train ARI→1.000 à β=1 (sur-apprentissage) ; trust test tenue ~0.82–0.85.
+  (Proches de l'ancien papier 0.36→0.53 / 0.50→0.89 : c'est le même double dial, revalidé.)
 - Vérifié : les sections théoriques (§4–§6) ne codent aucun chiffre en dur — seuls §7 et les
   légendes portent des valeurs.

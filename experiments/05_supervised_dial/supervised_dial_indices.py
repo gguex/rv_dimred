@@ -8,11 +8,12 @@ Reads the embeddings saved by supervised_dial_run.py and computes, per
                     evaluation only, never for building the embedding),
   * trustworthiness (feature-space neighbourhood preservation, k = TRUST_K).
 
-The point (art. §7.5): as beta rises, TEST ARI climbs on held-out points whose
-labels were never used -- supervision generalizes -- while test trustworthiness
-holds near its t-SNE level through the intermediate regime, then beta = 1 overfits
-(train ARI -> 1, test structure collapses). Writes
-results/05_supervised_dial/indices/supervised_dial.csv.
+The point (art. §7.5): under the double dial (input + output moving together), as
+beta rises TEST ARI climbs on held-out points whose labels were never used --
+supervision generalizes (singlecell 0.50 -> 0.92, mnist 0.35 -> 0.54) -- while test
+trustworthiness holds near its t-SNE level through the intermediate regime; beta = 1
+overfits (train ARI -> 1) so the test metric correctly rewards the intermediate /
+near-full regime. Writes results/05_supervised_dial/indices/supervised_dial.csv.
 """
 
 # ruff: noqa: E402, I001  (imports follow the sys.path bootstrap)

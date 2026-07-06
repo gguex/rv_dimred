@@ -208,13 +208,13 @@ si bien que la restructuration du §2 est terminée quand la dernière expérien
 - *Rangement* : `experiments/05_supervised_dial/` (fait), originaux `hybrids_*.py` dans
   `archive/old_paper/scripts/`, `results/coordinates/old/` → archive (fait).
 
-**E6 — Vitrine** 🔶 (après E1–E5, tout à n=2000)
-- Régénérer la galerie complète : scatter grids spectraux (6×3), side-by-side t-SNE/UMAP,
-  strip du dial, sweep γ (mécanique %-entrées-négatives, spread 7→26), spectre du jacobien,
-  démo objectif composite (si retenue). Réécrire `README.md` en page vitrine (une image + une
-  ligne par case study, lien vers l'article).
-- *Rangement final* : supprimer `scripts/` (vide), vérifier que `results/` est un miroir propre,
-  tag git `pre-submission`.
+**E6 — Vitrine** 🔶 en cours (après E1–E5, tout à n=2000)
+- ✅ `README.md` réécrit en page vitrine : résumé de l'article, galerie (spectral_gallery + tether
+  + dial_scatter + courbes dial), quickstart vérifié (snippet exécuté : linear rv = ceiling = 0.6792,
+  student-t hollow OK), table de repro par case study, layout, citation. Nouvelle figure
+  `showcase/readme_gallery.py` → `results/figures/spectral_gallery.png` (3 datasets × 6 méthodes).
+- 🔶 Reste : galerie complète optionnelle (side-by-side t-SNE/UMAP, sweep γ, spectre jacobien),
+  purge de `scripts/` (vide), vérifier que `results/` est un miroir propre, tag git `pre-submission`.
 
 ---
 

@@ -1,6 +1,4 @@
-# The Kernel Inner Product Space
-
-### Dimensionality Reduction as Kernel Alignment
+# The Kernel Inner Product Space : Dimensionality Reduction as Kernel Alignment
 
 PCA, Kernel PCA, Isomap, LLE, Laplacian Eigenmaps, Diffusion Maps, t‑SNE, UMAP —
 a crowded field of methods, each with its own objective, solver, and folklore.
@@ -42,8 +40,6 @@ that achievable set.**
 - **Repulsion is not in the objective.** The centering annihilates the one mode —
   the embedding's global volume — whose gradient *is* the repulsion of t‑SNE. So
   the framework is a relative of t‑SNE, and **cannot** be UMAP.
-
-The full paper (LaTeX source) lives in [`rv_dimred_new/`](rv_dimred_new/).
 
 ---
 

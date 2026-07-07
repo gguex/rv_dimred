@@ -121,7 +121,7 @@ Each case study of §7 is one self‑contained folder under
 | Experiment | Validates | Run |
 |---|---|---|
 | [`01_spectral/`](experiments/01_spectral/) | closed‑form recovery + alignment ceiling | `uv run python experiments/01_spectral/spectral_run.py` |
-| [`02_manifold_dim/`](experiments/02_manifold_dim/) | manifold dimension `nq − (q+1 choose 2)` | `uv run python experiments/02_manifold_dim/manifold_dim_run.py` |
+| [`02_manifold_dim/`](experiments/02_manifold_dim/) | manifold dimensions `nq − (q+1 choose 2)` (distance) and `nq − (q choose 2)` (dot‑product) | `uv run python experiments/02_manifold_dim/manifold_dim_run.py` |
 | [`03_forces/`](experiments/03_forces/) | gradient force identities + cross‑Procrustes | `uv run python experiments/03_forces/forces_check.py` |
 | [`04_tether/`](experiments/04_tether/) | the diagonal tether (Figure 1) | `uv run python experiments/04_tether/tether_run.py` |
 | [`05_supervised_dial/`](experiments/05_supervised_dial/) | the supervised dial (Figure 2) | `uv run python experiments/05_supervised_dial/supervised_dial_run.py` |

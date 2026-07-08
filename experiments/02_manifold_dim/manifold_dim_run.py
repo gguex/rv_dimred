@@ -1,5 +1,5 @@
 """
-manifold_dim_run.py  —  art. §7.2  intrinsic dimension of the output manifold
+manifold_dim_run.py  —  art. §6.3  intrinsic dimension of the output manifold
 =============================================================================
 
 Validates Prop. 2 (promise of art. §4.2) for the two canonical readouts of
@@ -98,7 +98,7 @@ def numerical_rank(sv: np.ndarray, n_in: int) -> tuple[int, float]:
 
 
 def main() -> None:
-    print("art. §7.2  -  intrinsic dimension of S_q^kappa  (two readouts)")
+    print("art. §6.3  -  intrinsic dimension of S_q^kappa  (two readouts)")
     print(f"  rank on {N_SAMPLES} random base points Y0 per (readout, n, q)")
     print(f"  sweeping n in {NS} to rule out a coincidence at any single n\n")
 

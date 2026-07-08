@@ -1,5 +1,5 @@
 """
-supervised_dial_figure.py  —  art. §7.5  Figure 2: supervision generalizes
+supervised_dial_figure.py  —  art. §6.6  Figure 2: supervision generalizes
 ==========================================================================
 
 From results/05_supervised_dial/indices/supervised_dial.csv, a 2x2 panel:

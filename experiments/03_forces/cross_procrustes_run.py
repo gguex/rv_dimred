@@ -1,13 +1,13 @@
 """
-cross_procrustes_run.py  —  art. §7.3(ii)  Table 4: the objective dominates the kernel
+cross_procrustes_run.py  —  art. §6.4(ii)  Table 4: the objective dominates the kernel
 ======================================================================================
 
-The payoff prediction of the §6.2 PUSH taxonomy: the RV-cosine objective can
+The payoff prediction of the §5.4 push taxonomy: the RV-cosine objective can
 approach t-SNE but NOT UMAP (UMAP's per-pair push on the raw Gram is out of reach
 of the pure cosine). We test it by swapping only the *kernels* while keeping the
 *objective* (hollow-RV) fixed, and measuring who ends up close to whom.
 
-For MNIST and single-cell (n=2000) at the canonical operating point of §7.3-7.4
+For MNIST and single-cell (n=2000) at the canonical operating point of §6.4-6.5
 (neighbour hp = 30, softening gamma = 0.5) we build four 2-D embeddings:
 
   framework_tsne  hollow-RV on adaptive-Gaussian input + Student-t output
@@ -61,7 +61,7 @@ EXP = "03_forces"
 DATASETS = ("mnist", "singlecell")   # labelled neighbour-embedding datasets
 PERPLEXITY = 30                       # canonical neighbour hp (t-SNE side)
 N_NEIGHBORS = 30                      # canonical neighbour hp (UMAP side)
-GAMMA = 0.5                           # input-affinity softening (§5.3.2)
+GAMMA = 0.5                           # input-affinity softening (art. §6.1)
 LABELS = ["framework_tsne", "framework_umap", "reference_tsne", "reference_umap"]
 
 

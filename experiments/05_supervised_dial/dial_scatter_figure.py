@@ -1,5 +1,5 @@
 """
-dial_scatter_figure.py  —  art. §7.5  scatter grid of the supervised dial
+dial_scatter_figure.py  —  art. §6.6  scatter grid of the supervised dial
 =========================================================================
 
 An illustrative companion to Figure 2: for each dataset (row) and dial value beta

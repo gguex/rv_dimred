@@ -1,4 +1,4 @@
-# The Kernel Inner Product Space : Dimensionality Reduction as Kernel Alignment
+# The Kernel Inner Product Space: Dimensionality Reduction as Kernel Alignment
 
 PCA, Kernel PCA, Isomap, LLE, Laplacian Eigenmaps, Diffusion Maps, t‑SNE, UMAP —
 a crowded field of methods, each with its own objective, solver, and folklore.
@@ -29,7 +29,8 @@ that achievable set.**
 - **Linear output → a convex cone.** The projection is the classical truncated
   eigendecomposition (Eckart–Young), in **closed form**, with an exact **alignment
   ceiling** `RV_max`. PCA, Kernel PCA, Isomap, LLE, Laplacian Eigenmaps and
-  Diffusion Maps are all its optima — for different input kernels. A class‑label
+  Diffusion Maps are all its optima — for different input kernels (up to their
+  libraries' axis‑scaling convention). A class‑label
   target extends the same projection to a continuous **soft‑LDA**.
 - **Heavy‑tailed (Student‑t) output → a smooth manifold** of exact dimension
   `nq − (q+1 choose 2)`. The RV gradient becomes **force‑directed**, and its
@@ -45,13 +46,13 @@ that achievable set.**
 
 ## Gallery
 
-**The diagonal tether (§7.4).** Keep the kernel diagonal and the embedding stays
+**The diagonal tether (§6.5).** Keep the kernel diagonal and the embedding stays
 tethered (full‑RV, left); drop it and the spread is released toward t‑SNE (right).
 The structural energy collapses while the degree floor stays pinned.
 
 ![Tether figure](results/04_tether/tether_figure.png)
 
-**A supervised dial, t‑SNE → classes (§7.5).** A single β blends both the input
+**A supervised dial, t‑SNE → classes (§6.6).** A single β blends both the input
 target and the output kernel from an unsupervised t‑SNE (β=0) to pure class
 centroids (β=1). Classes contract and separate continuously:
 
@@ -115,7 +116,7 @@ see [`experiments/05_supervised_dial/`](experiments/05_supervised_dial/).
 
 ## Reproducing the paper
 
-Each case study of §7 is one self‑contained folder under
+Each case study of §6 is one self‑contained folder under
 [`experiments/`](experiments/), validating one prediction of the theory:
 
 | Experiment | Validates | Run |
@@ -140,7 +141,7 @@ src/                 the library — one import away
   datasets.py          MNIST, PBMC3k single-cell, Swiss roll loaders
   indices.py           Procrustes, kNN overlap, trustworthiness
   benchmark_common.py  shared constants, devices, helpers
-experiments/         one folder per §7 case study (reproduces the paper)
+experiments/         one folder per §6 case study (reproduces the paper)
 showcase/            gallery scripts (this README's figures, extra sweeps)
 results/             coordinates, indices, and figures (mirrors experiments/)
 rv_dimred_new/       the article (LaTeX source + PDF)

@@ -2,7 +2,7 @@
 indices.py
 ==========
 
-Similarity (identity) and quality indices for §5 (protocol §0.4).
+Similarity (identity) and quality indices for art. §6 (protocol of art. §6.1).
 
 Identity indices compare two *embeddings* (framework vs reference):
     * ``procrustes_disparity`` — disparity after optimal rigid alignment (~0 = match)
@@ -13,7 +13,7 @@ Quality indices compare an *embedding* to the high-dimensional data / labels:
     * ``ari``                  — adjusted Rand index of k-means(embedding) vs labels
 
 ``align_procrustes`` returns the reference-aligned framework embedding for overlay
-plots (§5.3.1).
+plots (art. §6.4).
 """
 
 from __future__ import annotations

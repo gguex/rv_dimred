@@ -2,8 +2,8 @@
 datasets.py
 ===========
 
-Loaders for the three §5 case-study datasets, with the preprocessing fixed by
-the global protocol (§0.1) and a single ``random_state`` for reproducibility.
+Loaders for the three art. §6 case-study datasets, with the preprocessing fixed by
+the shared protocol (art. §6.1) and a single ``random_state`` for reproducibility.
 
 Each loader returns a :class:`Dataset`:
 

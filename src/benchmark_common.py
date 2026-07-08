@@ -38,7 +38,7 @@ from src.rv_kernels import (
     rv_dimred,
 )
 
-# ── Protocol constants (§0) ───────────────────────────────────────────────────
+# ── Protocol constants (art. §6.1) ───────────────────────────────────────────────────
 SEED = 0
 Q = 2  # embedding dimension
 K_NEIGHBORS = 15  # kNN for graph-based methods / UMAP n_neighbors
@@ -47,12 +47,12 @@ DIFFUSION_T = 10.0  # diffusion time (larger t sharpens the spectral gap → rec
 N_ITER_RV = 500  # RV gradient-ascent iterations
 LR_RV = 0.1  # RV gradient-ascent learning rate
 TRUST_K = 15  # k for the scalar trustworthiness / kNN overlap
-SOFTENING = 0.5  # §5.3.2 input-affinity softening exponent (G -> (G/max)^gamma)
+SOFTENING = 0.5  # art. §6.1 input-affinity softening exponent (G -> (G/max)^gamma)
 
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 COORDS_ROOT = RESULTS_DIR / "coordinates"  # saved embeddings, one subdir per family
 
-# §5.3.2 per-dataset hyperparameters (perplexity for t-SNE, n_neighbors for UMAP),
+# art. §6.1 per-dataset hyperparameters (perplexity for t-SNE, n_neighbors for UMAP),
 # tuned for framework↔reference agreement with the γ=SOFTENING input affinity.
 # The same value is used on both the framework and the library-reference side.
 APPROX_HYPERPARAMS: dict[str, dict[str, int]] = {
@@ -61,7 +61,7 @@ APPROX_HYPERPARAMS: dict[str, dict[str, int]] = {
     "swissroll": {"perplexity": 30, "n_neighbors": 15},
 }
 
-# §5.3.3 supervised interpolation (class-kernel ↔ t-SNE), shared by run / indices
+# art. §6.6 supervised interpolation (class-kernel ↔ t-SNE), shared by run / indices
 # / figures. β dials the input AND output kernels together:
 #   K_in(β)  = β·K_class + (1-β)·K_gaussianAffinity
 #   K_out(β) = β·linear(Y) + (1-β)·StudentT(Y, ν=1)
@@ -69,7 +69,7 @@ APPROX_HYPERPARAMS: dict[str, dict[str, int]] = {
 SUPERVISED_BETAS = [0.0, 0.25, 0.5, 0.75, 1.0]
 TEST_FRAC = 0.3  # held-out fraction for the train/test generalisation protocol
 
-# tidy-CSV schema (§0.5)
+# tidy-CSV schema (repo convention)
 CSV_COLUMNS = [
     "section",
     "dataset",
@@ -92,7 +92,7 @@ def get_device() -> str:
     return "cpu"
 
 
-# ── Shared PCA initialisation (§0.2) ──────────────────────────────────────────
+# ── Shared PCA initialisation (art. §6.1) ──────────────────────────────────────────
 def pca_embedding(X: np.ndarray, q: int = Q) -> np.ndarray:
     """Plain PCA projection to q dims (also the PCA *reference* embedding)."""
     return PCA(n_components=q, random_state=SEED).fit_transform(X).astype(np.float32)
@@ -103,7 +103,7 @@ def pca_init(X: np.ndarray, q: int = Q) -> np.ndarray:
     sklearn-convention init below, but at a numerically friendly scale so the RV
     gradient-ascent (Adam) converges for linear output kernels too. Procrustes/RV
     are scale-invariant, so comparing against a reference started from
-    :func:`pca_init_sklearn` stays legitimate (§0.2)."""
+    :func:`pca_init_sklearn` stays legitimate (art. §6.1)."""
     return pca_embedding(X, q)
 
 
@@ -126,7 +126,7 @@ def normalize_kernel(K: torch.Tensor) -> torch.Tensor:
 def supervised_split(
     X: np.ndarray, labels: np.ndarray, test_frac: float = TEST_FRAC
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Deterministic stratified train/test split for the §5.3.3 supervised protocol.
+    """Deterministic stratified train/test split for the art. §6.6 supervised protocol.
     Shared by run / indices / figures so they all see the same partition (and thus
     the saved test coordinates line up with the re-derived test labels)."""
     return tuple(
@@ -142,7 +142,7 @@ def supervised_output_kernel(
     weights: torch.Tensor | None = None,
     device: str | torch.device = "cpu",
 ) -> torch.Tensor:
-    """Blended output kernel of the §5.3.3 supervised interpolation, pass β as param:
+    """Blended output kernel of the art. §6.6 supervised interpolation, pass β as param:
     K_out(β) = β·linear(Y) + (1-β)·StudentT(Y, ν=1)   (each unit-Frobenius)."""
     beta = float(param)
     k_lin = compute_linear_kernel_torch(coords, weights=weights, device=device)
@@ -227,7 +227,7 @@ def diffusion_maps_ref(
     return (vecs[:, 1 : q + 1] * np.exp(-t * vals[1 : q + 1])).astype(np.float32)
 
 
-# ── Spectral method registry (§5.1.1) ─────────────────────────────────────────
+# ── Spectral method registry (art. §6.2) ─────────────────────────────────────────
 @dataclass
 class SpectralMethod:
     key: str
@@ -308,7 +308,7 @@ SPECTRAL_METHODS: list[SpectralMethod] = [
 ]
 
 
-# ── Tidy CSV (§0.5) ───────────────────────────────────────────────────────────
+# ── Tidy CSV (repo convention) ───────────────────────────────────────────────────────────
 class IndexLog:
     """Accumulates tidy index rows and appends/writes results_indices.csv."""
 
@@ -418,7 +418,7 @@ def meta_path(family: str) -> Path:
 def drop_sections(sections: set[str], path: Path | None = None) -> None:
     """Remove rows of the given ``section`` values from results_indices.csv, keeping
     every other row. Lets a driver re-run its own section without clobbering the
-    others (e.g. §5.3.1 / §5.3.2 re-run while §5.3.3 results are preserved)."""
+    others (e.g. one driver’s rows re-run while the others’ are preserved)."""
     path = path or (RESULTS_DIR / "results_indices.csv")
     if not path.exists():
         return

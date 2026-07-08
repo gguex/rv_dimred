@@ -423,7 +423,7 @@ def compute_gaussian_affinity_kernel_torch(
     param: dict {'perplexity': float (default 30), 'gamma': float (default 1.0)}.
            gamma softens the affinity via G = (P / max P)^gamma. gamma=0.5 is the
            Bhattacharyya/Hellinger variant (sharpens the intra/inter contrast,
-           §5.3.2); gamma=1.0 leaves P unchanged (up to the RV-invariant scale).
+           art. §6.1); gamma=1.0 leaves P unchanged (up to the RV-invariant scale).
     """
     if not _HAS_SCIPY:
         raise ImportError("gaussian-affinity kernel requires sklearn for distances")
@@ -454,7 +454,7 @@ def compute_fuzzy_topological_kernel_torch(
         G = W + W^T - W o W^T.
 
     param: dict {'k': int (default 15), 'gamma': float (default 1.0)}.
-           gamma softens the affinity via G = (G / max G)^gamma (§5.3.2); gamma=1.0
+           gamma softens the affinity via G = (G / max G)^gamma (art. §6.1); gamma=1.0
            leaves G unchanged (up to the RV-invariant scale).
     """
     if not _HAS_SCIPY:

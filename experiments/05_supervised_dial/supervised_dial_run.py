@@ -1,5 +1,5 @@
 """
-supervised_dial_run.py  —  art. §7.5  the supervised dial (double kernel dial)
+supervised_dial_run.py  —  art. §6.6  the supervised dial (double kernel dial)
 ==============================================================================
 
 A single dial beta interpolates an unsupervised t-SNE into a fully class-supervised
@@ -8,7 +8,7 @@ framework enables by blending kernels, with no library counterpart:
 
     K_in(beta)  = (1 - beta) K_ag  + beta K_Z         (each unit-Frobenius)
     K_out(beta) = (1 - beta) StudentT(Y, nu=1) + beta linear(Y)   (each unit-Frob.)
-    objective   = HOLLOW RV  (both diagonals zeroed; art. §7.4)
+    objective   = HOLLOW RV  (both diagonals zeroed; art. §6.5)
 
     beta = 0  ->  t-SNE (unsupervised)
     beta = 1  ->  linear <-> class-centroid kernel = cMDS on class centroids, which
@@ -79,7 +79,7 @@ def main() -> None:
     for name in DATASETS:
         ds = datasets[name]
         print("=" * 64)
-        print(f"art. §7.5  dataset = {ds.name}  (n={ds.n})")
+        print(f"art. §6.6  dataset = {ds.name}  (n={ds.n})")
         print("=" * 64)
 
         X_tr, X_te, y_tr, y_te = supervised_split(ds.X, ds.labels)

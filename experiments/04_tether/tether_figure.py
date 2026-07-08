@@ -1,5 +1,5 @@
 """
-tether_figure.py  —  art. §7.4  Figure 1: the diagonal tether
+tether_figure.py  —  art. §6.5  Figure 1: the diagonal tether
 =============================================================
 
 Composes Figure 1 from the artefacts of tether_run.py:

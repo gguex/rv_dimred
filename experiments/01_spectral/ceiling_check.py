@@ -1,5 +1,5 @@
 """
-ceiling_check.py  —  art. §7.1  Test A: the gradient solver attains the ceiling
+ceiling_check.py  —  art. §6.2  Test A: the gradient solver attains the ceiling
 ================================================================================
 
 Prop. 1 gives the alignment ceiling RV_max(q) attainable by any linear-output
@@ -10,7 +10,7 @@ reaches RV_max on a non-trivial input kernel, with no eigendecomposition in the
 loop.
 
 Input kernel: the adaptive-Gaussian t-SNE affinity (perplexity 30) softened at
-gamma = 0.5 — the standard neighbor-embedding target of art. §7.3-7.4 — so the
+gamma = 0.5 — the standard neighbor-embedding target of art. §6.4-6.5 — so the
 check runs on the same K_X the non-linear experiments use, not on an easy one.
 
 Writes results/01_spectral/indices/ceiling_check.csv (one row per dataset):

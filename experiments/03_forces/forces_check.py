@@ -1,5 +1,5 @@
 """
-forces_check.py  —  art. §7.3(i)  attraction / repulsion power asymmetry
+forces_check.py  —  art. §6.4(i)  attraction / repulsion power asymmetry
 ========================================================================
 
 Validates Cor. 2 (RV gradient) and Prop. 6(b) (volume PUSH): the analytic force
@@ -28,7 +28,7 @@ gradient-level mechanism of "approximates t-SNE without reproducing it".
 
 Run at n=2000 (the paper's scale): the identity is algebraic, so the machine-
 precision match is scale-independent; running at n=2000 states it at the size used
-by the rest of §7. Writes results/03_forces/indices/forces_check.csv.
+by the rest of §6. Writes results/03_forces/indices/forces_check.csv.
 """
 
 # ruff: noqa: E402, I001  (imports follow the sys.path bootstrap)
@@ -90,7 +90,7 @@ def main() -> None:
     K_X = compute_linear_kernel_torch(X, weights=w).detach()
     Ktil = Q.T @ K_X @ Q                                   # <K_X,K_Y> = <Ktil, G_Y>
 
-    print(f"art. §7.3(i)  -  attraction / repulsion power asymmetry  (n={N}, q={D})\n")
+    print(f"art. §6.4(i)  -  attraction / repulsion power asymmetry  (n={N}, q={D})\n")
     all_ok = True
 
     # ── (A) RV attraction: gradient of the real <K_X, K_Y> is q^2 (not q^1) ──────

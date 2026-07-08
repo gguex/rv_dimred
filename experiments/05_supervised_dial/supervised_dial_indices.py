@@ -1,5 +1,5 @@
 """
-supervised_dial_indices.py  —  art. §7.5  train/test metrics of the supervised dial
+supervised_dial_indices.py  —  art. §6.6  train/test metrics of the supervised dial
 ===================================================================================
 
 Reads the embeddings saved by supervised_dial_run.py and computes, per
@@ -8,7 +8,7 @@ Reads the embeddings saved by supervised_dial_run.py and computes, per
                     evaluation only, never for building the embedding),
   * trustworthiness (feature-space neighbourhood preservation, k = TRUST_K).
 
-The point (art. §7.5): under the double dial (input + output moving together), as
+The point (art. §6.6): under the double dial (input + output moving together), as
 beta rises TEST ARI climbs on held-out points whose labels were never used --
 supervision generalizes (singlecell 0.50 -> 0.92, mnist 0.35 -> 0.54) -- while test
 trustworthiness holds near its t-SNE level through the intermediate regime; beta = 1

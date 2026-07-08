@@ -1,8 +1,8 @@
 """
-tether_run.py  —  art. §7.4  the diagonal tether: full-RV vs hollow-RV vs t-SNE
+tether_run.py  —  art. §6.5  the diagonal tether: full-RV vs hollow-RV vs t-SNE
 ===============================================================================
 
-Validates Prop. 5 + the justification Lemma (promise of art. §5.3). Exact fact
+Validates Prop. 5 + the justification Lemma (promise of art. §5.1-5.2). Exact fact
 (uniform weights, centered kernel): K_ii = -r_i with r_i = sum_{j!=i} K_ij, so the
 diagonal energy ||diag(K_Y)||^2 = sum_i K_ii^2 = sum_i r_i^2 is exactly the degree
 term the full-RV metric M = I + D*D over-weights. Maximizing the FULL RV pours
@@ -153,7 +153,7 @@ def final_stats(
 def main() -> None:
     device = get_device()
     print(f"device: {device}")
-    print(f"art. §7.4  tether: full-RV vs hollow-RV vs t-SNE  "
+    print(f"art. §6.5  tether: full-RV vs hollow-RV vs t-SNE  "
           f"(MNIST n={10 * N_PER_DIGIT}, perp={PERPLEXITY}, gamma={SOFTENING})\n")
 
     ds = load_mnist(n_per_digit=N_PER_DIGIT, random_state=SEED)

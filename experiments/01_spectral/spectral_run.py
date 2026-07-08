@@ -1,5 +1,5 @@
 """
-spectral_run.py  —  art. §7.1  compute & save spectral embeddings (closed-form solver)
+spectral_run.py  —  art. §6.2  compute & save spectral embeddings (closed-form solver)
 =======================================================================================
 
 For every (dataset × spectral method) this computes two embeddings:

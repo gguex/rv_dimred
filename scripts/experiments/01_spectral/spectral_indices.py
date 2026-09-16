@@ -25,7 +25,7 @@ import numpy as np
 
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from src import indices as ix  # noqa: E402
 from src.benchmark_common import (  # noqa: E402

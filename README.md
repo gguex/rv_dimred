@@ -110,22 +110,22 @@ Y, rv = rv_dimred(
 That is the whole interface: **build an input kernel, pick an output kernel,
 maximize the RV coefficient** — in closed form on the cone, by gradient on the
 manifold. The supervised dial is the same call with a blended input/output kernel;
-see [`experiments/05_supervised_dial/`](experiments/05_supervised_dial/).
+see [`scripts/experiments/05_supervised_dial/`](scripts/experiments/05_supervised_dial/).
 
 ---
 
 ## Reproducing the paper
 
 Each case study of §6 is one self‑contained folder under
-[`experiments/`](experiments/), validating one prediction of the theory:
+[`scripts/experiments/`](scripts/experiments/), validating one prediction of the theory:
 
 | Experiment | Validates | Run |
 |---|---|---|
-| [`01_spectral/`](experiments/01_spectral/) | closed‑form recovery + alignment ceiling | `uv run python experiments/01_spectral/spectral_run.py` |
-| [`02_manifold_dim/`](experiments/02_manifold_dim/) | manifold dimensions `nq − (q+1 choose 2)` (distance) and `nq − (q choose 2)` (dot‑product) | `uv run python experiments/02_manifold_dim/manifold_dim_run.py` |
-| [`03_forces/`](experiments/03_forces/) | gradient force identities + cross‑Procrustes | `uv run python experiments/03_forces/forces_check.py` |
-| [`04_tether/`](experiments/04_tether/) | the diagonal tether (Figure 1) | `uv run python experiments/04_tether/tether_run.py` |
-| [`05_supervised_dial/`](experiments/05_supervised_dial/) | the supervised dial (Figure 2) | `uv run python experiments/05_supervised_dial/supervised_dial_run.py` |
+| [`01_spectral/`](scripts/experiments/01_spectral/) | closed‑form recovery + alignment ceiling | `uv run python scripts/experiments/01_spectral/spectral_run.py` |
+| [`02_manifold_dim/`](scripts/experiments/02_manifold_dim/) | manifold dimensions `nq − (q+1 choose 2)` (distance) and `nq − (q choose 2)` (dot‑product) | `uv run python scripts/experiments/02_manifold_dim/manifold_dim_run.py` |
+| [`03_forces/`](scripts/experiments/03_forces/) | gradient force identities + cross‑Procrustes | `uv run python scripts/experiments/03_forces/forces_check.py` |
+| [`04_tether/`](scripts/experiments/04_tether/) | the diagonal tether (Figure 1) | `uv run python scripts/experiments/04_tether/tether_run.py` |
+| [`05_supervised_dial/`](scripts/experiments/05_supervised_dial/) | the supervised dial (Figure 2) | `uv run python scripts/experiments/05_supervised_dial/supervised_dial_run.py` |
 
 Each folder pairs a `*_run.py` (embeddings) with `*_indices.py` / `*_figure.py`
 (metrics and figures); outputs land in the mirrored
@@ -141,9 +141,12 @@ src/                 the library — one import away
   datasets.py          MNIST, PBMC3k single-cell, Swiss roll loaders
   indices.py           Procrustes, kNN overlap, trustworthiness
   benchmark_common.py  shared constants, devices, helpers
-experiments/         one folder per §6 case study (reproduces the paper)
+scripts/             executable scripts
+  experiments/       one folder per §6 case study (reproduces the paper)
+  exploratory/       mathematical checks and ongoing explorations
 showcase/            gallery scripts (this README's figures, extra sweeps)
-results/             coordinates, indices, and figures (mirrors experiments/)
+results/             coordinates, indices, and figures (mirrors scripts/experiments/)
+notes/               local working notes (ignored by Git)
 rv_dimred_new/       the article (LaTeX source + PDF)
 archive/             superseded scripts and the previous paper
 ```

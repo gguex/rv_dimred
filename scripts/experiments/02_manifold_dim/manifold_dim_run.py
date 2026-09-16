@@ -39,7 +39,7 @@ from collections.abc import Callable
 from math import comb
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # repo root (for `src`)
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root (for `src`)
 
 import numpy as np
 import torch

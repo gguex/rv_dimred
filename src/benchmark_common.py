@@ -366,14 +366,14 @@ def fig_path(section: str, dataset: str, method: str, variant: str) -> Path:
 
 
 def exp_coords_dir(exp: str) -> Path:
-    """results/{exp}/coordinates/ — new per-experiment layout (experiments/{exp}/)."""
+    """results/{exp}/coordinates/ — new per-experiment layout (scripts/experiments/{exp}/)."""
     d = RESULTS_DIR / exp / "coordinates"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
 def exp_indices_dir(exp: str) -> Path:
-    """results/{exp}/indices/ — new per-experiment layout (experiments/{exp}/)."""
+    """results/{exp}/indices/ — new per-experiment layout (scripts/experiments/{exp}/)."""
     d = RESULTS_DIR / exp / "indices"
     d.mkdir(parents=True, exist_ok=True)
     return d

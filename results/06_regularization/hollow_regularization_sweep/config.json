@@ -1,0 +1,39 @@
+{
+  "scope": "exploratory; not included in the manuscript",
+  "dataset": "same balanced MNIST sample as experiment 04",
+  "n_per_digit": 200,
+  "sample_size": 2000,
+  "sample_seed": 0,
+  "perplexity": 30,
+  "softening": 0.5,
+  "common_start": "saved full-RV solution after 500 steps",
+  "objective": "hollow RV minus neutral-component quadratic penalty",
+  "rho_target": 0.99,
+  "eta_values": [
+    0.0,
+    100.0,
+    1000.0,
+    3000.0,
+    10000.0,
+    100000.0,
+    1000000.0
+  ],
+  "iterations_per_eta": 500,
+  "record_every": 10,
+  "lr": 0.1,
+  "dtype": "float32",
+  "device": "cpu",
+  "torch_threads": 4,
+  "parameter_conversion": "T=1-1/n; t0=rho_target*T; lambda=eta*(n-1)/T^2",
+  "trace_bound": 0.9994999766349792,
+  "trace_target": 0.9895049768686295,
+  "common_start_sha256": "994cf31e444a7c971b62e6a515b5094f310eb92b34f13765b55e4465c56aa4b5",
+  "wall_time_seconds": 157.08705520629883,
+  "python": "3.12.13",
+  "numpy": "2.4.6",
+  "torch": "2.12.0",
+  "source_hashes": {
+    "scripts/experiments/06_regularization/hollow_regularization_sweep.py": "9b3c9bf8b14e98f2a02a12132e8826f01aef3dbf4217ec716f5a68e7f420ff70",
+    "src/rv_kernels.py": "09c3c92a519f9dfe64316a22d015a977126e39ce4794c07f3056cf1944d184e4"
+  }
+}

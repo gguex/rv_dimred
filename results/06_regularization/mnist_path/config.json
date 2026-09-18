@@ -1,0 +1,53 @@
+{
+  "dataset": "MNIST test set, balanced prefix sample",
+  "n_per_digit": 50,
+  "sample_size": 500,
+  "sample_seed": 0,
+  "perplexity": 30,
+  "softening": 0.5,
+  "input_kernel": "normalized centered adaptive Gaussian affinity",
+  "output_kernel": "centered Student-t, nu=1",
+  "rv_variant": "full",
+  "weights": "uniform",
+  "q": 2,
+  "rho_target": 0.99,
+  "eta_path": [
+    0.0,
+    1.0,
+    10.0,
+    100.0,
+    1000.0
+  ],
+  "baseline_seeds": [
+    0,
+    1,
+    2
+  ],
+  "baseline_initialization": "PCA plus Gaussian noise of 5% PCA coordinate SD",
+  "baseline_selection": "largest final unpenalized full RV; labels unused",
+  "baseline_refinement": "additional unpenalized steps after seed selection",
+  "continuation": "each positive eta starts from the preceding path solution",
+  "optimizer": "Adam, default betas and eps, no weight decay",
+  "lr": 0.1,
+  "baseline_iterations": 2000,
+  "baseline_refinement_iterations": 3000,
+  "iterations_per_positive_eta": 1000,
+  "record_every": 10,
+  "dtype": "float32",
+  "device": "cpu",
+  "torch_threads": 4,
+  "parameter_conversion": "T=1-sum(f_i^2); t0=rho_target*T; lambda=eta*(n-1)/T^2",
+  "interpretation": "kernel-inertia path, not classical t-SNE or a quality benchmark",
+  "selected_baseline_seed": 1,
+  "selected_baseline_rv": 0.7007971405982971,
+  "trace_bound": 0.9980000257492065,
+  "trace_target": 0.9880200254917144,
+  "wall_time_seconds": 40.80712103843689,
+  "python": "3.12.13",
+  "numpy": "2.4.6",
+  "torch": "2.12.0",
+  "source_hashes": {
+    "scripts/experiments/06_regularization/mnist_regularization_path.py": "0e30224212140686c5b864ab420dffdf1c603947b9543baeee491f944e2c37a8",
+    "src/rv_kernels.py": "09c3c92a519f9dfe64316a22d015a977126e39ce4794c07f3056cf1944d184e4"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "dataset": "MNIST test set, balanced prefix sample",
+  "n_per_digit": 200,
+  "sample_size": 2000,
+  "sample_seed": 0,
+  "perplexity": 30,
+  "softening": 0.5,
+  "q": 2,
+  "weights": "uniform",
+  "input_kernel": "normalized centered adaptive Gaussian affinity",
+  "output_kernel": "centered Student-t, nu=1",
+  "common_start": "saved full-RV solution from experiment 04 after 500 steps",
+  "reference": "unchanged saved t-SNE coordinates from experiment 04",
+  "rho_target": 0.99,
+  "intermediate_eta": 100.0,
+  "strong_eta": 1000.0,
+  "combined_eta": 100000.0,
+  "branches": [
+    "hollow RV",
+    "full RV plus eta=100",
+    "full RV plus eta=1000",
+    "hollow RV plus eta=100000"
+  ],
+  "branch_protocol": "independent; exact same coordinates at step zero",
+  "iterations_per_branch": 500,
+  "record_every": 10,
+  "lr": 0.1,
+  "dtype": "float32",
+  "device": "cpu",
+  "torch_threads": 4,
+  "parameter_conversion": "T=1-1/n; t0=rho_target*T; lambda=eta*(n-1)/T^2",
+  "trace_bound": 0.9994999766349792,
+  "trace_target": 0.9895049768686295,
+  "common_start_sha256": "994cf31e444a7c971b62e6a515b5094f310eb92b34f13765b55e4465c56aa4b5",
+  "wall_time_seconds": 79.17915773391724,
+  "python": "3.12.13",
+  "numpy": "2.4.6",
+  "torch": "2.12.0",
+  "source_hashes": {
+    "scripts/experiments/06_regularization/mnist_hollow_regularization.py": "75bbe009912b467f0f353896f9873a31fd99e025e9b7fb612bbb89704c0d01ed",
+    "scripts/experiments/04_tether/tether_run.py": "3ed3ac5275d640f20655ba043ac91f976726c619d179284accb57724023b5e65",
+    "src/rv_kernels.py": "09c3c92a519f9dfe64316a22d015a977126e39ce4794c07f3056cf1944d184e4"
+  },
+  "historical_artifact_hashes": {
+    "results/04_tether/coordinates/full_rv.npy": "23046916429491e8daf6665fe98e3bae8e64d21faee555bc181e148fffe62cbc",
+    "results/04_tether/coordinates/tsne.npy": "8a556e7c99ef398c0ebe676bd3a206fa524e34671e7b0d25ea4ed3bd4da56bb2",
+    "results/04_tether/coordinates/labels.npy": "3ed441e994fc31ebc6698b584e0c339185f346ac6c14028bef7733bfa1c9751b"
+  }
+}

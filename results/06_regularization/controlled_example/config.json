@@ -1,0 +1,61 @@
+{
+  "dataset": "three isotropic Gaussian groups in R3, 20 objects per group",
+  "data_seed": 20260918,
+  "centers": [
+    [
+      -2,
+      0,
+      0
+    ],
+    [
+      2,
+      0,
+      1
+    ],
+    [
+      0,
+      3,
+      -1
+    ]
+  ],
+  "noise_std": 0.6,
+  "input_scaling": "center, then divide by median pairwise Euclidean distance",
+  "input_kernel": "weighted centered Student-t, nu=1",
+  "output_kernel": "weighted centered Student-t, nu=1",
+  "weights": "uniform",
+  "q": 2,
+  "rho_target": 0.65,
+  "eta_values": [
+    0.0,
+    1.0,
+    10.0
+  ],
+  "initialization_seeds": [
+    0,
+    1,
+    2
+  ],
+  "initialization": "0.1 * torch.randn(n, q), shared across strengths within seed",
+  "optimizer": "Adam, default betas and eps, no weight decay",
+  "lr": 0.03,
+  "n_iter": 1500,
+  "stopping_rule": "fixed budget, no early stopping or best-iterate selection",
+  "record_every": 25,
+  "dtype": "float64",
+  "device": "cpu",
+  "torch_threads": 1,
+  "parameter_conversion": "T=1-sum(f_i^2); t0=rho_target*T; lambda=eta*(n-1)/T^2",
+  "scope": "illustration of inertia control, not a visualization quality benchmark",
+  "n": 60,
+  "input_scale": 3.539773243650342,
+  "trace_bound": 0.9833333333333333,
+  "trace_target": 0.6391666666666667,
+  "input_trace": 0.4167489440079471,
+  "python": "3.12.13",
+  "numpy": "2.4.6",
+  "torch": "2.12.0",
+  "source_hashes": {
+    "scripts/experiments/06_regularization/regularization_run.py": "4700f2832c0e51a7ef23e4a731da9e391d741c30cbd4bd482e74cf6d19b3bde2",
+    "src/rv_kernels.py": "09c3c92a519f9dfe64316a22d015a977126e39ce4794c07f3056cf1944d184e4"
+  }
+}

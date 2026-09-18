@@ -1,0 +1,9 @@
+{
+  "tests": 5,
+  "failures": 0,
+  "errors": 0,
+  "passed": true,
+  "torch": "2.12.0",
+  "dtype": "float64",
+  "device": "cpu"
+}

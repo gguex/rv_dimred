@@ -35,6 +35,7 @@ defaults). It can be a scalar, a tuple, or a dict.
 
 from __future__ import annotations
 
+import math
 from typing import Any, Callable
 
 import numpy as np
@@ -750,6 +751,20 @@ def spectral_embed_orthonormal(
     return Y.detach(), float(rv_coefficient(K_X, K_Y))
 
 
+def kernel_trace_penalty(K: torch.Tensor, trace_target: float) -> torch.Tensor:
+    """Squared distance of the neutral component to a target, divided by two.
+
+    For a weighted centered kernel K and K0 = I - sqrt(f) sqrt(f)^T,
+    this is ||P0(K) - trace_target K0/(n-1)||_F^2 / 2.
+    It controls kernel inertia, not the Euclidean radius of the coordinates.
+    """
+    if K.ndim != 2 or K.shape[0] != K.shape[1] or K.shape[0] < 2:
+        raise ValueError("K must be a square kernel with at least two objects")
+    if not math.isfinite(trace_target) or trace_target <= 0:
+        raise ValueError("trace_target must be finite and strictly positive")
+    return (torch.trace(K) - trace_target).square() / (2 * (K.shape[0] - 1))
+
+
 def rv_dimred(
     K_X: torch.Tensor,
     output_kernel: str | Callable[..., torch.Tensor] = "student_t",
@@ -762,16 +777,31 @@ def rv_dimred(
     init: np.ndarray | torch.Tensor | None = None,
     verbose: bool = False,
     hollow: bool = False,
+    *,
+    trace_strength: float = 0.0,
+    trace_target: float | None = None,
+    callback: Callable[[int, torch.Tensor], None] | None = None,
 ) -> tuple[torch.Tensor, float]:
-    """Maximise RV(K_X, K_Y(Y)) over the embedding Y by autograd gradient ascent.
+    """Maximise RV(K_X, K_Y(Y)) minus an optional neutral-component penalty.
 
     K_X            : (n,n) fixed input kernel (any INPUT_KERNELS output).
     output_kernel  : name in OUTPUT_KERNELS, or a callable with the kernel signature.
-    hollow         : if True, optimise the hollow-RV (both diagonals zeroed) — the
-                     neighbour-embedding objective that frees the spread.
-    Returns (Y, final_rv).
+    hollow         : if True, compute RV with both kernel diagonals zeroed.
+    trace_strength : nonnegative lambda in lambda*(Tr(K_Y)-trace_target)^2/(2(n-1)).
+                     Zero preserves the unregularized optimization trajectory.
+    trace_target   : strictly positive target, required when trace_strength > 0.
+                     The penalty always uses the full centered output kernel.
+    callback       : receives (completed_steps, detached_copy_of_Y) initially
+                     and after each Adam step, for optional experiment logging.
+    Returns (Y, final_rv), with the unpenalized RV evaluated at the returned Y.
     """
     n = K_X.shape[0]
+    if not math.isfinite(trace_strength) or trace_strength < 0:
+        raise ValueError("trace_strength must be finite and nonnegative")
+    if trace_strength > 0 and trace_target is None:
+        raise ValueError("trace_target is required when trace_strength > 0")
+    if trace_target is not None:
+        kernel_trace_penalty(K_X, trace_target)  # validate before optimization
     weights = default_weights(n, device) if weights is None else weights.to(device)
     out_fn: Callable[..., torch.Tensor] = (
         OUTPUT_KERNELS[output_kernel]
@@ -781,17 +811,27 @@ def rv_dimred(
     Y = (
         (torch.randn(n, q, device=device) * 1e-2)
         if init is None
-        else _as_tensor(init, device).clone()
+        else _as_tensor(init, device).detach().clone()
     )
     Y.requires_grad_(True)
     opt = torch.optim.Adam([Y], lr=lr)
-    rv: torch.Tensor = torch.tensor(0.0)
+    if callback is not None:
+        callback(0, Y.detach().clone())
     for it in range(n_iter):
         opt.zero_grad()
         K_Y = out_fn(Y, param=output_param, weights=weights, device=device)
         rv = rv_coefficient(K_X, K_Y, hollow=hollow)
-        (-rv).backward()  # maximise RV
+        loss = -rv
+        if trace_strength > 0:
+            assert trace_target is not None  # checked before entering the loop
+            loss = loss + trace_strength * kernel_trace_penalty(K_Y, trace_target)
+        loss.backward()
         opt.step()
+        if callback is not None:
+            callback(it + 1, Y.detach().clone())
         if verbose and (it % max(1, n_iter // 10) == 0):
             print(f"  iter {it:4d}  RV = {rv.item():.4f}")
-    return Y.detach(), rv.item()
+    with torch.no_grad():
+        K_Y = out_fn(Y, param=output_param, weights=weights, device=device)
+        final_rv = rv_coefficient(K_X, K_Y, hollow=hollow).item()
+    return Y.detach(), final_rv

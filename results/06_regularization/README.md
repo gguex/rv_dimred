@@ -25,12 +25,27 @@ performances d'un algorithme de réduction de dimension. Le script conserve
 aussi des contrôles de variantes exploratoires qui ne sont pas retenues pour
 la révision.
 
-## Essais à réaliser
+## Intégration et exemple contrôlé
 
-L'expérience contrôlée comparant le RV sans pénalité à deux forces de
-régularisation sur trois graines reste à réaliser. Ses résultats seront ajoutés
-dans un sous-dossier distinct de `math_checks/`, avec les paramètres et le
-protocole effectivement utilisés.
+L'expérience prévue a été réalisée le 18 septembre 2026 : trois intensités
+de pénalisation, dont zéro, sur les mêmes trois initialisations. Le
+[compte rendu](controlled_example/README.md) donne le protocole, les résultats
+et les limites. Les neuf essais sont conservés, sans sélection du meilleur.
+
+La pénalité rapproche l'inertie du noyau de la cible, au prix d'une diminution
+du RV. La pénalité forte produit aussi des points éloignés et une sensibilité
+à l'initialisation. Cet exemple illustre un contrôle d'inertie ; il ne justifie
+pas une amélioration générale de la visualisation ni une garantie de convergence.
+
+Les cinq tests d'intégration du solveur passent : projection de Frobenius et
+forces, trajectoires inchangées à pénalité nulle, optimisation de l'objectif
+pénalisé, cohérence du score final et du suivi, validation des paramètres.
+[Résultat des tests](solver_checks.json).
+
+```sh
+.venv/bin/python scripts/exploratory/verify_regularized_solver.py
+.venv/bin/python scripts/experiments/06_regularization/regularization_run.py
+```
 
 Le script exploratoire volume/UMAP est archivé dans
 `archive/exploratory/verify_volume_repulsion.py` ; ses anciens résultats ont été

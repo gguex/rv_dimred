@@ -168,5 +168,5 @@ notes/                  local revision notes, ignored by Git
 
 ## Citation
 
-> Guex, G. *The Kernel Inner Product Space: Dimensionality Reduction as Kernel
+> Anonymous. *The Kernel Inner Product Space: Dimensionality Reduction as Kernel
 > Alignment.* TMLR submission 10396, under review.

@@ -14,7 +14,6 @@ from pathlib import Path
 import numpy as np
 import torch
 
-
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "results" / "06_regularization" / "math_checks"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -121,21 +120,29 @@ for s in (.1, 1., 10., 100.):
     g = 1 / (1 + (y[:, None] - y[None, :]) ** 2)
     k = h_np @ g @ h_np / n
     factor = 4 * s * s / (1 + 4 * s * s)
-    check("split_counterexample_kernel", torch.tensor(k), torch.tensor(factor * boundary_k))
-    alignment = float((k * boundary_k).sum() / np.linalg.norm(k) / np.linalg.norm(boundary_k))
+    check(
+        "split_counterexample_kernel",
+        torch.tensor(k),
+        torch.tensor(factor * boundary_k),
+    )
+    alignment = float(
+        (k * boundary_k).sum() / np.linalg.norm(k) / np.linalg.norm(boundary_k)
+    )
     check("split_counterexample_RV", torch.tensor(alignment), torch.tensor(1.))
     trace = float(np.trace(k))
     rows.append({"s": s, "trace": trace, "RV": alignment,
-                 "L2_regularized_objective_lambda_1": alignment - (trace - t0_np)**2 / 6,
+                 "L2_regularized_objective_lambda_1":
+                     alignment - (trace - t0_np)**2 / 6,
                  "linear_kernel_trace": s*s})
 
 report = {"maximum_absolute_errors": errors, "split_counterexample": rows,
           "trace_target_counterexample": t0_np}
 (OUT / "checks.json").write_text(json.dumps(report, indent=2) + "\n")
 
-import matplotlib
+import matplotlib  # noqa: E402
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # noqa: E402
 
 scales = np.logspace(-2, 2, 301)
 fig, axes = plt.subplots(1, 2, figsize=(10, 4), layout="constrained")

@@ -1,10 +1,10 @@
 """
 temp_log_volume_scan_Kx_diag0.py
 ================================
-Scan fin sur les petites valeurs de lambda pour l'objectif log(Z).
-Kernel d'entrée : compute_gaussian_affinity_kernel_torch (celui de src/rv_kernels.py)
-avec MISE A ZERO DE LA DIAGONALE uniquement pour K_X.
-K_Y conserve sa diagonale complète, donc son ||K_Y||_F pénalise toujours l'expansion globale.
+Fine scan over small lambda values for the log(Z) objective.
+Input kernel: compute_gaussian_affinity_kernel_torch (from src/rv_kernels.py),
+with only the diagonal of K_X set to zero. K_Y retains its full diagonal, so
+its ||K_Y||_F continues to penalize global expansion.
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ def optimize(K_X_hollow, w, init, lam: float):
         G_Y = gram_student(Y)
         K_Y = double_center(G_Y, w, DEV)
         
-        # PULL avec diagonale de K_X à 0, mais ||K_Y|| normal.
+        # PULL with a zero K_X diagonal but the usual ||K_Y||.
         K_Y_frob = (K_Y * K_Y).sum().sqrt().clamp_min(1e-10)
         pull = (K_X_hollow * K_Y).sum() / K_Y_frob
         
@@ -84,8 +84,7 @@ def compute_custom_input_kernel(coords: np.ndarray | torch.Tensor, perp: float, 
     G = (P / (P.max() + 1e-12)) 
     G_tensor = torch.tensor(G, dtype=torch.float32, device=DEV)
     
-    # EXACTEMENT COMME DEMANDÉ : On force la diagonale de la matrice Gram d'entrée à 0
-    # avant de passer dans double_center.
+    # Explicitly set the input Gram matrix diagonal to zero before double_center.
     G_tensor.fill_diagonal_(0.0)
 
     sums_gauss = torch.sum(G_tensor, axis=1)
@@ -103,16 +102,16 @@ def main():
     init = pca_init(ds.X)
     X_t = to_tensor(ds.X, DEV)
     
-    # 1. Obtenir K_X via le kernel alternatif
+    # 1. Obtain K_X through the alternative kernel
     K_X_raw = compute_custom_input_kernel(X_t, PERP, SOFTENING, w)
     
-    # 2. Normaliser
+    # 2. Normalize
     K_X = normalize_kernel(K_X_raw)
 
     fig, axes = plt.subplots(2, 4, figsize=(16, 8))
     axes = axes.flatten()
     
-    print("Scan Lambda | kernel alternatif (G_X brut a la diagonale à 0)")
+    print("Lambda scan | alternative kernel (raw G_X with zero diagonal)")
     print(f"{'Lambda':<8} | {'RV':>7} | {'ARI':>7} | {'spread':>8}")
     print("-" * 37)
 
@@ -137,7 +136,7 @@ def main():
     ax.set_title(f"t-SNE ref (Perp=30)\nARI={ari:.3f} SP={sp:.1f}")
     ax.set_xticks([]); ax.set_yticks([])
 
-    fig.suptitle("Scan Lambda log(Z) avec noyau d'entrée alternatif (G_X diag=0)", fontsize=16)
+    fig.suptitle("Lambda scan for log(Z) with an alternative input kernel (G_X diag=0)", fontsize=16)
     fig.tight_layout()
     out = FIG_DIR / "temp_log_volume_scan_Kx_diag0.png"
     fig.savefig(out, dpi=130)

@@ -1,10 +1,10 @@
 """
 temp_log_volume_scan.py
 =======================
-Scan fin sur les petites valeurs de lambda pour l'objectif log(Z).
-Perplexité fixe à 30.
-Kernel d'entrée : compute_gaussian_affinity_kernel_torch (celui de src/rv_kernels.py)
-avec MISE A ZERO DE LA DIAGONALE du kernel K_X (et K_Y) pour le calcul du RV.
+Fine scan over small lambda values for the log(Z) objective.
+Perplexity is fixed at 30.
+Input kernel: compute_gaussian_affinity_kernel_torch (from src/rv_kernels.py),
+with the diagonals of K_X and K_Y set to zero when computing RV.
 """
 
 from __future__ import annotations
@@ -45,8 +45,8 @@ def log_volume(G: torch.Tensor) -> torch.Tensor:
     return torch.log(Z.clamp_min(1e-9))
 
 def rv_hollow(K1: torch.Tensor, K2: torch.Tensor) -> torch.Tensor:
-    """RV avec la diagonale mise à 0 explicitement."""
-    # On crée des copies pour ne pas modifier les tenseurs originaux
+    """RV with the diagonal explicitly set to zero."""
+    # Create copies to avoid modifying the original tensors.
     K1_h = K1.clone()
     K2_h = K2.clone()
     K1_h.fill_diagonal_(0.0)
@@ -73,7 +73,7 @@ def optimize(K_X, w, init, lam: float):
         G_Y = gram_student(Y)
         K_Y = double_center(G_Y, w, DEV)
         
-        # PULL avec diagonale à 0
+        # PULL with a zero diagonal
         pull = rv_hollow(K_X, K_Y)
         
         loss = -(pull - lam * log_volume(G_Y))
@@ -89,19 +89,19 @@ def main():
     init = pca_init(ds.X)
     X_t = to_tensor(ds.X, DEV)
     
-    # K_X via rv_kernels (t-SNE input kernel avec perplexité)
+    # K_X via rv_kernels (t-SNE input kernel with perplexity)
     K_X_raw = compute_gaussian_affinity_kernel_torch(
         X_t, param={"perplexity": PERP, "gamma": SOFTENING}, weights=w, device=DEV
     )
-    # Note: G dans gaussian_affinity a DÉJÀ 0 sur la diagonale. 
-    # Le centrage (Q G Q^T) remplit la diagonale. On met à 0 la diagonale de K_X_raw
-    # pour s'assurer que même après ou avant centrage, on joue sur du "hollow".
+    # G from gaussian_affinity ALREADY has a zero diagonal. Centering (Q G Q^T)
+    # fills the diagonal. The diagonal of K_X_raw is set to zero to ensure that
+    # the comparison is hollow regardless of whether it occurs before or after centering.
     K_X = normalize_kernel(K_X_raw)
 
     fig, axes = plt.subplots(2, 4, figsize=(16, 8))
     axes = axes.flatten()
     
-    print("Scan Lambda (log volume) | K_X = gaussian_affinity (rv_kernels) + diag=0")
+    print("Lambda scan (log volume) | K_X = gaussian_affinity (rv_kernels) + diag=0")
     print(f"{'Lambda':<8} | {'RV_0':>7} | {'ARI':>7} | {'spread':>8}")
     print("-" * 37)
 
@@ -126,7 +126,7 @@ def main():
     ax.set_title(f"t-SNE ref (Perp=30)\nARI={ari:.3f} SP={sp:.1f}")
     ax.set_xticks([]); ax.set_yticks([])
 
-    fig.suptitle("Scan Lambda log(Z) avec K_X adaptatif et RV sans diagonale", fontsize=16)
+    fig.suptitle("Lambda scan for log(Z) with adaptive K_X and hollow RV", fontsize=16)
     fig.tight_layout()
     out = FIG_DIR / "temp_log_volume_scan_Kdiag0.png"
     fig.savefig(out, dpi=130)

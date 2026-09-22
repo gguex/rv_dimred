@@ -1,87 +1,86 @@
-# Essais de régularisation dans l'espace des noyaux
+# Kernel-space regularization experiments
 
-Ce dossier regroupe les résultats des vérifications et des essais de la
-régularisation par contrôle de la composante neutre.
+This directory contains the results of the checks and experiments concerning
+regularization through control of the neutral component.
 
-## Résultats disponibles
+## Available results
 
-Le sous-dossier `math_checks/` contient les résultats du script
-[verify_kernel_regularization.py](../../scripts/exploratory/verify_kernel_regularization.py) :
+The `math_checks/` subdirectory contains the output of
+[verify_kernel_regularization.py](../../scripts/exploratory/verify_kernel_regularization.py):
 
-- [checks.json](math_checks/checks.json) : erreurs numériques des identités,
-  gradients, plafond spectral et contre-exemple de séparation de deux groupes ;
-- [trace_regularization.pdf](math_checks/trace_regularization.pdf) et
-  [trace_regularization.png](math_checks/trace_regularization.png) : illustration
-  de la trace et de la pénalité le long de dilatations.
+- [checks.json](math_checks/checks.json): numerical errors for the identities,
+  gradients, spectral ceiling, and two-group separation counterexample;
+- [trace_regularization.pdf](math_checks/trace_regularization.pdf) and
+  [trace_regularization.png](math_checks/trace_regularization.png): illustration
+  of the trace and penalty along dilation paths.
 
-Pour les régénérer depuis la racine du dépôt :
+Regenerate them from the repository root with:
 
 ```sh
 .venv/bin/python scripts/exploratory/verify_kernel_regularization.py
 ```
 
-Ces résultats sont des vérifications mathématiques, pas une évaluation des
-performances d'un algorithme de réduction de dimension. Le script conserve
-aussi des contrôles de variantes exploratoires qui ne sont pas retenues pour
-la révision.
+These results are mathematical checks rather than an evaluation of a
+dimensionality-reduction algorithm. The script also retains checks for
+exploratory variants that were not selected for the revision.
 
-## Intégration et exemple contrôlé
+## Integration and controlled example
 
-L'expérience prévue a été réalisée le 18 septembre 2026 : trois intensités
-de pénalisation, dont zéro, sur les mêmes trois initialisations. Le
-[compte rendu](controlled_example/README.md) donne le protocole, les résultats
-et les limites. Les neuf essais sont conservés, sans sélection du meilleur.
+The planned experiment was run on September 18, 2026: three penalty strengths,
+including zero, applied to the same three initializations. The
+[report](controlled_example/README.md) describes the protocol, results, and
+limitations. All nine runs are retained without selecting the best one.
 
-La pénalité rapproche l'inertie du noyau de la cible, au prix d'une diminution
-du RV. La pénalité forte produit aussi des points éloignés et une sensibilité
-à l'initialisation. Cet exemple illustre un contrôle d'inertie ; il ne justifie
-pas une amélioration générale de la visualisation ni une garantie de convergence.
+The penalty moves the kernel inertia toward its target at the cost of lower RV.
+The strongest penalty also produces distant points and sensitivity to
+initialization. This example illustrates inertia control; it does not support a
+general improvement in visualization quality or a convergence guarantee.
 
-Les cinq tests d'intégration du solveur passent : projection de Frobenius et
-forces, trajectoires inchangées à pénalité nulle, optimisation de l'objectif
-pénalisé, cohérence du score final et du suivi, validation des paramètres.
-[Résultat des tests](solver_checks.json).
+All five solver integration checks pass: Frobenius projection and forces,
+unchanged trajectories at zero penalty, optimization of the penalized
+objective, consistency of the final score and tracking, and parameter
+validation. See the [test results](solver_checks.json).
 
 ```sh
 .venv/bin/python scripts/exploratory/verify_regularized_solver.py
 .venv/bin/python scripts/experiments/06_regularization/regularization_run.py
 ```
 
-## Comparaison MNIST retenue dans l'article
+## MNIST comparison retained in the paper
 
-Le dossier [mnist_hollow_regularization](mnist_hollow_regularization/) reprend
-exactement les 2 000 observations, les coordonnées full-RV, hollow-RV et t-SNE,
-et les trajectoires de l'ancienne expérience `04_tether`. À partir de la solution
-full-RV historique, quatre essais appariés de 500 pas comparent hollow RV, full
-RV à `eta=100` et `eta=1000`, et hollow RV régularisé à `eta=100000`.
+The [mnist_hollow_regularization](mnist_hollow_regularization/) directory uses
+exactly the same 2,000 observations, full-RV, hollow-RV, and t-SNE coordinates,
+and trajectories as the earlier `04_tether` experiment. Starting from the saved
+full-RV solution, four matched 500-step runs compare hollow RV, full RV at
+`eta=100` and `eta=1000`, and regularized hollow RV at `eta=100000`.
 
 ```sh
 .venv/bin/python scripts/experiments/06_regularization/mnist_hollow_regularization.py
 ```
 
-## Chemin MNIST préliminaire
+## Preliminary MNIST path
 
-Le dossier [mnist_path](mnist_path/README.md) conserve la visualisation
-préliminaire sur un échantillon équilibré de 500 images MNIST. Elle part de
-la meilleure de trois solutions non régularisées, choisie par le RV, puis suit
-la continuation `eta = 1, 10, 100, 1000`. Les cartes à échelle commune montrent
-l'expansion progressive et le compromis avec l'alignement. Elle n'est plus
-utilisée dans le manuscrit.
+The [mnist_path](mnist_path/README.md) directory retains the preliminary
+visualization on a balanced sample of 500 MNIST images. It starts from the best
+of three unregularized solutions, selected by RV, and then follows the
+continuation path `eta = 1, 10, 100, 1000`. Maps on a common scale show the
+progressive expansion and the trade-off with alignment. This experiment is no
+longer used in the manuscript.
 
 ```sh
 .venv/bin/python scripts/experiments/06_regularization/mnist_regularization_path.py
 ```
 
-Le script exploratoire volume/UMAP est archivé dans
-`archive/exploratory/verify_volume_repulsion.py` ; ses anciens résultats ont été
-supprimés et ne font pas partie de ce dossier.
+The exploratory volume/UMAP script is archived as
+`archive/exploratory/verify_volume_repulsion.py`; its previous results were
+removed and are not part of this directory.
 
-## Balayage hollow et forte régularisation
+## Hollow sweep and strong regularization
 
-Le dossier [hollow_regularization_sweep](hollow_regularization_sweep/) contient
-un test hors manuscrit de l'objectif hollow régularisé jusqu'à `eta=1000000`.
-Toutes les branches partent du même état full-RV. Les cartes à échelle commune
-et individuelle, les métriques finales et les trajectoires montrent que l'effet
-devient visible vers `eta=3000`, que la cible est presque exactement atteinte à
-`eta=100000`, et que `eta=1000000` dégrade davantage l'alignement et la fidélité
-locale.
+The [hollow_regularization_sweep](hollow_regularization_sweep/) directory
+contains an experiment outside the manuscript that applies the regularized
+hollow objective up to `eta=1000000`. All branches start from the same full-RV
+state. Maps on common and individual scales, final metrics, and trajectories
+show that the effect becomes visible around `eta=3000`, the target is reached
+almost exactly at `eta=100000`, and `eta=1000000` further degrades alignment and
+local fidelity.

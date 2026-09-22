@@ -1,19 +1,19 @@
 """
-test_log_volume.py  —  Vérification de log(Z) (Grid)
-====================================================
+test_log_volume.py  —  log(Z) check (grid)
+==========================================
 
-Grille croisée (Perplexité x Lambda fixe) pour explorer l'interaction entre
-la topologie locale (PULL) et la force de répulsion canonique (PUSH) du t-SNE,
-mais formulée dans le cadre RV.
+Crossed grid (perplexity x fixed lambda) exploring the interaction between
+local topology (PULL) and the canonical t-SNE repulsive force (PUSH), formulated
+within the RV framework.
 
-Objectif (maximiser sur Y) :
+Objective (maximize over Y):
     L(Y, lambda) = RV(K_X, K_Y)  -  lambda * log(Z)
-où
-    RV(K_X, K_Y) = <K_X, K_Y> / ||K_Y||   (PULL normalisé)
-    Z = somme des éléments hors-diagonale de G_Y (Gram Student-t brut)
+where
+    RV(K_X, K_Y) = <K_X, K_Y> / ||K_Y||   (normalized PULL)
+    Z = sum of the off-diagonal entries of G_Y (raw Student-t Gram matrix)
 
-On utilise des petites valeurs de lambda (0.01, 0.1) car le log-volume est une
-force asympotiquement non-bornée, nécessitant un réglage fin face au PULL borné.
+Small lambda values (0.01, 0.1) are used because the log-volume is an
+asymptotically unbounded force that requires fine tuning against the bounded PULL.
 """
 
 from __future__ import annotations
@@ -121,7 +121,7 @@ def main() -> None:
     print("-" * 43)
 
     for row, perp in enumerate(PERPLEXITIES):
-        # 1. K_X (centré) pour le PULL (dépend de la perplexité)
+        # 1. Centered K_X for the PULL (depends on perplexity)
         K_X = compute_gaussian_affinity_kernel_torch(
             X_t, param={"perplexity": perp, "gamma": SOFTENING}, weights=w, device=DEV
         )
@@ -138,7 +138,7 @@ def main() -> None:
             ax.set_title(f"Perp={perp}, Lam={lam}\nARI={ari:.3f} SP={sp:.1f}")
             ax.set_xticks([]); ax.set_yticks([])
 
-        # Calcul t-SNE ref pour cette perplexité
+        # Compute the t-SNE reference for this perplexity
         Yref = TSNE(n_components=D, perplexity=perp, random_state=SEED).fit_transform(ds.X)
         rvr, arir, spr = metrics(Yref, K_X, w, labels)
         print(f"{perp:<6} | {'t-SNE':<6} | {rvr:>7.4f} | {arir:>7.4f} | {spr:>8.3f}")
@@ -149,7 +149,7 @@ def main() -> None:
         ax_ref.set_title(f"t-SNE (Perp={perp})\nARI={arir:.3f} SP={spr:.1f}")
         ax_ref.set_xticks([]); ax_ref.set_yticks([])
 
-    fig.suptitle("Log-Volume vs t-SNE : Effet croisé Perplexité / Lambda", fontsize=16)
+    fig.suptitle("Log-volume vs t-SNE: joint effect of perplexity and lambda", fontsize=16)
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     out = FIG_DIR / "test_log_volume_grid.png"
     fig.savefig(out, dpi=130)

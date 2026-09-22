@@ -1,22 +1,22 @@
 """
-test_probabilistic_rv.py  —  TEST E (exploration: RV probabiliste / Negative Sampling)
-====================================================================================
+test_probabilistic_rv.py  —  TEST E (exploration: probabilistic RV / negative sampling)
+======================================================================================
 
-Exploration de l'idée de "Noyau Répulsif" (Negative Sampling type UMAP) appliquée
-au cadre RV (réf. idea_push_pull.md).
+Exploration of a "repulsive kernel" (UMAP-style negative sampling) applied to
+the RV framework (see idea_push_pull.md).
 
-Au lieu d'une contrainte de volume globale, on pénalise explicitement la similarité
-entre les paires qui sont des "non-voisins" dans l'espace d'entrée.
+Instead of a global volume constraint, this objective explicitly penalizes
+similarity between pairs that are not neighbors in the input space.
 
-Objectif (maximiser sur Y) :
+Objective (maximize over Y):
     L(Y, lambda) = RV(K_X, K_Y)  -  lambda * <G_neg, G_Y>
-où
-    RV(K_X, K_Y) = <K_X, K_Y> / ||K_Y||   (PULL normalisé)
-    G_neg = 1 - G_X                       (G_X : affinités brutes dans [0,1])
-    G_Y = 1 / (1 + D^2(Y))                (Gram Student-t brut)
+where
+    RV(K_X, K_Y) = <K_X, K_Y> / ||K_Y||   (normalized PULL)
+    G_neg = 1 - G_X                       (G_X: raw affinities in [0,1])
+    G_Y = 1 / (1 + D^2(Y))                (raw Student-t Gram matrix)
 
-On teste cette approche (a) sans répulsion, (b) avec un balayage de lambda,
-et on compare à (c) t-SNE sklearn (référence).
+The experiment tests (a) no repulsion and (b) a lambda sweep, and compares both
+with (c) the scikit-learn t-SNE reference.
 """
 
 from __future__ import annotations
@@ -68,7 +68,7 @@ def gram_student(Y: torch.Tensor) -> torch.Tensor:
     return 1.0 / (1.0 + d2)
 
 def get_raw_gaussian_affinity(X: np.ndarray, perplexity: float, gamma: float) -> torch.Tensor:
-    """Calcule G_X brut (avant centrage), dans [0, 1]."""
+    """Compute raw G_X before centering, with values in [0, 1]."""
     n = X.shape[0]
     sq = (X**2).sum(1)
     D2 = np.maximum(sq[:, None] + sq[None, :] - 2 * X @ X.T, 0.0)
@@ -107,10 +107,10 @@ def optimize(
         G_Y = gram_student(Y)
         K_Y = double_center(G_Y, w, DEV)
         K_Y_frob = (K_Y * K_Y).sum().sqrt().clamp_min(1e-10)
-        align = (K_X * K_Y).sum() / K_Y_frob   # RV normalisé (||K_X||=1)
+        align = (K_X * K_Y).sum() / K_Y_frob   # normalized RV (||K_X||=1)
         
-        # Repulsion cible les non-voisins :
-        # On normalise par n*(n-1) pour avoir une métrique ~ moyenne hors-diagonale
+        # Repulsion targets non-neighbors. Normalize by n*(n-1) to obtain a
+        # metric comparable to an off-diagonal mean.
         repulsion = ((G_neg * G_Y).sum() - (torch.diag(G_neg)*torch.diag(G_Y)).sum()) / (n * (n - 1))
         
         loss = -(align - lam * repulsion)
@@ -122,20 +122,20 @@ def optimize(
 
 def main() -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"Test E  -  RV probabiliste (Negative Sampling), reduced MNIST n=500\n")
+    print(f"Test E  -  probabilistic RV (negative sampling), reduced MNIST n=500\n")
 
     ds = load_mnist(n_per_digit=N_PER_DIGIT, random_state=SEED)
     n, labels = ds.n, ds.labels
     w = default_weights(n, DEV)
     
-    # 1. K_X (centré, normé) pour le PULL
+    # 1. Centered, normalized K_X for the PULL
     X_t = to_tensor(ds.X, DEV)
     K_X = compute_gaussian_affinity_kernel_torch(
         X_t, param={"perplexity": PERPLEXITY, "gamma": SOFTENING}, weights=w, device=DEV
     )
     K_X = normalize_kernel(K_X)
     
-    # 2. G_neg (brut) pour le PUSH
+    # 2. Raw G_neg for the PUSH
     G_X = get_raw_gaussian_affinity(ds.X, PERPLEXITY, SOFTENING)
     G_neg = 1.0 - G_X
     
@@ -151,7 +151,7 @@ def main() -> None:
         sweep[lam] = Yl
 
     # (c) reference: t-SNE sklearn
-    print("  (calcul t-SNE sklearn...)", flush=True)
+    print("  (computing scikit-learn t-SNE...)", flush=True)
     Yref = TSNE(n_components=D, perplexity=PERPLEXITY,
                 random_state=SEED).fit_transform(ds.X)
 
@@ -169,7 +169,7 @@ def main() -> None:
     print(f"  {'reference t-SNE (sklearn)':<28} {rvr:>7.4f} {arir:>7.4f} {spr:>8.3f}")
 
     # --- figures ---
-    # Choix de la meilleure config lambda pour le plot (arbitrairement lambda=10)
+    # Choose one lambda configuration for the plot (lambda=10, arbitrarily).
     Y_best = sweep[10.0]
     
     panels = [("lambda=0 (PULL only)", Y0), ("Negative Sampling (lam=10)", Y_best),
@@ -179,7 +179,7 @@ def main() -> None:
         ax.scatter(Y[:, 0], Y[:, 1], c=labels, cmap="tab10", s=8, alpha=0.8)
         ax.set_title(title)
         ax.set_xticks([]); ax.set_yticks([])
-    fig.suptitle("Test E: RV Probabiliste (Negative Sampling type UMAP)")
+    fig.suptitle("Test E: probabilistic RV (UMAP-style negative sampling)")
     fig.tight_layout()
     out = FIG_DIR / "test_E_probabilistic_rv.png"
     fig.savefig(out, dpi=130)

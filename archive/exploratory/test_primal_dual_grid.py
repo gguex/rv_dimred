@@ -1,17 +1,17 @@
 """
-test_primal_dual_grid.py  —  TEST C (suite)
-===========================================
+test_primal_dual_grid.py  —  TEST C (continued)
+=================================================
 
-Grille croisée (Perplexité x Lambda fixe) pour explorer l'interaction entre
-la topologie locale (PULL) et la force de répulsion globale (PUSH primal-dual).
+Crossed grid (perplexity x fixed lambda) exploring the interaction between
+local topology (PULL) and the global repulsive force (primal-dual PUSH).
 
-Objectif (maximiser sur Y avec lambda fixe) :
+Objective (maximize over Y with fixed lambda):
     L(Y, lambda) = RV(K_X, K_Y)  -  lambda * vbar(Y)
-où
-    RV(K_X, K_Y) = <K_X, K_Y> / ||K_Y||   (PULL normalisé)
-    vbar(Y) = moyenne hors-diagonale de G_Y (Gram Student-t brut)
+where
+    RV(K_X, K_Y) = <K_X, K_Y> / ||K_Y||   (normalized PULL)
+    vbar(Y) = off-diagonal mean of G_Y (raw Student-t Gram matrix)
 
-On génère un graphique (lignes = perplexités, colonnes = lambdas + t-SNE ref).
+The resulting plot uses perplexities as rows and lambdas plus t-SNE as columns.
 """
 
 from __future__ import annotations
@@ -121,7 +121,7 @@ def main() -> None:
     print("-" * 43)
 
     for row, perp in enumerate(PERPLEXITIES):
-        # 1. K_X (centré) pour le PULL (dépend de la perplexité)
+        # 1. Centered K_X for the PULL (depends on perplexity)
         K_X = compute_gaussian_affinity_kernel_torch(
             X_t, param={"perplexity": perp, "gamma": SOFTENING}, weights=w, device=DEV
         )
@@ -138,7 +138,7 @@ def main() -> None:
             ax.set_title(f"Perp={perp}, Lam={lam}\nARI={ari:.3f} SP={sp:.1f}")
             ax.set_xticks([]); ax.set_yticks([])
 
-        # Calcul t-SNE ref pour cette perplexité
+        # Compute the t-SNE reference for this perplexity
         Yref = TSNE(n_components=D, perplexity=perp, random_state=SEED).fit_transform(ds.X)
         rvr, arir, spr = metrics(Yref, K_X, w, labels)
         print(f"{perp:<6} | {'t-SNE':<6} | {rvr:>7.4f} | {arir:>7.4f} | {spr:>8.3f}")
@@ -149,7 +149,7 @@ def main() -> None:
         ax_ref.set_title(f"t-SNE (Perp={perp})\nARI={arir:.3f} SP={spr:.1f}")
         ax_ref.set_xticks([]); ax_ref.set_yticks([])
 
-    fig.suptitle("Primal-Dual vs t-SNE : Effet croisé Perplexité / Lambda", fontsize=16)
+    fig.suptitle("Primal-dual vs t-SNE: joint effect of perplexity and lambda", fontsize=16)
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     out = FIG_DIR / "test_C_grid_primal_dual.png"
     fig.savefig(out, dpi=130)

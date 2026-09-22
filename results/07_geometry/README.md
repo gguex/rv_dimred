@@ -1,26 +1,25 @@
-# Figure conceptuelle de la géométrie des noyaux
+# Conceptual kernel-geometry figure
 
-Cette figure donne la vue d'ensemble ajoutée au manuscrit révisé. Elle est
-entièrement schématique et ne représente pas une expérience numérique.
+This figure provides the overview added to the revised manuscript. It is fully
+schematic and does not represent a numerical experiment.
 
-Les deux panneaux montrent :
+The two panels show:
 
-1. une coupe du cône de noyaux linéaires réalisables, avec la cible, le plus
-   proche noyau de rang contraint et l'angle associé au RV ;
-2. une feuille locale de l'image d'un readout non linéaire, avec le gradient
-   ambiant et la vitesse tangentielle réellement induite par une mise à jour des
-   coordonnées.
+1. a cross-section of the cone of realizable linear kernels, with the target,
+   the nearest rank-constrained kernel, and the angle associated with RV;
+2. a local sheet in the image of a nonlinear readout, with the ambient gradient
+   and the tangent velocity actually induced by a coordinate update.
 
-Les rayons séparés du premier panneau rappellent que le cône de rang contraint
-est généralement non convexe. Le second panneau ne dessine volontairement pas
-la mise à jour paramétrique comme une projection orthogonale.
+The separate rays in the first panel recall that the rank-constrained cone is
+generally non-convex. The second panel deliberately avoids drawing the
+parametric update as an orthogonal projection.
 
-Fichiers produits :
+Generated files:
 
-- `kernel_geometry_overview.pdf`, version vectorielle utilisée dans l'article ;
-- `kernel_geometry_overview.png`, version de contrôle visuel.
+- `kernel_geometry_overview.pdf`, the vector version used in the paper;
+- `kernel_geometry_overview.png`, the visual-check version.
 
-Reproduction depuis la racine du dépôt :
+Reproduce the figure from the repository root with:
 
 ```sh
 .venv/bin/python scripts/figures/kernel_geometry_overview.py

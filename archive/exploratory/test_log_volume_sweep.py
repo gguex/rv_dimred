@@ -1,5 +1,5 @@
 """
-test_log_volume_sweep.py  —  Vérification de lambda sur log(Z)
+test_log_volume_sweep.py  —  lambda check for log(Z)
 ==============================================================
 """
 

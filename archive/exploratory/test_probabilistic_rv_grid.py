@@ -1,18 +1,18 @@
 """
-test_probabilistic_rv_grid.py  —  TEST E (suite)
-=================================================
+test_probabilistic_rv_grid.py  —  TEST E (continued)
+=====================================================
 
-Grille croisée (Perplexité x Lambda) pour explorer l'interaction entre
-la topologie locale (PULL) et la force de répulsion globale (PUSH).
+Crossed grid (perplexity x lambda) exploring the interaction between local
+topology (PULL) and the global repulsive force (PUSH).
 
-Objectif (maximiser sur Y) :
+Objective (maximize over Y):
     L(Y, lambda) = RV(K_X, K_Y)  -  lambda * <G_neg, G_Y>
-où
-    RV(K_X, K_Y) = <K_X, K_Y> / ||K_Y||   (PULL normalisé)
-    G_neg = 1 - G_X                       (G_X : affinités brutes dans [0,1])
-    G_Y = 1 / (1 + D^2(Y))                (Gram Student-t brut)
+where
+    RV(K_X, K_Y) = <K_X, K_Y> / ||K_Y||   (normalized PULL)
+    G_neg = 1 - G_X                       (G_X: raw affinities in [0,1])
+    G_Y = 1 / (1 + D^2(Y))                (raw Student-t Gram matrix)
 
-On génère un graphique (lignes = perplexités, colonnes = lambdas + t-SNE ref).
+The resulting plot uses perplexities as rows and lambdas plus t-SNE as columns.
 """
 
 from __future__ import annotations
@@ -115,7 +115,7 @@ def optimize(
 
 def main() -> None:
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"Test E (Grid) - RV probabiliste, MNIST n=500\n")
+    print(f"Test E (grid) - probabilistic RV, MNIST n=500\n")
 
     ds = load_mnist(n_per_digit=N_PER_DIGIT, random_state=SEED)
     n, labels = ds.n, ds.labels
@@ -130,13 +130,13 @@ def main() -> None:
     print("-" * 43)
 
     for row, perp in enumerate(PERPLEXITIES):
-        # 1. K_X (centré) pour le PULL (dépend de la perplexité)
+        # 1. Centered K_X for the PULL (depends on perplexity)
         K_X = compute_gaussian_affinity_kernel_torch(
             X_t, param={"perplexity": perp, "gamma": SOFTENING}, weights=w, device=DEV
         )
         K_X = normalize_kernel(K_X)
         
-        # 2. G_neg (brut) pour le PUSH (dépend de la perplexité)
+        # 2. Raw G_neg for the PUSH (depends on perplexity)
         G_X = get_raw_gaussian_affinity(ds.X, perp, SOFTENING)
         G_neg = 1.0 - G_X
         
@@ -151,7 +151,7 @@ def main() -> None:
             ax.set_title(f"Perp={perp}, Lam={lam}\nARI={ari:.3f} SP={sp:.1f}")
             ax.set_xticks([]); ax.set_yticks([])
 
-        # Calcul t-SNE ref pour cette perplexité
+        # Compute the t-SNE reference for this perplexity
         Yref = TSNE(n_components=D, perplexity=perp, random_state=SEED).fit_transform(ds.X)
         rvr, arir, spr = metrics(Yref, K_X, w, labels)
         print(f"{perp:<6} | {'t-SNE':<6} | {rvr:>7.4f} | {arir:>7.4f} | {spr:>8.3f}")
@@ -162,7 +162,7 @@ def main() -> None:
         ax_ref.set_title(f"t-SNE (Perp={perp})\nARI={arir:.3f} SP={spr:.1f}")
         ax_ref.set_xticks([]); ax_ref.set_yticks([])
 
-    fig.suptitle("RV Probabiliste vs t-SNE : Effet croisé Perplexité / Lambda", fontsize=16)
+    fig.suptitle("Probabilistic RV vs t-SNE: joint effect of perplexity and lambda", fontsize=16)
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     out = FIG_DIR / "test_E_grid.png"
     fig.savefig(out, dpi=130)

@@ -121,7 +121,7 @@ def optimize(
         G = gram_student(Y)
         K_Y = double_center(G, w, DEV)
         K_Y_frob = (K_Y * K_Y).sum().sqrt().clamp_min(1e-10)
-        align = (K_X * K_Y).sum() / K_Y_frob   # RV normalisé (||K_X||=1)
+        align = (K_X * K_Y).sum() / K_Y_frob   # normalized RV (||K_X||=1)
         vbar = mean_offdiag(G)                  # crowding on RAW Gram (PUSH target)
         loss = -(align - lam * vbar)            # maximize L => minimize -L
         loss.backward()
@@ -166,7 +166,7 @@ def main() -> None:
     Ypd, lam_traj = optimize(K_X, w, init, lam0=0.0, c=c, adapt_dual=True)
 
     # (d) reference: t-SNE sklearn
-    print("  (calcul t-SNE sklearn...)", flush=True)
+    print("  (computing scikit-learn t-SNE...)", flush=True)
     Yref = TSNE(n_components=D, perplexity=PERPLEXITY,
                 random_state=SEED).fit_transform(ds.X)
 

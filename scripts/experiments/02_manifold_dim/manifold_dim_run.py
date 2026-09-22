@@ -1,22 +1,18 @@
-"""
-manifold_dim_run.py  —  art. §6.3  intrinsic dimension of the output manifold
-=============================================================================
+"""Numerical ranks of the coordinate-to-kernel maps.
 
-Validates Prop. 2 (promise of art. §4.2) for the two canonical readouts of
-art. §4.1: the non-linear output manifold
+For the two canonical nonlinear readouts, the local image
     S_q^kappa = { Q kappa(arg(Y)) Q^T : Y in R^{n x q} }
-has intrinsic dimension
+has, at regular configurations, dimension
     (B) distance readout   arg(Y) = D^2(Y):   dim = n*q - C(q+1, 2),
     (A) dot-prod. readout  arg(Y) = Y Y^T:    dim = n*q - C(q, 2),
 the invariances being the motions the readout cannot see: all rigid motions
 (translation q + rotation q(q-1)/2) leave every distance fixed, while a
 non-affine dot-product readout registers translations and only rotations
 remain. For q=2 the distance case is the headline  dim = 2n - 3; the
-dot-product sheet is thicker by exactly q. Each regular dot-product
-configuration is also the certificate that Prop. 2(ii) calls for, settling
-the generic alternative for the exponential profile.
+dot-product sheet is thicker by exactly q. Regular configurations certify the
+generic rank for the exponential profile.
 
-We estimate dim S_q^kappa as the RANK of the Jacobian of
+We estimate the local dimension as the rank of the Jacobian of
     Y  |->  K_Y = Q kappa(arg(Y)) Q^T
         (Student-t: kappa = 1/(1+t) on D^2;  exponential: kappa = exp(t/10)
          on Y Y^T, scaled to keep entries in a sane numerical range)
@@ -98,7 +94,7 @@ def numerical_rank(sv: np.ndarray, n_in: int) -> tuple[int, float]:
 
 
 def main() -> None:
-    print("art. §6.3  -  intrinsic dimension of S_q^kappa  (two readouts)")
+    print("local dimension of the coordinate-to-kernel map  (two readouts)")
     print(f"  rank on {N_SAMPLES} random base points Y0 per (readout, n, q)")
     print(f"  sweeping n in {NS} to rule out a coincidence at any single n\n")
 

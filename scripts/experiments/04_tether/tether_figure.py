@@ -1,15 +1,14 @@
-"""
-tether_figure.py  —  art. §6.5  Figure 1: the diagonal tether
-=============================================================
+"""Historical figure for the full-RV versus hollow-RV MNIST baseline.
 
-Composes Figure 1 from the artefacts of tether_run.py:
+This figure is retained for reproducibility and as an input audit for experiment
+06. Its original general diagonal-tether interpretation is not part of the
+revised manuscript. It displays:
 
   top    triptych of the three MNIST embeddings (full-RV, hollow-RV, t-SNE),
          coloured by digit, each autoscaled (equal aspect) with its RMS spread
-         in the title -- the tether tightens full-RV and loosens toward t-SNE.
+         in the title;
   bottom energy split along the optimization: the structural energy ||K̊_Y||^2
-         collapses (~7x) while the degree floor sum_i r_i^2 stays essentially
-         pinned -- the mechanism of Prop. 5 / the justification Lemma.
+         and the degree term sum_i r_i^2 for this optimization run.
 
 Writes results/04_tether/tether_figure.{png,pdf}.
 """
@@ -97,8 +96,7 @@ def main() -> None:
                 label=r"$\sum_i r_i^2$ (degree floor)")
     ax.set_xlabel("iteration")
     ax.set_ylabel("energy (log scale)")
-    ax.set_title(r"structural energy $\|\mathring{K}_Y\|^2$ collapses; "
-                 r"degree floor $\sum_i r_i^2$ stays pinned", fontsize=11)
+    ax.set_title(r"structural and diagonal energy along optimization", fontsize=11)
     ax.legend(loc="center right", fontsize=9, framealpha=0.9)
     ax.margins(x=0.01)
 

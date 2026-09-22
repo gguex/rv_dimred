@@ -1,28 +1,21 @@
-"""
-supervised_dial_run.py  —  art. §6.6  the supervised dial (double kernel dial)
-==============================================================================
+"""Run the supervised input/output kernel interpolation.
 
-A single dial beta interpolates an unsupervised t-SNE into a fully class-supervised
-embedding by moving the INPUT *and* the OUTPUT kernel together — something the RV
-framework enables by blending kernels, with no library counterpart:
+A single dial beta interpolates between an unsupervised hollow-RV embedding and a
+class-target hollow-RV embedding by moving the INPUT and OUTPUT kernels together:
 
     K_in(beta)  = (1 - beta) K_ag  + beta K_Z         (each unit-Frobenius)
     K_out(beta) = (1 - beta) StudentT(Y, nu=1) + beta linear(Y)   (each unit-Frob.)
-    objective   = HOLLOW RV  (both diagonals zeroed; art. §6.5)
+    objective   = HOLLOW RV  (both diagonals zeroed)
 
-    beta = 0  ->  t-SNE (unsupervised)
-    beta = 1  ->  linear <-> class-centroid kernel = cMDS on class centroids, which
-                  collapses each class to a point (fully supervised); the useful
-                  regime is intermediate beta.
+    beta = 0  ->  hollow RV, adaptive-Gaussian target, Student-t output
+    beta = 1  ->  hollow RV, class target, linear output
 
-Dialing the output toward linear is what makes supervision pay: only a linear output
-can realise the low-rank centroid structure of K_Z (a fixed Student-t output cannot).
 K_ag is the adaptive-Gaussian t-SNE affinity softened at gamma = SOFTENING; K_Z is the
 inter-class (label) kernel on the linear base. Honest train/test protocol (labelled
 datasets only, mnist + singlecell): K_Z is built from TRAIN labels, the embedding is
 optimized on train, and TEST points are projected out-of-sample from their features
-alone (project_out_of_sample, no test labels), so the generalization of supervision
-can be measured on held-out points.
+alone (project_out_of_sample, no test labels). The held-out scores measure transfer
+under this fixed split and heuristic extension; they are not a generalization bound.
 
 Saves train + projected-test coordinates to results/05_supervised_dial/coordinates/
 (+ run_meta.csv with beta and RV). Indices / figure built by the companion scripts.
@@ -79,7 +72,7 @@ def main() -> None:
     for name in DATASETS:
         ds = datasets[name]
         print("=" * 64)
-        print(f"art. §6.6  dataset = {ds.name}  (n={ds.n})")
+        print(f"supervised interpolation: dataset = {ds.name}  (n={ds.n})")
         print("=" * 64)
 
         X_tr, X_te, y_tr, y_te = supervised_split(ds.X, ds.labels)

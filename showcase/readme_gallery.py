@@ -1,11 +1,9 @@
-"""
-readme_gallery.py  —  the spectral-zoo gallery for the repository README
-========================================================================
+"""Spectral-method gallery for the repository.
 
-A single grid (3 datasets x 6 spectral methods) of the closed-form RV embeddings,
+A grid (3 datasets x 6 spectral methods) of closed-form kernel embeddings,
 each Procrustes-aligned to its reference-library orientation and colored by the
-dataset's ground truth. The point of the picture: the whole spectral zoo is one
-operation --- the projection of a different input kernel onto the same cone.
+dataset's ground truth. The methods use different input kernels and, depending on
+their reference convention, eigenvalue-scaled or balanced output axes.
 
 Writes results/figures/spectral_gallery.png.
 """
@@ -66,8 +64,7 @@ def main() -> None:
                 ax.set_ylabel(ds.name, fontsize=11)
 
     fig.suptitle(
-        "The spectral zoo, one operation: closed-form RV projection of six input "
-        "kernels onto the same cone",
+        "Spectral embeddings from input-kernel and output-axis conventions",
         fontsize=13,
     )
     fig.tight_layout()

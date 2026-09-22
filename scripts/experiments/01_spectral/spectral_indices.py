@@ -6,7 +6,7 @@ Reads the embeddings saved by spectral_run.py (results/01_spectral/coordinates/)
 and computes, for each (dataset × method):
   * identity vs the reference: Procrustes disparity, kNN overlap,
   * quality: trustworthiness, ARI (labelled datasets only),
-  * rv_final, rv_max (Prop. 1 ceiling), rv_ratio (read from run_meta.csv).
+  * rv_final, rv_max (linear-readout ceiling), rv_ratio (from run_meta.csv).
 
 Reference-only quality (trustworthiness, ARI) is logged once per method. Two files
 are written to results/01_spectral/indices/ on each run:
@@ -88,7 +88,7 @@ def write_table(
 
 
 def load_rv_meta() -> dict[tuple[str, str], dict[str, float]]:
-    """Per (dataset, method_key): rv_final, rv_max (Prop. 1 ceiling), rv_ratio."""
+    """Load rv_final, rv_max, and rv_ratio by dataset and method key."""
     meta: dict[tuple[str, str], dict[str, float]] = {}
     with exp_meta_path(EXP).open() as f:
         for r in csv.DictReader(f):

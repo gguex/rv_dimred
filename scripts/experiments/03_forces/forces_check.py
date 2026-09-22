@@ -1,10 +1,7 @@
-"""
-forces_check.py  —  art. §6.4(i)  attraction / repulsion power asymmetry
-========================================================================
+"""Check analytic Student-t force identities against autograd.
 
-Validates Cor. 2 (RV gradient) and Prop. 6(b) (volume PUSH): the analytic force
-laws the article states coincide with autograd of the project's *real* kernel code
-to machine precision. Both the framework and t-SNE use the SAME Student-t output
+The analytic force laws coincide with autograd of the project's kernel code to
+machine precision. Both the RV construction and t-SNE use the same Student-t output
 q_ij = (1 + ||y_i - y_j||^2)^{-1}; only the OBJECTIVE differs (RV-cosine bilinear
 alignment vs KL). We check three gradient identities:
 
@@ -17,18 +14,17 @@ alignment vs KL). We check three gradient identities:
           dC/dy_k          = 4 sum_j (p - q)_kj q_kj    (y_k - y_j)     [POWER 1]
       -> the t-SNE attractive weight is p_kj q_kj^1, one power of q LESS than the RV.
 
-  (C) Volume repulsion (the only PUSH available, Prop. 6c):
+  (C) t-SNE normalization reference:
           d/dy_k (-log Z)  = (4/Z) sum_j q_kj^2 (y_k - y_j)             [POWER 2]
       -> identical to the t-SNE repulsive force.
 
-Conclusion: RV attraction and the volume PUSH are BOTH q^2 (same chain rule through
-the bounded readout kappa' = -q^2); t-SNE is asymmetric (q^1 attraction, q^2
-repulsion). The framework is the RV-cosine cousin of t-SNE, not t-SNE -- the
-gradient-level mechanism of "approximates t-SNE without reproducing it".
+Check C documents the t-SNE partition-function force. It is not the regularizer
+used in the revised RV model, which instead penalizes the neutral component in
+kernel space.
 
 Run at n=2000 (the paper's scale): the identity is algebraic, so the machine-
 precision match is scale-independent; running at n=2000 states it at the size used
-by the rest of §6. Writes results/03_forces/indices/forces_check.csv.
+by the other experiments. Writes results/03_forces/indices/forces_check.csv.
 """
 
 # ruff: noqa: E402, I001  (imports follow the sys.path bootstrap)
@@ -90,7 +86,7 @@ def main() -> None:
     K_X = compute_linear_kernel_torch(X, weights=w).detach()
     Ktil = Q.T @ K_X @ Q                                   # <K_X,K_Y> = <Ktil, G_Y>
 
-    print(f"art. §6.4(i)  -  attraction / repulsion power asymmetry  (n={N}, q={D})\n")
+    print(f"Student-t force identities  (n={N}, q={D})\n")
     all_ok = True
 
     # ── (A) RV attraction: gradient of the real <K_X, K_Y> is q^2 (not q^1) ──────
@@ -147,9 +143,9 @@ def main() -> None:
     all_ok &= record("(C) -log Z repulsion == q^2", "q^2", err_c, err_c < TOL, "< tol")
 
     print(
-        "\n  => RV attraction q^2 and volume PUSH q^2 (both via kappa' = -q^2);"
-        "\n     t-SNE asymmetric: attraction q^1, repulsion q^2."
-        "\n     Same Student-t output, different objective (RV vs KL)."
+        "\n  => RV attraction and the t-SNE normalization reference both use q^2;"
+        "\n     t-SNE is asymmetric: attraction q^1, repulsion q^2."
+        "\n     The revised RV regularizer is a separate kernel-space penalty."
     )
     print(f"\n  ALL CHECKS PASS: {all_ok}")
 

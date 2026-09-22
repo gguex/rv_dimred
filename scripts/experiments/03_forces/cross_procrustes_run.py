@@ -1,26 +1,23 @@
-"""
-cross_procrustes_run.py  —  art. §6.4(ii)  Table 4: the objective dominates the kernel
-======================================================================================
+"""Descriptive cross-method Procrustes comparison.
 
-The payoff prediction of the §5.4 push taxonomy: the RV-cosine objective can
-approach t-SNE but NOT UMAP (UMAP's per-pair push on the raw Gram is out of reach
-of the pure cosine). We test it by swapping only the *kernels* while keeping the
-*objective* (hollow-RV) fixed, and measuring who ends up close to whom.
+This compares two hollow-RV embeddings, built with t-SNE-inspired or UMAP-inspired
+input/output profiles, with the corresponding library embeddings.  It is a
+descriptive comparison: the library methods also differ in their objectives,
+initializations and optimizers, so the disparities do not isolate a causal effect.
 
-For MNIST and single-cell (n=2000) at the canonical operating point of §6.4-6.5
+For MNIST (n=2000) and single-cell (n=2638) at the shared operating point
 (neighbour hp = 30, softening gamma = 0.5) we build four 2-D embeddings:
 
-  framework_tsne  hollow-RV on adaptive-Gaussian input + Student-t output
-  framework_umap  hollow-RV on fuzzy-topological input + UMAP output
+  framework_tsne  hollow-RV on adaptive-Gaussian input + Student-t profile
+  framework_umap  hollow-RV on fuzzy-topological input + UMAP profile
   reference_tsne  sklearn.manifold.TSNE   (perplexity 30)
   reference_umap  umap-learn UMAP         (n_neighbors 30)
 
-and report the full 4x4 Procrustes-disparity matrix. The prediction: the two
-framework variants are closer to *each other* than to their own references
-(swapping in UMAP's kernels does not move the result toward UMAP) -- the objective
-shapes the embedding, the kernel swap is secondary. Writes
+and report the full 4x4 Procrustes-disparity matrix. In the saved runs, the two
+RV variants are closer to each other than either is to its nominal reference.
+Writes
 results/03_forces/indices/cross_procrustes.csv (long form, one row per dataset x
-ordered pair) plus one 4x4 matrix CSV per dataset.
+unordered pair) plus one 4x4 matrix CSV per dataset.
 """
 
 # ruff: noqa: E402, I001  (imports follow the sys.path bootstrap)
@@ -61,7 +58,7 @@ EXP = "03_forces"
 DATASETS = ("mnist", "singlecell")   # labelled neighbour-embedding datasets
 PERPLEXITY = 30                       # canonical neighbour hp (t-SNE side)
 N_NEIGHBORS = 30                      # canonical neighbour hp (UMAP side)
-GAMMA = 0.5                           # input-affinity softening (art. §6.1)
+GAMMA = 0.5                           # input-affinity softening
 LABELS = ["framework_tsne", "framework_umap", "reference_tsne", "reference_umap"]
 
 

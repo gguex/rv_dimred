@@ -11,7 +11,9 @@ Every kernel maps a coordinate / similarity input to a *centered* kernel matrix
 so that K lies in the weighted kernel space K_n (i.e. K sqrt(f) = 0).
 All kernels share the same signature
 
-        compute_*_kernel_torch(coords, param=None, weights=None, device='cpu') -> (n,n) torch.Tensor
+        compute_*_kernel_torch(
+            coords, param=None, weights=None, device="cpu"
+        ) -> (n,n) torch.Tensor
 
 so that an INPUT kernel and an OUTPUT kernel can be plugged into the optimiser
 like two interchangeable bricks (see `rv_dimred` and the __main__ demo).
@@ -84,11 +86,22 @@ def double_center(
 ) -> torch.Tensor:
     """Map a raw Gram/affinity matrix G to the centered kernel K = Q G Q^T in K_n.
 
-    Differentiable in G (Q depends only on the fixed weights), so OUTPUT kernels
-    that build G from the embedding remain autograd-friendly.
+    This uses the weighted row/column-mean identity instead of forming the two
+    dense matrix products with Q.  It is algebraically identical, differentiable
+    in G, and costs O(n^2) time and memory for an n by n matrix.
     """
-    Q = centering_operator(weights, device=device)
-    return Q @ G @ Q.T
+    weights = weights.to(device=device, dtype=G.dtype)
+    sqrt_weights = torch.sqrt(weights)
+    weighted_columns = weights @ G
+    weighted_rows = G @ weights
+    grand_mean = weights @ weighted_rows
+    centered = (
+        G
+        - weighted_columns.unsqueeze(0)
+        - weighted_rows.unsqueeze(1)
+        + grand_mean
+    )
+    return sqrt_weights.unsqueeze(1) * centered * sqrt_weights.unsqueeze(0)
 
 
 def _as_tensor(coords: Any, device: str | torch.device = "cpu") -> torch.Tensor:
@@ -120,7 +133,7 @@ def compute_linear_kernel_torch(
     weights: torch.Tensor | None = None,
     device: str | torch.device = "cpu",
 ) -> torch.Tensor:
-    """Linear / dot-product kernel: G = Y Y^T.  Recovers PCA / cMDS (spectral readout)."""
+    """Linear kernel G = Y Y^T, used for PCA and classical MDS readouts."""
     coords = _as_tensor(coords, device)
     n = coords.shape[0]
     weights = default_weights(n, device) if weights is None else weights.to(device)
@@ -284,8 +297,8 @@ def compute_lle_kernel_torch(
         w = np.linalg.solve(C, ones)
         w /= w.sum()
         W[i, idx[i]] = w
-    I = np.eye(n)
-    Phi = (I - W).T @ (I - W)
+    identity = np.eye(n)
+    Phi = (identity - W).T @ (identity - W)
     G = pinvh(
         Phi
     )  # symmetric pseudo-inverse: top eigvecs <-> bottom nonzero eigvecs of Phi
@@ -423,8 +436,8 @@ def compute_gaussian_affinity_kernel_torch(
 
     param: dict {'perplexity': float (default 30), 'gamma': float (default 1.0)}.
            gamma softens the affinity via G = (P / max P)^gamma. gamma=0.5 is the
-           Bhattacharyya/Hellinger variant (sharpens the intra/inter contrast,
-           art. §6.1); gamma=1.0 leaves P unchanged (up to the RV-invariant scale).
+           Bhattacharyya/Hellinger variant (sharpens the intra/inter contrast);
+           gamma=1.0 leaves P unchanged up to the RV-invariant scale.
     """
     if not _HAS_SCIPY:
         raise ImportError("gaussian-affinity kernel requires sklearn for distances")
@@ -455,7 +468,7 @@ def compute_fuzzy_topological_kernel_torch(
         G = W + W^T - W o W^T.
 
     param: dict {'k': int (default 15), 'gamma': float (default 1.0)}.
-           gamma softens the affinity via G = (G / max G)^gamma (art. §6.1); gamma=1.0
+           gamma softens the affinity via G = (G / max G)^gamma; gamma=1.0
            leaves G unchanged (up to the RV-invariant scale).
     """
     if not _HAS_SCIPY:
@@ -516,7 +529,7 @@ def gaussian_affinity_base(
 def fuzzy_topological_base(
     coords: np.ndarray | torch.Tensor, k: int = 15
 ) -> np.ndarray:
-    """UMAP fuzzy-topological affinity G = W + W^T - W o W^T (pre-softening, pre-centering)."""
+    """Return the UMAP fuzzy affinity before softening and centering."""
     if not _HAS_SCIPY:
         raise ImportError("fuzzy-topological kernel requires sklearn")
     X = _np(coords)
@@ -673,15 +686,13 @@ def rv_coefficient(
 
 
 # ===========================================================================
-# Spectral (closed-form) solvers  —  exact RV optima on the linear cone
+# Spectral closed-form solvers: exact RV optima for the linear readout
 # ---------------------------------------------------------------------------
-# Theorem 2: on the cone S_d = {K >= 0, rank(K) <= d}, maximising the RV cosine
-# is a Frobenius projection, solved by truncating K_X to its top-d eigenpairs
-# (Eckart-Young / classical MDS). No iteration: eigh gives the global optimum,
-# which reaches the alignment ceiling RV_max(d) of Prop. 3 exactly. The solvers are
-# modular in the *input* kernel: feed any centred K_X = Q G_X^kappa Q^T built by the
-# INPUT_KERNELS bricks, and the right spectral method follows. Two readouts differ
-# only in the axis scaling: `linear` uses the sqrt(lambda) (PCA/MDS) scaling;
+# On S_d = {K >= 0, rank(K) <= d}, maximizing the RV cosine is a Frobenius
+# projection solved by truncating K_X to its top-d eigenpairs (Eckart-Young /
+# classical MDS). No iteration is needed, and the result reaches the alignment
+# ceiling RV_max(d). The solver is modular in the input kernel. Two readouts differ
+# in their axis scaling: `linear` uses the sqrt(lambda) (PCA/MDS) scaling;
 # `orthonormal` uses balanced unit axes (the native readout of methods defined as
 # orthonormal eigenvectors, e.g. Laplacian Eigenmaps, LLE).
 # ===========================================================================
@@ -697,11 +708,12 @@ def _truncated_eig(K_X: torch.Tensor, q: int) -> tuple[torch.Tensor, torch.Tenso
 
 
 def rv_ceiling(K_X: torch.Tensor, q: int = 2) -> float:
-    """Alignment ceiling RV_max(q) of Prop. 1 (the Frobenius 'explained variance'):
+    """Return the linear-readout alignment ceiling RV_max(q).
+
     RV_max(q) = sqrt( sum_{j<=q} (lambda_j^+)^2 / ||K_X||_F^2 ), computed from the
-    top-q eigenvalues of K_X (clipped at 0) and the full Frobenius norm — no full
+    top-q eigenvalues of K_X (clipped at 0) and the full Frobenius norm; no full
     eigendecomposition needed. No output kernel with a linear readout can exceed it,
-    and the clipped truncation of Theorem 2 attains it exactly."""
+    and the clipped truncation attains it exactly."""
     lam, _ = _truncated_eig(K_X, q)
     num = (lam.clamp_min(0.0) ** 2).sum()
     den = (K_X * K_X).sum()
@@ -714,12 +726,12 @@ def spectral_embed_linear(
     weights: torch.Tensor | None = None,
     device: str | torch.device = "cpu",
 ) -> tuple[torch.Tensor, float]:
-    """Closed-form RV optimum for a LINEAR output kernel (Theorem 2 / classical MDS).
+    """Closed-form RV optimum for a linear output kernel.
 
     Truncates K_X to its top-q positive eigenpairs and reads coordinates with the
     sqrt(lambda) axis scaling Y = Pi^{-1/2} U_q Lambda_q^{1/2} (anisotropic, like
     PCA / cMDS / Isomap / Kernel PCA). Negative eigenvalues are clipped (PSD
-    projection). Returns (Y, rv) where rv = RV_max(q) (Prop. 3).
+    projection). Returns (Y, rv), where rv = RV_max(q).
     """
     n = K_X.shape[0]
     weights = default_weights(n, device) if weights is None else weights.to(device)

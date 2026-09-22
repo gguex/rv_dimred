@@ -1,6 +1,4 @@
-"""
-spectral_run.py  —  art. §6.2  compute & save spectral embeddings (closed-form solver)
-=======================================================================================
+"""Compute and save the spectral embeddings with closed-form solvers.
 
 For every (dataset × spectral method) this computes two embeddings:
   * reference  — the named library implementation,
@@ -14,9 +12,9 @@ For every (dataset × spectral method) this computes two embeddings:
 No gradient ascent, no initialisation — the eigh gives the global RV optimum.
 
 It only *saves coordinates* to results/01_spectral/coordinates/, plus, per run, the
-final RV, the alignment ceiling RV_max(q) of Prop. 1 (computed from the spectrum of
-K_X) and their ratio in run_meta.csv — for the linear readout, rv_final = rv_max by
-Theorem 2, which the ratio column verifies. Indices are built from these coordinates
+final RV, the alignment ceiling RV_max(q) computed from the spectrum of K_X, and
+their ratio in run_meta.csv. For the linear readout, rv_final = rv_max, which the
+ratio column verifies. Indices are built from these coordinates
 by the companion script spectral_indices.py; the Test A gradient-ascent check lives
 in ceiling_check.py; scatter figures are the showcase's job (showcase/).
 """
@@ -88,7 +86,7 @@ def main() -> None:
             np.save(exp_coord_path(EXP, ds.name, m.key, "reference"), Y_ref)
 
             K_in = m.input_kernel(X_t, ds, device, w)
-            rv_max = rv_ceiling(K_in, q=Q)  # alignment ceiling (Prop. 1)
+            rv_max = rv_ceiling(K_in, q=Q)
 
             Y, rv = READOUTS[m.readout](K_in, q=Q, weights=w, device=device)
             np.save(

@@ -1,6 +1,4 @@
-"""
-supervised_dial_indices.py  —  art. §6.6  train/test metrics of the supervised dial
-===================================================================================
+"""Compute train/test metrics for the supervised kernel interpolation.
 
 Reads the embeddings saved by supervised_dial_run.py and computes, per
 (dataset x beta x split in {train, test}):
@@ -8,12 +6,11 @@ Reads the embeddings saved by supervised_dial_run.py and computes, per
                     evaluation only, never for building the embedding),
   * trustworthiness (feature-space neighbourhood preservation, k = TRUST_K).
 
-The point (art. §6.6): under the double dial (input + output moving together), as
-beta rises TEST ARI climbs on held-out points whose labels were never used --
-supervision generalizes (singlecell 0.50 -> 0.92, mnist 0.35 -> 0.54) -- while test
-trustworthiness holds near its t-SNE level through the intermediate regime; beta = 1
-overfits (train ARI -> 1) so the test metric correctly rewards the intermediate /
-near-full regime. Writes results/05_supervised_dial/indices/supervised_dial.csv.
+In the saved runs, held-out ARI rises from 0.50 to 0.92 on single-cell data and
+from 0.35 to a maximum of 0.54 on MNIST, while trustworthiness decreases to
+different degrees. These are descriptive results for one deterministic split and
+a heuristic out-of-sample extension. Writes
+results/05_supervised_dial/indices/supervised_dial.csv.
 """
 
 # ruff: noqa: E402, I001  (imports follow the sys.path bootstrap)

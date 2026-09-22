@@ -1,22 +1,23 @@
-"""
-tether_run.py  —  art. §6.5  the diagonal tether: full-RV vs hollow-RV vs t-SNE
-===============================================================================
+"""Historical full-RV versus hollow-RV MNIST baseline.
 
-Validates Prop. 5 + the justification Lemma (promise of art. §5.1-5.2). Exact fact
+This experiment is retained because the regularization comparison in experiment
+06 reuses its sample, reference, and saved full-RV coordinates. Its original
+diagonal-tether interpretation is not a general claim of the revised manuscript.
+
+The script records the following exact fact
 (uniform weights, centered kernel): K_ii = -r_i with r_i = sum_{j!=i} K_ij, so the
-diagonal energy ||diag(K_Y)||^2 = sum_i K_ii^2 = sum_i r_i^2 is exactly the degree
-term the full-RV metric M = I + D*D over-weights. Maximizing the FULL RV pours
-energy into that diagonal (dense-core collapse); the HOLLOW RV (both diagonals
-zeroed) keeps it down and spreads like t-SNE.
+diagonal energy ||diag(K_Y)||^2 = sum_i K_ii^2 = sum_i r_i^2. The trajectories
+compare the two objectives on this fixed setup without asserting that hollow RV
+must reproduce t-SNE or that the observed spread is universal.
 
 Along each optimization we record the energy split of K_Y:
     e_diag   = sum_i K_ii^2  (= sum_i r_i^2, the degree floor)
     e_hollow = ||K̊_Y||^2     (= ||K_Y||^2 - e_diag, the structural part)
     frac_diag = e_diag / ||K_Y||^2
-    spread   = RMS radius of Y
-plus the final ARI / RV_full / RV_hollow, and a t-SNE reference. This produces the
-data behind Figure 1 (triptych + energy panel): MNIST n=2000, perplexity 30,
-gamma 0.5, seed 0.
+    spread    = RMS radius of Y
+
+It also saves final ARI / RV_full / RV_hollow and a t-SNE reference for MNIST
+n=2000, perplexity 30, gamma 0.5, seed 0.
 
 Writes to results/04_tether/:
     coordinates/{full_rv,hollow_rv,tsne}.npy, labels.npy
@@ -153,7 +154,7 @@ def final_stats(
 def main() -> None:
     device = get_device()
     print(f"device: {device}")
-    print(f"art. §6.5  tether: full-RV vs hollow-RV vs t-SNE  "
+    print(f"historical baseline: full-RV vs hollow-RV vs t-SNE  "
           f"(MNIST n={10 * N_PER_DIGIT}, perp={PERPLEXITY}, gamma={SOFTENING})\n")
 
     ds = load_mnist(n_per_digit=N_PER_DIGIT, random_state=SEED)

@@ -38,7 +38,7 @@ from src.rv_kernels import (
     rv_dimred,
 )
 
-# ── Protocol constants (art. §6.1) ───────────────────────────────────────────────────
+# ── Shared protocol constants ────────────────────────────────────────────────────────
 SEED = 0
 Q = 2  # embedding dimension
 K_NEIGHBORS = 15  # kNN for graph-based methods / UMAP n_neighbors
@@ -47,12 +47,12 @@ DIFFUSION_T = 10.0  # diffusion time (larger t sharpens the spectral gap → rec
 N_ITER_RV = 500  # RV gradient-ascent iterations
 LR_RV = 0.1  # RV gradient-ascent learning rate
 TRUST_K = 15  # k for the scalar trustworthiness / kNN overlap
-SOFTENING = 0.5  # art. §6.1 input-affinity softening exponent (G -> (G/max)^gamma)
+SOFTENING = 0.5  # input-affinity softening exponent (G -> (G/max)^gamma)
 
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 COORDS_ROOT = RESULTS_DIR / "coordinates"  # saved embeddings, one subdir per family
 
-# art. §6.1 per-dataset hyperparameters (perplexity for t-SNE, n_neighbors for UMAP),
+# Per-dataset hyperparameters (perplexity for t-SNE, n_neighbors for UMAP),
 # tuned for framework↔reference agreement with the γ=SOFTENING input affinity.
 # The same value is used on both the framework and the library-reference side.
 APPROX_HYPERPARAMS: dict[str, dict[str, int]] = {
@@ -61,11 +61,11 @@ APPROX_HYPERPARAMS: dict[str, dict[str, int]] = {
     "swissroll": {"perplexity": 30, "n_neighbors": 15},
 }
 
-# art. §6.6 supervised interpolation (class-kernel ↔ t-SNE), shared by run / indices
+# Supervised interpolation, shared by run and index scripts
 # / figures. β dials the input AND output kernels together:
 #   K_in(β)  = β·K_class + (1-β)·K_gaussianAffinity
 #   K_out(β) = β·linear(Y) + (1-β)·StudentT(Y, ν=1)
-# β=0 → t-SNE (unsupervised), β=1 → class-centroid kernel (fully supervised).
+# β=0 → affinity target + Student-t output; β=1 → class target + linear output.
 SUPERVISED_BETAS = [0.0, 0.25, 0.5, 0.75, 1.0]
 TEST_FRAC = 0.3  # held-out fraction for the train/test generalisation protocol
 
@@ -92,7 +92,7 @@ def get_device() -> str:
     return "cpu"
 
 
-# ── Shared PCA initialisation (art. §6.1) ──────────────────────────────────────────
+# ── Shared PCA initialization ─────────────────────────────────────────────────────
 def pca_embedding(X: np.ndarray, q: int = Q) -> np.ndarray:
     """Plain PCA projection to q dims (also the PCA *reference* embedding)."""
     return PCA(n_components=q, random_state=SEED).fit_transform(X).astype(np.float32)
@@ -103,7 +103,7 @@ def pca_init(X: np.ndarray, q: int = Q) -> np.ndarray:
     sklearn-convention init below, but at a numerically friendly scale so the RV
     gradient-ascent (Adam) converges for linear output kernels too. Procrustes/RV
     are scale-invariant, so comparing against a reference started from
-    :func:`pca_init_sklearn` stays legitimate (art. §6.1)."""
+    :func:`pca_init_sklearn` stays legitimate."""
     return pca_embedding(X, q)
 
 
@@ -126,7 +126,7 @@ def normalize_kernel(K: torch.Tensor) -> torch.Tensor:
 def supervised_split(
     X: np.ndarray, labels: np.ndarray, test_frac: float = TEST_FRAC
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Deterministic stratified train/test split for the art. §6.6 supervised protocol.
+    """Deterministic stratified train/test split for the supervised protocol.
     Shared by run / indices / figures so they all see the same partition (and thus
     the saved test coordinates line up with the re-derived test labels)."""
     return tuple(
@@ -142,7 +142,7 @@ def supervised_output_kernel(
     weights: torch.Tensor | None = None,
     device: str | torch.device = "cpu",
 ) -> torch.Tensor:
-    """Blended output kernel of the art. §6.6 supervised interpolation, pass β as param:
+    """Blended output kernel for supervised interpolation; pass beta as ``param``:
     K_out(β) = β·linear(Y) + (1-β)·StudentT(Y, ν=1)   (each unit-Frobenius)."""
     beta = float(param)
     k_lin = compute_linear_kernel_torch(coords, weights=weights, device=device)
@@ -156,8 +156,8 @@ def project_out_of_sample(
     X_tr: np.ndarray, Y_tr: np.ndarray, X_te: np.ndarray, k: int = K_NEIGHBORS
 ) -> np.ndarray:
     """Place each test point at the Gaussian-weighted mean of its k feature-space
-    nearest TRAIN neighbours' embedding positions — uses no test labels, so it is a
-    fair out-of-sample extension for the supervised embedding (cf. openTSNE/UMAP)."""
+    nearest TRAIN neighbours' embedding positions. It uses no test labels, but is a
+    heuristic interpolation rather than a learned out-of-sample map."""
     nbrs = NearestNeighbors(n_neighbors=k).fit(X_tr)
     dist, idx = nbrs.kneighbors(X_te)
     sigma = float(np.median(dist)) + 1e-12
@@ -227,7 +227,7 @@ def diffusion_maps_ref(
     return (vecs[:, 1 : q + 1] * np.exp(-t * vals[1 : q + 1])).astype(np.float32)
 
 
-# ── Spectral method registry (art. §6.2) ─────────────────────────────────────────
+# ── Spectral method registry ─────────────────────────────────────────────────────
 @dataclass
 class SpectralMethod:
     key: str
@@ -303,12 +303,13 @@ SPECTRAL_METHODS: list[SpectralMethod] = [
         reference=lambda X, ds: SpectralEmbedding(
             n_neighbors=K_NEIGHBORS, n_components=Q, random_state=SEED
         ).fit_transform(X),
-        readout="orthonormal",  # Laplacian Eigenmaps reference = orthonormal eigenvectors
+        # Laplacian Eigenmaps reference uses orthonormal eigenvectors.
+        readout="orthonormal",
     ),
 ]
 
 
-# ── Tidy CSV (repo convention) ───────────────────────────────────────────────────────────
+# ── Tidy CSV (repository convention) ───────────────────────────────────────────
 class IndexLog:
     """Accumulates tidy index rows and appends/writes results_indices.csv."""
 
@@ -366,14 +367,14 @@ def fig_path(section: str, dataset: str, method: str, variant: str) -> Path:
 
 
 def exp_coords_dir(exp: str) -> Path:
-    """results/{exp}/coordinates/ — new per-experiment layout (scripts/experiments/{exp}/)."""
+    """Return results/{exp}/coordinates/ for scripts/experiments/{exp}/."""
     d = RESULTS_DIR / exp / "coordinates"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
 def exp_indices_dir(exp: str) -> Path:
-    """results/{exp}/indices/ — new per-experiment layout (scripts/experiments/{exp}/)."""
+    """Return results/{exp}/indices/ for scripts/experiments/{exp}/."""
     d = RESULTS_DIR / exp / "indices"
     d.mkdir(parents=True, exist_ok=True)
     return d
@@ -397,7 +398,7 @@ def coords_dir(family: str) -> Path:
 
 
 def indices_dir(family: str) -> Path:
-    """results/indices/{family}/ (tidy + wide-table index CSVs, one subdir per family)."""
+    """Return the directory for a family's tidy and wide-table index CSVs."""
     d = RESULTS_DIR / "indices" / family
     d.mkdir(parents=True, exist_ok=True)
     return d

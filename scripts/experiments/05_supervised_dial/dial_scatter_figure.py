@@ -1,12 +1,11 @@
-"""
-dial_scatter_figure.py  —  art. §6.6  scatter grid of the supervised dial
-=========================================================================
+"""Scatter grid for the supervised kernel interpolation.
 
-An illustrative companion to Figure 2: for each dataset (row) and dial value beta
-(column), the train embedding coloured by class. Reading left to right, the classes
-contract and separate as beta rises, collapsing toward points at beta = 1 (the class
-kernel removes within-class variance). Writes
-results/05_supervised_dial/dial_scatter.{png,pdf}.
+For each dataset (row) and dial value beta (column), this plots the training
+embedding coloured by class. Beta jointly interpolates the input target from the
+adaptive affinity kernel to the class kernel and the output readout from Student-t
+to linear. At beta = 1, the class target removes within-class variation.
+
+Writes results/05_supervised_dial/dial_scatter.{png,pdf}.
 """
 
 # ruff: noqa: E402, I001  (imports follow the sys.path bootstrap)
@@ -53,7 +52,7 @@ def main() -> None:
             if col == 0:
                 ax.set_ylabel(ds, fontsize=13)
     fig.suptitle(
-        "Supervised dial: t-SNE (β=0) → class kernel (β=1), train embeddings",
+        "Supervised RV interpolation: affinity target (β=0) → class target (β=1)",
         fontsize=14,
     )
     fig.tight_layout()

@@ -1,17 +1,13 @@
-"""
-ceiling_check.py  —  art. §6.2  Test A: the gradient solver attains the ceiling
-================================================================================
+"""Check that iterative linear-kernel optimization attains the RV ceiling.
 
-Prop. 1 gives the alignment ceiling RV_max(q) attainable by any linear-output
-embedding, and Theorem 2 says the clipped spectral truncation attains it. This
-script checks the *iterative* side of that claim: plain RV gradient ascent
-(Adam, PCA init — the exact solver of Appendix B) with a linear output kernel
+The spectral result gives the alignment ceiling RV_max(q) attainable by a
+linear-output embedding. This script checks the iterative side of that result:
+plain RV gradient ascent (Adam, PCA initialization) with a linear output kernel
 reaches RV_max on a non-trivial input kernel, with no eigendecomposition in the
 loop.
 
 Input kernel: the adaptive-Gaussian t-SNE affinity (perplexity 30) softened at
-gamma = 0.5 — the standard neighbor-embedding target of art. §6.4-6.5 — so the
-check runs on the same K_X the non-linear experiments use, not on an easy one.
+gamma = 0.5, matching the input kernel used by the nonlinear experiments.
 
 Writes results/01_spectral/indices/ceiling_check.csv (one row per dataset):
 rv_gradient, rv_max, gap = rv_max - rv_gradient.

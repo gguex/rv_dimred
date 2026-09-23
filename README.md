@@ -9,7 +9,7 @@ centered kernel matrices. Their agreement is measured by the RV coefficient,
 which is the cosine of the angle between the two kernels in matrix space:
 
 $$
-\operatorname{RV}(K_X,K_Y)
+\text{RV}(K_X,K_Y)
 =\frac{\langle K_X,K_Y\rangle_F}
 {\lVert K_X\rVert_F\,\lVert K_Y\rVert_F}.
 $$
